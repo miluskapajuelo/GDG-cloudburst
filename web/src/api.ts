@@ -18,6 +18,26 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Turn an error body into one readable sentence. FastAPI's 422 `detail` is a list of
+ * { loc, msg } objects; never show raw JSON to the agent.
+ */
+function formatDetail(detail: unknown): string {
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    const parts = detail.map((d) => {
+      const e = (d ?? {}) as { loc?: unknown[]; msg?: unknown }
+      // loc is e.g. ["body", "body"]: drop the leading "body" (the request body), keep the field name.
+      const loc = Array.isArray(e.loc) ? e.loc : []
+      const field = (loc[0] === 'body' && loc.length > 1 ? loc.slice(1) : loc).join('.')
+      const msg = typeof e.msg === 'string' ? e.msg.replace(/^Value error, /, '') : 'invalid value'
+      return field ? `${field === 'body' ? 'message' : field}: ${msg}` : msg
+    })
+    return parts.join('; ') || 'invalid input'
+  }
+  return 'unexpected response'
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
@@ -29,8 +49,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers: { 'Content-Type': 'application/json', ...init?.headers },
     })
   } catch (e) {
-    if ((e as Error).name === 'AbortError') throw new ApiError('timeout', 'The request took longer than 60 s.')
-    throw new ApiError('network', 'The triage API is not reachable.')
+    if ((e as Error).name === 'AbortError') throw new ApiError('timeout', 'The triage API took longer than 60 s to answer. Your text is kept: try again.')
+    throw new ApiError('network', `The triage API at ${BASE} is not reachable. Your text is kept: start the API and try again, or switch on "Demo data" in the top bar.`)
   } finally {
     clearTimeout(timer)
   }
@@ -38,11 +58,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let detail = res.statusText
     try {
       const body = await res.json()
-      detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail ?? body)
+      detail = formatDetail(body.detail ?? body)
     } catch {
       /* non-JSON error body */
     }
-    if (res.status === 422) throw new ApiError('validation', `Invalid input: ${detail}`, 422)
+    if (res.status === 422) throw new ApiError('validation', `The ticket was not accepted: ${detail}`, 422)
     if (res.status === 404) throw new ApiError('not_found', detail, 404)
     throw new ApiError('server', `Server error ${res.status}: ${detail}`, res.status)
   }

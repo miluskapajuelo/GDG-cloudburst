@@ -109,7 +109,7 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-x-2 text-[13px] font-semibold text-oncall">
                     Critical incident
-                    <span className="rounded-full bg-oncall/15 px-2 py-px text-xs font-medium">Not acknowledged</span>
+                    <span className="rounded-full bg-oncall px-2 py-px text-xs font-semibold text-on-route">Not acknowledged</span>
                   </p>
                   <p className="mt-0.5 truncate text-[15px] font-medium text-ink" title={t.translation?.subject ?? t.subject}>{t.translation?.subject ?? t.subject}</p>
                   <p className="mt-0.5 flex flex-wrap gap-x-4 text-[13px] text-ink-2">

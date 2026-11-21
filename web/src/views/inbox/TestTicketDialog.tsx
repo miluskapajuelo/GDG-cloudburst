@@ -57,7 +57,6 @@ export default function TestTicketDialog({ onClose }: { onClose: () => void }) {
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong. Please try again.'
       setError(msg)
-      toast({ tone: 'error', text: msg })
       setBusy(false)
     }
   }
@@ -106,8 +105,12 @@ export default function TestTicketDialog({ onClose }: { onClose: () => void }) {
             <p id="body-count" aria-live="polite" className={`tabular -mt-2 text-right text-xs ${body.length > 8000 ? 'font-semibold text-review' : 'text-muted'}`}>
               {body.length.toLocaleString()} characters{body.length > 8000 ? ' (only the first 8,000 are analysed)' : ''}
             </p>
-            {error && <p role="alert" className="rounded-lg bg-oncall-soft px-3 py-2 text-sm text-oncall">{error}</p>}
           </form>
+        )}
+        {error && !busy && (
+          <p role="alert" className="flex items-start gap-2 border-t border-oncall/30 bg-oncall-soft px-5 py-3 text-sm font-medium text-oncall">
+            <Icon name="alertCircle" className="mt-0.5 h-4 w-4" />{error}
+          </p>
         )}
         <footer className="flex items-center gap-2 border-t border-line px-5 py-3">
           <span className="text-xs text-muted">Ctrl or ⌘ + Enter to triage</span>

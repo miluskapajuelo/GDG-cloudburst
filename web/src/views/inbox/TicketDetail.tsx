@@ -84,7 +84,7 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
           <a href={`#/${section}`} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
             <Icon name="arrowLeft" /> <span className="capitalize">{section}</span>
           </a>
-          <span className="text-line-strong">/</span>
+          <span aria-hidden className="text-muted">/</span>
           <span className="tabular font-mono text-xs text-muted">{t.id}</span>
           <div className="ml-auto flex items-center gap-1">
             <span className="tabular mr-1 hidden text-xs text-muted md:inline">{idx + 1} of {siblings.length}</span>
@@ -113,7 +113,7 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
       </header>
 
       {/* 3-column workspace: one scroll for the page; columns hug their content; side columns stay in view and scroll on their own. */}
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto xl:grid xl:grid-cols-[minmax(320px,30fr)_minmax(420px,42fr)_minmax(300px,28fr)] xl:items-start xl:gap-6 xl:p-6">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto xl:grid xl:grid-cols-[minmax(250px,30fr)_minmax(360px,42fr)_minmax(240px,28fr)] xl:items-start xl:gap-6 xl:p-6">
         <section aria-label="Customer ticket" className="border-b border-line bg-surface-2 xl:sticky xl:top-0 xl:max-h-[calc(var(--ws-h,100dvh)-3rem)] xl:overflow-y-auto xl:rounded-2xl xl:border">
           <CustomerColumn t={t} now={now} />
         </section>

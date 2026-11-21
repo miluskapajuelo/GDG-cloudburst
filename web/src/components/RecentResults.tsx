@@ -1,5 +1,5 @@
 import { useStore } from '../store'
-import { routeKey, ROUTE_STYLE } from './ui'
+import { Icon, routeKey, ROUTE_STYLE } from './ui'
 
 /** Task C.6: the last 10 triage results in memory. Clicking one opens that result again. */
 export function RecentResults({ activeId }: { activeId?: string }) {
@@ -21,7 +21,8 @@ export function RecentResults({ activeId }: { activeId?: string }) {
               <li key={t.id}>
                 <a href={`#/inbox/${t.id}`} aria-current={activeId === t.id ? 'page' : undefined} title={`${esc?.badge ?? ''}: ${label}`}
                   className={`flex items-start gap-2.5 rounded-xl px-3 py-1.5 text-xs transition-colors ${activeId === t.id ? 'bg-surface-3 text-ink' : 'text-ink-2 hover:bg-surface-3/60 hover:text-ink'}`}>
-                  <span aria-hidden className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${s.solid}`} />
+                  {/* Shape + colour, never colour alone: the same icon as the decision badge. */}
+                  <span aria-hidden className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${s.solid}`}><Icon name={s.icon} className="h-2.5 w-2.5" /></span>
                   <span className="min-w-0 flex-1">
                     <span className="sr-only">{esc?.badge ?? 'Not triaged'}: </span>
                     <span className="line-clamp-2 break-words leading-snug">{text}</span>
