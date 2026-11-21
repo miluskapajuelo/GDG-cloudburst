@@ -85,14 +85,14 @@ Layout, wide screen (projector-friendly, base font 16px or larger):
 
 ### C.8 README.md (draft by T+3:30, final by T+4:30)
 Fill in the skeleton `README.md` (already in the repo). Get the numbers from A2 and the architecture notes from B2. Required sections:
-- [ ] What it does (3 lines) and a screenshot of the console
-- [ ] Architecture (copy the diagram from `docs/plan.md`)
+- [x] What it does (3 lines) and a screenshot of the console
+- [x] Architecture (copy the diagram from `docs/plan.md`)
 - [ ] Setup: venv, `pip install -r requirements.txt`, `.env`, `make_split`, `train`, `build_index`, the API, the web app. Get A1 to follow it on a fresh clone.
-- [ ] Evaluation: the command plus the metrics table from `eval/results/metrics.md`, with the split fingerprint
-- [ ] Escalation policy summary (link `docs/escalation-policy.md`)
-- [ ] Leakage controls (link `docs/data-and-leakage.md`)
-- [ ] Bonus features: cross-lingual, burst, PII
-- [ ] Limitations and next steps, and the team with their roles
+- [x] Evaluation: the command plus the metrics table from `eval/results/metrics.md`, with the split fingerprint
+- [x] Escalation policy summary (link `docs/escalation-policy.md`)
+- [x] Leakage controls (link `docs/data-and-leakage.md`)
+- [x] Bonus features: cross-lingual, burst, PII
+- [x] Limitations and next steps, and the team with their roles
 
 ### C.9 Demo script and rehearsal (by T+4:45)
 - [ ] Write `docs/demo-script.md`: a 5-minute run sheet with timings. Suggested flow:
