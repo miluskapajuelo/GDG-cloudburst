@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { MetricsStrip } from '../../components/MetricsStrip'
 import { Avatar, Button, EmptyState, Icon, IconChip, Kbd, LangChip, PriorityBadge, type IconName } from '../../components/ui'
 import { band, duration, PRIORITY_LABEL, pct, sla, STATUS_LABEL } from '../../lib/format'
 import { isTyping } from '../../lib/router'
@@ -136,6 +137,9 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
             )}
           </div>
         )}
+
+        {/* Holdout metrics (C.6): the offline evaluation, separate from this session's tickets */}
+        {view === 'inbox' && <div className="mt-8"><MetricsStrip /></div>}
 
         {/* Summary */}
         {view === 'inbox' && (
