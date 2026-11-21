@@ -1,91 +1,89 @@
 {
-  "request_id": "00000000-0000-4000-8000-000000000001",
+  "request_id": "MOCK-00000000-0000-0000-0000-000000000000",
   "mock": true,
-  "input": { "subject": "Dringend: VPN-Ausfall – Telemedizin und EMR nicht erreichbar", "body_chars": 412, "truncated": false },
-  "language": { "code": "de", "confidence": 0.99, "reply_language": "de" },
-  "pii": { "masked": false, "counts": { "EMAIL": 0, "PHONE": 0, "IP": 0, "IBAN": 0, "CARD": 0, "ACCOUNT": 0 } },
+  "input": {
+    "subject": "",
+    "body_chars": 0,
+    "truncated": false
+  },
+  "language": {
+    "code": "en",
+    "confidence": 0.99,
+    "reply_language": "en"
+  },
+  "pii": {
+    "masked": false,
+    "counts": {
+      "EMAIL": 0,
+      "PHONE": 0,
+      "IP": 0,
+      "IBAN": 0,
+      "CARD": 0,
+      "ACCOUNT": 0
+    }
+  },
   "predictions": {
     "type": {
-      "label": "Incident",
-      "confidence": 0.82,
-      "probs": { "Incident": 0.82, "Problem": 0.10, "Request": 0.05, "Change": 0.03 }
+      "label": "Request",
+      "confidence": 0.75,
+      "probs": {
+        "Incident": 0.10,
+        "Request": 0.75,
+        "Problem": 0.10,
+        "Change": 0.05
+      }
     },
     "queue": {
-      "label": "Technical Support",
-      "confidence": 0.61,
+      "label": "Customer Service",
+      "confidence": 0.65,
       "probs": {
-        "Technical Support": 0.61,
-        "IT Support": 0.22,
-        "Product Support": 0.09,
-        "Service Outages and Maintenance": 0.04,
-        "Customer Service": 0.02,
-        "Billing and Payments": 0.01,
-        "General Inquiry": 0.01
+        "Customer Service": 0.65,
+        "Technical Support": 0.15,
+        "Billing and Payments": 0.10,
+        "Product Support": 0.05,
+        "IT Support": 0.03,
+        "Sales and Pre-Sales": 0.02
       }
     },
     "priority": {
-      "label": "high",
-      "confidence": 0.71,
-      "probs": { "high": 0.71, "medium": 0.22, "low": 0.07 }
+      "label": "low",
+      "confidence": 0.80,
+      "probs": {
+        "high": 0.05,
+        "medium": 0.15,
+        "low": 0.80
+      }
     }
   },
   "escalation": {
-    "status": "ESCALATE",
-    "route": "ON_CALL",
-    "badge": "Escalate to On-Call Engineer",
-    "reasons": [
-      { "code": "HIGH_PRIORITY_INCIDENT", "message": "Predicted high priority (p=0.71) and Incident (p=0.82)." }
-    ]
+    "status": "AUTO_DRAFT",
+    "route": null,
+    "badge": "Auto-Draft Ready",
+    "reasons": []
   },
-  "precedents": [
-    {
-      "ticket_id": "TKT-00412",
-      "similarity": 0.812,
-      "language": "en",
-      "subject": "VPN error 809 for all remote sites",
-      "body_snippet": "Since this morning none of our branch offices can establish a VPN connection. Clients report error 809. Restarting the firewall did not help...",
-      "answer_snippet": "The VPN gateway certificate had expired overnight, which causes error 809 during authentication. We renewed the certificate and restarted the VPN service; connections were restored...",
-      "answer": "The VPN gateway certificate had expired overnight, which causes error 809 during authentication. We renewed the certificate and restarted the VPN service; connections were restored. Please check the certificate expiry date on the gateway and set a renewal reminder.",
-      "type": "Incident",
-      "queue": "Technical Support",
-      "priority": "high",
-      "tags": ["VPN", "Network", "Outage"]
-    },
-    {
-      "ticket_id": "TKT-03187",
-      "similarity": 0.774,
-      "language": "en",
-      "subject": "IKEv2 VPN connections failing after firewall change",
-      "body_snippet": "After a firewall rule update yesterday our IKEv2 VPN tunnels fail to connect for all users...",
-      "answer_snippet": "The firewall update blocked UDP ports 500 and 4500 used by IKEv2. After re-opening both ports the tunnels came back up...",
-      "answer": "The firewall update blocked UDP ports 500 and 4500 used by IKEv2. After re-opening both ports the tunnels came back up. We recommend reviewing firewall change requests against the VPN port list.",
-      "type": "Incident",
-      "queue": "IT Support",
-      "priority": "high",
-      "tags": ["VPN", "Firewall"]
-    },
-    {
-      "ticket_id": "TKT-11920",
-      "similarity": 0.701,
-      "language": "de",
-      "subject": "VPN-Ausfall nach Client-Update",
-      "body_snippet": "Nach dem automatischen Update des VPN-Clients können sich unsere Mitarbeitenden nicht mehr anmelden...",
-      "answer_snippet": "Das Client-Update hat das gespeicherte Zertifikatsprofil zurückgesetzt. Nach dem erneuten Import des Profils funktionierte die Verbindung wieder...",
-      "answer": "Das Client-Update hat das gespeicherte Zertifikatsprofil zurückgesetzt. Nach dem erneuten Import des Profils funktionierte die Verbindung wieder. Wir empfehlen, das Profil zentral zu verteilen.",
-      "type": "Incident",
-      "queue": "Technical Support",
-      "priority": "medium",
-      "tags": ["VPN", "Client"]
-    }
-  ],
+  "precedents": [],
   "draft": {
     "status": "OK",
-    "text": "Sehr geehrte Damen und Herren,\n\nvielen Dank für Ihre Meldung. Wir haben den VPN-Ausfall an Ihren Klinikstandorten mit höchster Priorität an unseren Bereitschaftsdienst weitergeleitet.\n\nIn vergleichbaren Fällen wurde Fehler 809 durch ein abgelaufenes Zertifikat auf dem VPN-Gateway verursacht. Bitte prüfen Sie daher, ob das Gateway-Zertifikat noch gültig ist [TKT-00412]. Zusätzlich empfehlen wir zu kontrollieren, ob die UDP-Ports 500 und 4500 auf der Firewall geöffnet sind [TKT-03187].\n\nMit freundlichen Grüßen\nIhr Support-Team",
-    "cited_ids": ["TKT-00412", "TKT-03187"],
-    "language": "de",
-    "for_human_review": true,
-    "model": "gemini-3.5-flash-lite"
+    "text": "Thank you for contacting us. How can I assist you today?",
+    "cited_ids": [],
+    "language": "en",
+    "for_human_review": false,
+    "model": "mock"
   },
-  "burst": { "active": false, "cluster_size": 1, "window_minutes": 15, "label": null, "request_ids": [] },
-  "latency_ms": { "pii": 1, "language": 3, "classify": 9, "retrieve": 28, "gate": 1, "generate": 2140, "total": 2190 }
+  "burst": {
+    "active": false,
+    "cluster_size": 1,
+    "window_minutes": 15,
+    "label": null,
+    "request_ids": []
+  },
+  "latency_ms": {
+    "pii": 0,
+    "language": 0,
+    "classify": 0,
+    "retrieve": 0,
+    "gate": 0,
+    "generate": 0,
+    "total": 0
+  }
 }

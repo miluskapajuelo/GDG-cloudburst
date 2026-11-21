@@ -3,7 +3,7 @@
 | Member | Role | Owns |
 |---|---|---|
 | `shaadqrsh` | **A1**: data split, classifier, demo machine | `ml/`, `shared/text.py`, the kickoff scaffold |
-| `GUSTAVO_LOGIN` | **A2**: API service, evaluation, metrics, threshold tuning | `api/`, `eval/` |
+| `gbuitra` | **A2**: API service, evaluation, metrics, threshold tuning | `api/`, `eval/` |
 
 Read first: [contract.md](../contract.md), [data-and-leakage.md](../data-and-leakage.md), [escalation-policy.md](../escalation-policy.md) §5.
 
@@ -71,12 +71,12 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 
 ---
 
-## A2: Gustavo (`GUSTAVO_LOGIN`)
+## A2: Gustavo (`gbuitra`)
 
 Agent: work only on the tasks in this section, in order. Tick each box in the same commit as the work.
 
 ### A2.0 Register yourself (first commit)
-- [ ] Replace `GUSTAVO_LOGIN` with your GitHub login everywhere it appears: `CLAUDE.md` (roster and Step 0 question), `docs/plan.md`, `README.md` (team table) and the table at the top of this file. Run `git grep GUSTAVO_LOGIN` to confirm none are left. This is an allowed edit for you.
+- [ ] Replace `gbuitra` with your GitHub login everywhere it appears: `CLAUDE.md` (roster and Step 0 question), `docs/plan.md`, `README.md` (team table) and the table at the top of this file. Run `git grep gbuitra` to confirm none are left. This is an allowed edit for you.
 
 ### A2.1 API skeleton with mock mode (by T+0:30). Unblocks Team C.
 - [ ] `api/schemas.py`: Pydantic v2 models that mirror the contract response exactly (`TriageRequest`, `TriageResponse` and the nested models).

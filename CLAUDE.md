@@ -24,12 +24,12 @@ Before you write or change any file:
 | GitHub login | Team | Role | Task file (section) | Folders you own | Branch prefix |
 |---|---|---|---|---|---|
 | `shaadqrsh` | A: ML & Eval | **A1**: Data split, classifier, demo machine | [docs/tasks/team-a-ml-eval.md](docs/tasks/team-a-ml-eval.md) (section A1) | `ml/`, `shared/text.py` | `shaadqrsh/` |
-| `GUSTAVO_LOGIN` (Gustavo) | A: ML & Eval | **A2**: API service, evaluation, metrics | [docs/tasks/team-a-ml-eval.md](docs/tasks/team-a-ml-eval.md) (section A2) | `api/`, `eval/` | `GUSTAVO_LOGIN/` |
+| `gbuitra` (Gustavo) | A: ML & Eval | **A2**: API service, evaluation, metrics | [docs/tasks/team-a-ml-eval.md](docs/tasks/team-a-ml-eval.md) (section A2) | `api/`, `eval/` | `gbuitra/` |
 | `Karanpatel3114` | B: Agent | **B1**: Retrieval, language, PII, burst | [docs/tasks/team-b-rag-agent.md](docs/tasks/team-b-rag-agent.md) (section B1) | B1 files in `agent/` (listed in the task file) | `Karanpatel3114/` |
 | `prithvipoojari` | B: Agent | **B2**: Gate, grounded drafting, citations, pipeline | [docs/tasks/team-b-rag-agent.md](docs/tasks/team-b-rag-agent.md) (section B2) | B2 files in `agent/` (listed in the task file) | `prithvipoojari/` |
 | `miluskapajuelo` | C: Frontend | Console UI, README, demo | [docs/tasks/team-c-console-demo.md](docs/tasks/team-c-console-demo.md) | `web/`, `README.md`, `docs/demo-script.md` | `miluskapajuelo/` |
 
-> **Gustavo** is A2. `GUSTAVO_LOGIN` is a placeholder until his GitHub login is known. **Any login that is not in this table is treated as Gustavo (A2).** His first commit replaces the placeholder with his real login (task A2.0).
+> **Gustavo** is A2. `gbuitra` is a placeholder until his GitHub login is known. **Any login that is not in this table is treated as Gustavo (A2).** His first commit replaces the placeholder with his real login (task A2.0).
 
 **Helping another person.** Sometimes the human says they are helping someone else (for example, "I'm helping prithvipoojari with the prompt"). In that case, read that person's section as well and work in their files for that task only. Say this in your commit message. Without that statement, do not do tasks that belong to another login.
 

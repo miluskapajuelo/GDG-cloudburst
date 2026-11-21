@@ -23,7 +23,7 @@
 
 | Team | Members | Owns |
 |---|---|---|
-| **A: ML & Eval** | `shaadqrsh` (A1: data, classifier, demo machine), `GUSTAVO_LOGIN` (A2: API service, eval) | `ml/`, `api/`, `eval/`, `shared/text.py` |
+| **A: ML & Eval** | `shaadqrsh` (A1: data, classifier, demo machine), `gbuitra` (A2: API service, eval) | `ml/`, `api/`, `eval/`, `shared/text.py` |
 | **B: Agent** | `Karanpatel3114` (B1: retrieval, language, PII, burst), `prithvipoojari` (B2: gate, drafting, citations, pipeline) | `agent/` |
 | **C: Frontend** | `miluskapajuelo` | `web/`, `README.md`, `docs/demo-script.md` |
 
