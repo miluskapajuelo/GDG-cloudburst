@@ -38,12 +38,19 @@ export default function ResponseWorkspace({ t, onCite }: { t: Ticket; onCite: (i
   }
   if (answered && t.status !== 'new' && t.status !== 'open') return <SentNote t={t} />
   if (!tri.draft) {
+    const codes = tri.escalation.reasons.map((r) => r.code)
     const why = tri.escalation.reasons.find((r) => r.code === 'PROMPT_INJECTION_SUSPECTED')
       ? 'This ticket contains instructions aimed at the assistant, so no response was suggested. Treat it with care and write the reply yourself.'
       : tri.escalation.reasons.find((r) => r.code === 'LLM_UNAVAILABLE')
         ? 'The drafting service was unavailable. Classification still worked; write the reply yourself or try again later.'
         : 'No sufficiently similar historical resolutions found, so nothing could be grounded. Write the reply yourself, or ask the customer for details.'
-    return <Composer t={t} replyLang={replyLang} initial="" mode="manual" onCite={onCite} intro={<Notice tone="neutral" icon="search" title="No suggested response">{why}</Notice>} />
+    return (
+      <Composer t={t} replyLang={replyLang} initial="" mode="manual" onCite={onCite}
+        intro={<Notice tone="neutral" icon="search" title="No draft generated">
+          {why}
+          {codes.length > 0 && <span className="mt-2 flex flex-wrap gap-1.5">{codes.map((c) => <code key={c} className="rounded border border-line bg-surface-2 px-1.5 py-px font-mono text-xs font-semibold text-ink-2">{c}</code>)}</span>}
+        </Notice>} />
+    )
   }
   return <Composer t={t} replyLang={replyLang} initial={tri.draft.text} mode="suggested" onCite={onCite} />
 }
@@ -87,11 +94,19 @@ function Composer({ t, replyLang, initial, mode, onCite, intro }: { t: Ticket; r
   const title = mode === 'acknowledgement' ? 'Customer acknowledgement' : mode === 'suggested' ? 'Suggested response' : 'Your response'
 
   return (
-    <section aria-label={title} className="rounded-lg border border-line bg-surface">
+    <section aria-label={title} className="overflow-hidden rounded-xl border border-line bg-surface shadow-soft">
+      {mode === 'suggested' && draft?.for_human_review && (
+        <div role="note" className="flex items-center gap-2 border-b border-review/35 bg-review-soft px-5 py-2 text-sm font-semibold text-review">
+          <Icon name="eye" className="h-4 w-4" />
+          For human review: do not send
+          <span className="font-normal text-ink-2">A person must read and approve this draft first.</span>
+        </div>
+      )}
       {intro && <div className="border-b border-line p-4">{intro}</div>}
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-4 py-3">
         <h3 className="text-sm font-semibold text-ink">{title}</h3>
-        <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2 py-0.5 text-xs text-ink-2">
+        {mode === 'suggested' && <span className="rounded border border-ai/30 bg-ai-soft px-1.5 py-px text-xs font-medium text-ai" title="Written by the language model from the cited past tickets">AI draft</span>}
+        <span className="inline-flex items-center gap-1 rounded bg-surface-3 px-1.5 py-0.5 text-xs text-ink-2">
           <Icon name="languages" className="h-3.5 w-3.5" /> Reply in {LANG_LABEL[replyLang]}
         </span>
         {mode === 'suggested' && t.translation?.draft && (
@@ -104,14 +119,14 @@ function Composer({ t, replyLang, initial, mode, onCite, intro }: { t: Ticket; r
 
       {mode === 'suggested' && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-surface-2 px-4 py-2 text-xs">
-          <span className="inline-flex items-center gap-1.5 text-ink-2"><Icon name="quote" className="h-3.5 w-3.5 text-accent" />Based on {stats.citedIds.length} historical resolution{stats.citedIds.length === 1 ? '' : 's'}</span>
+          <span className="inline-flex items-center gap-1.5 text-ink-2"><Icon name="quote" className="h-3.5 w-3.5 text-ai" />Based on {stats.citedIds.length} historical resolution{stats.citedIds.length === 1 ? '' : 's'}</span>
           {stats.unsupported > 0 ? (
             <span className="inline-flex items-center gap-1.5 font-medium text-review"><Icon name="alert" className="h-3.5 w-3.5" />{stats.unsupported} statement{stats.unsupported > 1 ? 's have' : ' has'} no supporting reference</span>
           ) : (
             <span className="inline-flex items-center gap-1.5 text-auto"><Icon name="check" className="h-3.5 w-3.5" />Every statement is referenced</span>
           )}
           {stats.unverified > 0 && <span className="inline-flex items-center gap-1.5 font-medium text-oncall"><Icon name="alertCircle" className="h-3.5 w-3.5" />{stats.unverified} reference not in the supporting history</span>}
-          {draft?.status === 'INSUFFICIENT_EVIDENCE' && <span className="inline-flex items-center gap-1.5 font-medium text-review"><Icon name="info" className="h-3.5 w-3.5" />Holding reply: the history does not answer the request</span>}
+          {draft?.status === 'INSUFFICIENT_EVIDENCE' && <span className="inline-flex items-center gap-1.5 rounded border border-review/35 bg-review-soft px-1.5 py-0.5 font-semibold text-review"><Icon name="info" className="h-3.5 w-3.5" />Insufficient evidence: holding reply</span>}
           {edited && <span className="text-muted">Edited by you</span>}
         </div>
       )}
@@ -135,7 +150,7 @@ function Composer({ t, replyLang, initial, mode, onCite, intro }: { t: Ticket; r
               onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && text.trim()) { e.preventDefault(); setConfirm(true) } }}
               rows={Math.min(18, Math.max(8, text.split('\n').length + 2))}
               placeholder={mode === 'manual' ? `Write your response in ${LANG_LABEL[replyLang]}…` : ''}
-              className="block w-full resize-y rounded-md border border-line-strong bg-surface px-3 py-2.5 text-[14px] leading-relaxed text-ink placeholder:text-muted"
+              className="block w-full resize-y rounded-lg border border-line-strong bg-surface px-3 py-2.5 text-[14px] leading-relaxed text-ink placeholder:text-muted"
             />
             {mode !== 'manual' && <p className="mt-2 text-xs text-muted">Keep references like [TKT-…] next to the statements they support. They are removed before sending.</p>}
           </>
@@ -153,6 +168,7 @@ function Composer({ t, replyLang, initial, mode, onCite, intro }: { t: Ticket; r
           )
         )}
         {mode === 'suggested' && edited && <Button size="sm" variant="ghost" icon="undo" onClick={() => setText(initial)}>Restore suggestion</Button>}
+        {text.trim() && <CopyButton text={text} />}
         {mode === 'suggested' && (
           <div className="flex items-center gap-0.5" role="group" aria-label="Rate the suggested response">
             <button aria-pressed={feedback === 'up'} aria-label="Helpful" onClick={() => { setFeedback('up'); store.patch(t.id, { feedback: { rating: 'up' } }, { kind: 'feedback', text: 'Suggested response rated helpful' }, AGENT.name) }}
@@ -161,6 +177,7 @@ function Composer({ t, replyLang, initial, mode, onCite, intro }: { t: Ticket; r
               className={`rounded-md p-1.5 ${feedback === 'down' ? 'bg-oncall-soft text-oncall' : 'text-muted hover:bg-surface-3 hover:text-ink'}`}><Icon name="thumbDown" /></button>
           </div>
         )}
+        {mode === 'suggested' && draft?.model && <span className="font-mono text-xs text-ai" title="Model that wrote this draft">{draft.model}</span>}
         <Button variant="primary" className="ml-auto" icon="send" disabled={!text.trim()} onClick={() => setConfirm(true)}>
           {mode === 'acknowledgement' ? 'Review and send acknowledgement' : 'Review and send'}
         </Button>
@@ -215,7 +232,7 @@ function StatementView({ statements, onCite, precedents, muted }: { statements: 
                 })}
               </span>
               {st.kind === 'unsupported' && !muted && (
-                <span className="ml-1 inline-flex items-center gap-0.5 align-middle text-[11px] font-medium text-review"><Icon name="alert" className="h-3 w-3" />No reference</span>
+                <span className="ml-1 inline-flex items-center gap-0.5 align-middle text-xs font-medium text-review"><Icon name="alert" className="h-3 w-3" />No reference</span>
               )}
               {j < para.length - 1 && !para[j + 1].newline && ' '}
             </span>
@@ -232,7 +249,7 @@ function CitationChip({ id, known, precedent, onClick }: { id: string; known: bo
       type="button"
       onClick={onClick}
       title={known ? `View supporting ticket ${id}: ${precedent?.subject ?? ''}` : `${id} is not in the supporting history`}
-      className={`mx-0.5 inline-flex translate-y-[-1px] items-center rounded px-1.5 py-px align-middle font-mono text-[11px] font-medium transition-colors ${known ? 'bg-accent-soft text-accent hover:bg-accent hover:text-on-accent' : 'bg-oncall-soft text-oncall'}`}
+      className={`mx-0.5 inline-flex translate-y-[-1px] items-center rounded px-1.5 py-px align-middle font-mono text-xs font-medium transition-colors ${known ? 'bg-accent-soft text-accent hover:bg-accent hover:text-on-accent' : 'bg-oncall-soft text-oncall'}`}
     >
       {id.replace('TKT-', '#')}
       <span className="sr-only">{known ? ` — view supporting ticket ${id}` : ` — unverified reference`}</span>
@@ -245,11 +262,12 @@ function EngineerReference({ t, onCite }: { t: Ticket; onCite: (id: string) => v
   const draft = t.triage!.draft!
   const showTr = view === 'translation' && t.translation?.draft
   return (
-    <details className="group rounded-lg border border-line bg-surface" open>
+    <details className="group overflow-hidden rounded-xl border border-line bg-surface shadow-soft" open>
       <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3">
         <Icon name="file" className="h-4 w-4 text-muted" />
         <span className="text-sm font-semibold text-ink">Technical context for the engineer</span>
-        <span className="rounded bg-surface-3 px-1.5 py-0.5 text-[11px] font-medium text-muted">Internal · not sent</span>
+        <span className="rounded border border-ai/30 bg-ai-soft px-1.5 py-px text-xs font-medium text-ai">AI draft</span>
+        <span className="rounded bg-surface-3 px-1.5 py-0.5 text-xs font-medium text-muted">Internal, not sent</span>
         <Icon name="chevronDown" className="ml-auto h-4 w-4 text-muted transition group-open:rotate-180" />
       </summary>
       <div className="border-t border-line p-4">
@@ -260,6 +278,11 @@ function EngineerReference({ t, onCite }: { t: Ticket; onCite: (id: string) => v
           </div>
         )}
         <StatementView statements={analyzeDraft(showTr ? t.translation!.draft! : draft.text, t.triage!.precedents)} precedents={t.triage!.precedents} onCite={onCite} />
+        <div className="mt-4 flex items-center gap-3">
+          <CopyButton text={draft.text} />
+          {draft.model && <span className="font-mono text-xs text-ai">{draft.model}</span>}
+          {draft.status === 'INSUFFICIENT_EVIDENCE' && <span className="inline-flex items-center gap-1.5 rounded border border-review/35 bg-review-soft px-1.5 py-0.5 text-xs font-semibold text-review"><Icon name="info" className="h-3.5 w-3.5" />Insufficient evidence: holding reply</span>}
+        </div>
       </div>
     </details>
   )
@@ -286,7 +309,7 @@ function Notice({ tone, icon, title, children }: { tone: 'oncall' | 'neutral'; i
       <Icon name={icon} className={`mt-0.5 h-4 w-4 ${tone === 'oncall' ? 'text-oncall' : 'text-muted'}`} />
       <div className="text-sm">
         <p className="font-semibold text-ink">{title}</p>
-        <p className="mt-0.5 text-ink-2">{children}</p>
+        <div className="mt-0.5 text-ink-2">{children}</div>
       </div>
     </div>
   )
@@ -315,10 +338,10 @@ function ApprovalDialog({ t, text, lang, mode, edited, unsupported, escalated, r
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-scrim backdrop-blur-sm p-0 sm:items-center sm:p-6" onClick={onCancel}>
       <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="approve-title" onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92dvh] w-full max-w-2xl flex-col glass-strong overflow-hidden rounded-t-2xl border border-line bg-dialog shadow-pop sm:rounded-2xl">
+        className="flex max-h-[92dvh] w-full max-w-2xl flex-col glass-strong overflow-hidden rounded-t-xl border border-line bg-dialog shadow-pop sm:rounded-xl">
         <header className="border-b border-line px-5 py-4">
           <h2 id="approve-title" className="font-display text-xl font-semibold text-ink">Approve and send</h2>
-          <p className="mt-0.5 text-sm text-muted">To {t.requester.name} &lt;{t.requester.email}&gt; · {LANG_LABEL[lang]}</p>
+          <p className="mt-0.5 text-sm text-muted">To {t.requester.name} &lt;{t.requester.email}&gt;, in {LANG_LABEL[lang]}</p>
         </header>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <ul className="space-y-1.5 text-sm">
@@ -332,7 +355,7 @@ function ApprovalDialog({ t, text, lang, mode, edited, unsupported, escalated, r
           </div>
           <label className="flex items-center gap-2 text-sm text-ink-2">
             After sending, set status to
-            <select value={after} onChange={(e) => setAfter(e.target.value as WorkflowStatus)} className="h-8 rounded-md border border-line-strong bg-surface px-2 text-sm text-ink">
+            <select value={after} onChange={(e) => setAfter(e.target.value as WorkflowStatus)} className="h-8 rounded-lg border border-line-strong bg-surface px-2 text-sm text-ink">
               <option value="awaiting_customer">Awaiting customer</option>
               <option value="resolved">Resolved</option>
               <option value="open">Open</option>
@@ -362,4 +385,19 @@ function Check({ ok, warn, children }: { ok?: boolean; warn?: boolean; children:
       <span className={warn ? 'text-ink' : 'text-ink-2'}>{children}</span>
     </li>
   )
+}
+
+function CopyButton({ text }: { text: string }) {
+  const toast = useToast()
+  const [done, setDone] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setDone(true)
+      setTimeout(() => setDone(false), 1500)
+    } catch {
+      toast({ tone: 'error', text: 'Could not copy. Select the text and copy it manually.' })
+    }
+  }
+  return <Button size="sm" variant="ghost" icon={done ? 'check' : 'copy'} onClick={copy} aria-live="polite">{done ? 'Copied' : 'Copy'}</Button>
 }
