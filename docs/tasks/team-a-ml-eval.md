@@ -151,8 +151,8 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [ ] Write `eval/results/threshold_sweep.md` with a recommended row. Send it to `prithvipoojari`, who updates `agent/config.py`.
 
 ### A2.8 Red-team runner (by T+3:50)
-- [ ] `eval/run_redteam.py`: run every ticket in `shared/fixtures/demo_tickets.json` through `triage()` with the LLM on. Compare against `expected_status` / `expected_reason_codes`. Write `eval/results/redteam.md` (a pass/fail table, plus the draft text for failures).
-- [ ] Before the run, call `/burst/reset` (or `BurstDetector.reset()`), and run the burst tickets in order.
+- [x] `eval/run_redteam.py`: run every ticket in `shared/fixtures/demo_tickets.json` through `triage()` with the LLM on. Compare against `expected_status` / `expected_reason_codes`. Write `eval/results/redteam.md` (a pass/fail table, plus the draft text for failures).
+- [x] Before the run, call `/burst/reset` (or `BurstDetector.reset()`), and run the burst tickets in order.
 
 ### A2.9 Final eval and handoff (T+4:00–4:15)
 - [ ] After the freeze, run the final `python -m eval.run_eval --llm-sample 40` on the demo machine. Commit the `metrics.*` files.
