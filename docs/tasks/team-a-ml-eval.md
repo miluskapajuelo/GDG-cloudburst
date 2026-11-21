@@ -89,12 +89,12 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 **Done when:** `SENTINEL_MOCK=1 uvicorn api.main:app --port 8000` works, `curl -X POST localhost:8000/triage -H "content-type: application/json" -d '{"body":"test"}'` returns the fixture, and `miluskapajuelo` is told it is ready.
 
 ### A2.2 Service orchestrator (by T+1:15)
-- [ ] `api/service.py`: `triage(subject, body, *, skip_llm=False)`. It follows the fixed order in contract §2 and times each stage with `time.perf_counter()` (integer ms).
-- [ ] Load models once in a FastAPI lifespan handler: `TriageClassifier.load()`, `Retriever.load()`, `BurstDetector(...)`, `AgentPipeline(...)`. Run one warm-up `triage("warmup", "warm up", skip_llm=True)`.
-- [ ] Progressive wiring: if a module is missing (`ImportError`) or its artifact is missing, fall back to a stub in `api/stubs.py` that returns contract-shaped data. `/health` reports which parts are real. Team A must never block on Team B.
+- [x] `api/service.py`: `triage(subject, body, *, skip_llm=False)`. It follows the fixed order in contract §2 and times each stage with `time.perf_counter()` (integer ms).
+- [x] Load models once in a FastAPI lifespan handler: `TriageClassifier.load()`, `Retriever.load()`, `BurstDetector(...)`, `AgentPipeline(...)`. Run one warm-up `triage("warmup", "warm up", skip_llm=True)`.
+- [x] Progressive wiring: if a module is missing (`ImportError`) or its artifact is missing, fall back to a stub in `api/stubs.py` that returns contract-shaped data. `/health` reports which parts are real. Team A must never block on Team B.
 
 ### A2.3 Holdout evaluation script (by T+1:45, first full run at T+2:30)
-- [ ] `eval/run_eval.py`. Flags: `--limit N`, `--llm-sample N` (default 0), `--out eval/results`.
+- [x] `eval/run_eval.py`. Flags: `--limit N`, `--llm-sample N` (default 0), `--out eval/results`.
   1. Re-check the leakage asserts from data-and-leakage §3. Compute the split fingerprint.
   2. Load **only** `test_inputs.parquet`. Call `api.service.triage(subject, body, skip_llm=True)` for every row (in-process: same code path as the demo). Save the predictions, escalation status, reason codes, detected language and per-stage latency to `eval/results/test_predictions.parquet` (gitignored).
   3. **Only then** load `test_labels.parquet` and score:
@@ -105,7 +105,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
      - language detection accuracy against the `language` label
      - latency p50/p95 per stage, and total (skip_llm)
   4. Write `eval/results/metrics.json` (shape below) and `eval/results/metrics.md` (human-readable tables). Commit both.
-- [ ] Batch the classifier/embedding work if the full test run takes over 10 minutes, but keep the per-ticket latency numbers honest: measure them on a 300-ticket sample through `triage()`.
+- [x] Batch the classifier/embedding work if the full test run takes over 10 minutes, but keep the per-ticket latency numbers honest: measure them on a 300-ticket sample through `triage()`.
 
 ### A2.4 Integration 1 (T+2:00)
 - [ ] Wire the real classifier and retriever into `service.py` (replace stubs). Merge after A1.

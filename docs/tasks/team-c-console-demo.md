@@ -12,6 +12,8 @@ Agent: work only on the tasks below, in order. Tick each box in the same commit 
 
 If the `frontend-design` skill is available, load it before building the UI.
 
+**Design rules:** read [design-rules.md](../design-rules.md) before writing any UI code. It covers drafts, palette, type, layout and copy, and how they override the layout sketch below.
+
 ---
 
 ### C.1 Stack decision (by T+0:15)
