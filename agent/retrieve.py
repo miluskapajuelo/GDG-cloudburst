@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 # IMPORT ORDER MATTERS (macOS segfault otherwise): torch, via sentence-transformers, must load
 # before faiss, and faiss must run single-threaded. Each ships its own OpenMP runtime, and they
 # crash during CPU encoding. Single-threaded flat search over ~23k vectors still takes ~1 ms.
+# The setting is per-thread, so search() re-applies it on every calling thread (see below).
 from sentence_transformers import SentenceTransformer  # noqa: I001  (must precede faiss)
 import faiss  # noqa: E402
 
@@ -98,6 +99,10 @@ class Retriever:
         exclude = exclude_ids or set()
         n = min(self.size, k + len(exclude) + 5)
         query = np.ascontiguousarray(np.asarray(vector, dtype=np.float32).reshape(1, -1))
+        # omp_set_num_threads is per-thread: the module-level call only covers the importing thread.
+        # The API serves each request on a worker thread, where faiss would go multi-threaded again
+        # and segfault on macOS. So set it again here, on the calling thread (cheap).
+        faiss.omp_set_num_threads(1)
         sims, idxs = self._index.search(query, n)
 
         out: list[dict] = []
