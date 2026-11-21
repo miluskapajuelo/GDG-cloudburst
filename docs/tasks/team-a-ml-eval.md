@@ -3,7 +3,7 @@
 | Member | Role | Owns |
 |---|---|---|
 | `shaadqrsh` | **A1**: data split, classifier, demo machine | `ml/`, `shared/text.py`, the kickoff scaffold |
-| `GUSTAVO_LOGIN` | **A2**: API service, evaluation, metrics, threshold tuning | `api/`, `eval/` |
+| `gbuitra` | **A2**: API service, evaluation, metrics, threshold tuning | `api/`, `eval/` |
 
 Read first: [contract.md](../contract.md), [data-and-leakage.md](../data-and-leakage.md), [escalation-policy.md](../escalation-policy.md) §5.
 
@@ -71,7 +71,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 
 ---
 
-## A2: Gustavo (`GUSTAVO_LOGIN`)
+## A2: Gustavo (`gbuitra`)
 
 Agent: work only on the tasks in this section, in order. Tick each box in the same commit as the work.
 
