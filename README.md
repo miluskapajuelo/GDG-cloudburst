@@ -8,9 +8,11 @@ SentinelDesk reads an incoming support ticket in English or German, predicts its
 A rule-based safety gate decides whether the ticket goes to the on-call engineer, to human review, or gets an AI reply draft. Every decision carries a reason code with the numbers behind it.
 Drafts come from Gemini, may only state facts from cited past resolutions, and are never sent without a person approving them in the console.
 
-![SentinelDesk console: a German hospital VPN outage escalated to the on-call engineer, with the reason, the predicted labels and four cited English precedents](web/screenshots/console-ticket.png)
+![SentinelDesk console: a German hospital VPN outage escalated to the on-call engineer, with the reasons, the predicted labels and cited English precedents](web/screenshots/console-ticket.png)
 
-*The ticket workspace for a German VPN outage. The gate routes it to on-call (`HIGH_PRIORITY_INCIDENT`, P(high)=0.79, P(Incident)=0.86) and retrieves English VPN resolutions as evidence. Screenshot taken in the console's "Demo data" mode.*
+*The ticket workspace for a German VPN outage (demo-01), from the live API with the trained models on 2026-11-21. The gate routes it to on-call with `HIGH_PRIORITY_INCIDENT` (P(high)=0.75, P(Incident)=0.49) and `LOW_CLASSIFIER_CONFIDENCE` (type 0.49 < 0.50). The two closest precedents are English VPN tickets (similarity 0.81 and 0.80), and the German draft cites both. Three other VPN tickets in the same 15 minutes raise the burst flag.*
+
+More live screenshots: [inbox with the burst banner](web/screenshots/console-inbox.png) and [a German auto-draft that cites an English ticket](web/screenshots/console-draft.png).
 
 ## Architecture
 
@@ -67,6 +69,7 @@ cd web && npm install && npm run dev   # the console at http://localhost:5173
 
 - `make_split` uses the dataset CSV committed in `data/`. If that file is missing, it downloads it from Hugging Face.
 - The console calls `http://localhost:8000` by default. To use another address, put `VITE_API_URL=...` in `web/.env.local`.
+- The sidebar shows "Support Agent" by default. To show your own name, put `VITE_AGENT_NAME=...` (and optionally `VITE_AGENT_ROLE=...`) in `web/.env.local` and restart the console.
 - Mock API (no models needed): `SENTINEL_MOCK=1 uvicorn api.main:app --port 8000`.
 - Windows: `run.bat` starts the API and the console together (`run.bat mock` for the mock API).
 - If the API is unavailable during a presentation, the console's **Demo data** switch in the top bar loads built-in sample tickets and a local heuristic. A banner says so while it is on.
