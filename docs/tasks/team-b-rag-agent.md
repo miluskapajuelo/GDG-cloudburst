@@ -49,7 +49,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 **Done when:** search takes under 50 ms per query after warm-up. Merge for Integration 1 at T+2:00.
 
 ### B1.5 Cross-lingual check (by T+2:45)
-- [ ] Run 5 German queries and 5 English queries. Record in `agent/NOTES.md` how often the top 5 contains the other language and whether it is relevant. That is the evidence for the cross-lingual bonus in the demo.
+- [x] Run 5 German queries and 5 English queries. Record in `agent/NOTES.md` how often the top 5 contains the other language and whether it is relevant. That is the evidence for the cross-lingual bonus in the demo.
 - [ ] **(optional, only if the precedents look off-topic)** Add hybrid retrieval: BM25 (`rank_bm25`) top 20 + dense top 20, merged with reciprocal rank fusion. Ask the human first.
 
 ### B1.6 Burst detection: `agent/burst.py` (by T+3:15)
