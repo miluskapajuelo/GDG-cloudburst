@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Avatar, Button, EmptyState, Icon, Kbd, LangChip, PriorityBadge, type IconName } from '../../components/ui'
+import { Avatar, Button, EmptyState, Icon, IconChip, Kbd, LangChip, PriorityBadge, type IconName } from '../../components/ui'
 import { band, duration, PRIORITY_LABEL, pct, sla, STATUS_LABEL } from '../../lib/format'
 import { isTyping } from '../../lib/router'
 import { decision, DECISION_COPY, DECISION_ORDER, isEscalated, isOpen, minConfidence, riskSort, waitingMs, type Decision } from '../../lib/ticket'
@@ -82,7 +82,7 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
         {/* Page header */}
         <header className="flex flex-wrap items-end gap-x-6 gap-y-3">
           <div className="min-w-0">
-            <h1 className="text-[32px] leading-[1.15] text-ink">{VIEW_COPY[view].title}</h1>
+            <h1 className="text-[40px] leading-[1.1] text-ink">{VIEW_COPY[view].title}</h1>
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">{VIEW_COPY[view].description}</p>
             {view === 'escalated' && (
               <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
@@ -103,12 +103,12 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
           <div className="mt-8 space-y-3">
             {unackCritical.map((t) => (
               <a key={t.id} href={`#/${view}/${t.id}`}
-                className="group flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-oncall/25 bg-oncall-soft px-4 py-3.5 transition-colors hover:border-oncall/45 sm:px-5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-oncall text-on-route"><Icon name="siren" className="h-[18px] w-[18px]" /></span>
+                className="group flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-oncall/25 bg-oncall-soft px-4 py-4 transition-colors hover:border-oncall/45 sm:px-5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-oncall text-on-route"><Icon name="siren" className="h-5 w-5" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-x-2 text-[13px] font-semibold text-oncall">
                     Critical incident
-                    <span className="rounded border border-oncall/30 px-1.5 py-px text-xs font-medium">Not acknowledged</span>
+                    <span className="rounded-full bg-oncall/15 px-2 py-px text-xs font-medium">Not acknowledged</span>
                   </p>
                   <p className="mt-0.5 truncate text-[15px] font-medium text-ink" title={t.translation?.subject ?? t.subject}>{t.translation?.subject ?? t.subject}</p>
                   <p className="mt-0.5 flex flex-wrap gap-x-4 text-[13px] text-ink-2">
@@ -117,14 +117,14 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
                     <span className="font-mono text-xs text-muted">{t.id}</span>
                   </p>
                 </div>
-                <span className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-oncall px-3.5 text-sm font-medium text-on-route transition-opacity group-hover:opacity-90">
+                <span className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-on-primary transition-colors group-hover:bg-primary-hover">
                   Open incident <Icon name="chevronRight" className="h-4 w-4" />
                 </span>
               </a>
             ))}
             {burst && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line bg-surface px-4 py-3 sm:px-5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-review-soft text-review"><Icon name="zap" className="h-[18px] w-[18px]" /></span>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-line bg-surface px-4 py-3.5 sm:px-5">
+                <IconChip icon="zap" tone="review" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-ink">
                     Possible major incident: <span className="tabular">{burst.cluster_size}</span> similar reports in <span className="tabular">{burst.window_minutes}</span> minutes
@@ -139,7 +139,7 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
 
         {/* Summary */}
         {view === 'inbox' && (
-          <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3 lg:grid-cols-5">
+          <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <Stat label="Open tickets" value={open.length} icon="inbox" />
             <Stat label="Critical incidents" value={open.filter((t) => decision(t) === 'critical').length} tone="oncall" icon="siren" />
             <Stat label="Need human review" value={open.filter((t) => decision(t) === 'review').length} tone="review" icon="eye" />
@@ -152,20 +152,20 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
         <div className="mt-8 flex flex-wrap items-center gap-2">
           <label className="relative min-w-0 flex-1 sm:max-w-xs">
             <span className="sr-only">Search tickets</span>
-            <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <Icon name="search" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input id="inbox-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tickets"
-              className="h-9 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-ink transition-colors hover:border-ink-2/30 focus:border-accent focus:outline-none focus-visible:outline-none focus:ring-3 focus:ring-accent/15" />
+              className="h-9 w-full rounded-full border border-line bg-surface-2 pl-10 pr-4 text-sm text-ink transition-colors hover:border-ink-2/30 focus:border-accent focus:outline-none focus-visible:outline-none focus:ring-3 focus:ring-accent/15" />
           </label>
           <Filter label="Priority" value={prio} onChange={setPrio} options={PRIORITIES.map((p) => [p, PRIORITY_LABEL[p]])} />
           <Filter label="Queue" value={queue} onChange={setQueue} options={QUEUES.map((x) => [x, x])} />
           <Filter label="Language" value={lang} onChange={setLang} options={[['en', 'English'], ['de', 'German']]} />
           <Filter label="Status" value={status} onChange={setStatus} options={(Object.keys(STATUS_LABEL) as WorkflowStatus[]).filter((s) => (view === 'resolved') === (s === 'resolved' || s === 'closed')).map((s) => [s, STATUS_LABEL[s]])} />
-          {filtersOn && <button onClick={clear} className="h-9 rounded-lg px-3 text-sm font-medium text-accent hover:bg-accent-soft">Clear filters</button>}
+          {filtersOn && <button onClick={clear} className="h-9 rounded-full px-3.5 text-sm font-medium text-accent hover:bg-accent-soft">Clear filters</button>}
           <span className="tabular ml-auto text-[13px] text-muted">{filtered.length} of {scoped.length} tickets</span>
         </div>
 
         {/* List */}
-        <div ref={listRef} className="mt-4 overflow-hidden rounded-xl border border-line bg-surface shadow-soft">
+        <div ref={listRef} className="mt-4 overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
           <div className={`hidden ${COLS} gap-x-4 border-b border-line px-5 py-2.5 text-xs font-medium text-muted xl:grid`} aria-hidden>
             <span>Priority</span><span>Ticket</span><span>Type</span><span>Queue</span><span>Lang</span><span>Confidence</span><span>Decision</span><span /><span className="text-right">Waiting</span>
           </div>
@@ -185,7 +185,7 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
                   <header className="flex items-center gap-2.5 border-b border-line bg-surface-2 px-5 py-2.5">
                     <Icon name={DECISION_ICON[g.key as Decision]} className={`h-4 w-4 ${DECISION_CLS[g.key as Decision]}`} />
                     <h2 className="text-[13px] font-semibold text-ink">{DECISION_COPY[g.key as Decision].group}</h2>
-                    <span className="tabular rounded-md bg-surface-3 px-1.5 py-px font-mono text-xs font-medium text-ink-2">{g.items.length}</span>
+                    <span className="tabular rounded-full bg-surface-3 px-2 py-px text-xs font-medium text-ink-2">{g.items.length}</span>
                     <span className="hidden min-w-0 truncate text-[13px] text-muted md:inline">{DECISION_COPY[g.key as Decision].hint}</span>
                   </header>
                 )}
@@ -202,11 +202,14 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
 const COLS = 'xl:grid-cols-[100px_minmax(0,1fr)_84px_156px_56px_112px_128px_32px_76px]'
 
 function Stat({ label, value, tone, icon }: { label: string; value: number | string; tone?: 'oncall' | 'review' | 'auto'; icon: IconName }) {
-  const color = tone === 'oncall' ? 'text-oncall' : tone === 'review' ? 'text-review' : tone === 'auto' ? 'text-auto' : 'text-muted'
+  const color = tone === 'oncall' ? 'text-oncall' : tone === 'review' ? 'text-review' : tone === 'auto' ? 'text-auto' : 'text-ink-2'
   return (
-    <div className="min-w-0 border-l border-line pl-4">
-      <dt className="flex items-center gap-2 text-[13px] text-muted"><Icon name={icon} className={`h-4 w-4 ${color}`} />{label}</dt>
-      <dd className="tabular mt-1.5 font-mono text-[26px] font-medium leading-none tracking-[-0.02em] text-ink">{value}</dd>
+    <div className="min-w-0 rounded-2xl border border-line bg-surface p-4 shadow-soft">
+      <dt className="flex items-center gap-2.5 text-[13px] text-ink-2">
+        <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full bg-surface-3 ${color}`}><Icon name={icon} className="h-3.5 w-3.5" /></span>
+        {label}
+      </dt>
+      <dd className="numeral mt-4 text-[40px] text-ink">{value}</dd>
     </div>
   )
 }
@@ -215,16 +218,16 @@ function Filter({ label, value, onChange, options }: { label: string; value: str
   const active = value !== 'all'
   const current = options.find(([v]) => v === value)?.[1]
   return (
-    <label className={`relative inline-flex h-9 items-center rounded-lg border text-sm transition-colors ${active ? 'border-accent/40 bg-accent-soft' : 'border-line-strong bg-surface hover:border-ink-2/30'}`}>
+    <label className={`relative inline-flex h-9 items-center rounded-full border text-sm transition-colors ${active ? 'border-transparent bg-primary' : 'border-line bg-surface-2 hover:border-line-strong'}`}>
       <span className="pointer-events-none flex items-center gap-1.5 pl-3 pr-8">
-        <span className="text-muted">{label}</span>
-        <span className={active ? 'font-medium text-accent' : 'font-medium text-ink'}>{current ?? 'All'}</span>
+        <span className={active ? 'text-on-primary/70' : 'text-muted'}>{label}</span>
+        <span className={active ? 'font-medium text-on-primary' : 'font-medium text-ink'}>{current ?? 'All'}</span>
       </span>
       <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} className="absolute inset-0 cursor-pointer appearance-none opacity-0">
         <option value="all">{label}: All</option>
         {options.map(([v, l]) => <option key={v} value={v}>{label}: {l}</option>)}
       </select>
-      <Icon name="chevronDown" className={`pointer-events-none absolute right-2.5 h-4 w-4 ${active ? 'text-accent' : 'text-muted'}`} />
+      <Icon name="chevronDown" className={`pointer-events-none absolute right-3 h-4 w-4 ${active ? 'text-on-primary' : 'text-muted'}`} />
     </label>
   )
 }
