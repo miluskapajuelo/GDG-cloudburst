@@ -104,3 +104,4 @@ The source of truth for who does what is the roster in [CLAUDE.md](../CLAUDE.md)
 Add one line per decision: `T+h:mm — decision — who`.
 
 - T+0:00 — Plan adopted: 3 teams. A: ML & Eval ×2 (shaadqrsh, Gustavo). B: Agent ×2 (Karanpatel3114, prithvipoojari). C: Frontend ×1 (miluskapajuelo) — all
+- T+0:15 — C.1 stack: Vite 8 + React 19 + TypeScript + Tailwind v4 (`@tailwindcss/vite`), lucide-react icons, oxlint. Not Streamlit. Prototype currently lives in `ui/`; it moves to `web/` (the roster folder) in C.2 — miluskapajuelo
