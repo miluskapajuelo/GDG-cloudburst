@@ -95,7 +95,7 @@ Fill in the skeleton `README.md` (already in the repo). Get the numbers from A2 
 - [x] Limitations and next steps, and the team with their roles
 
 ### C.9 Demo script and rehearsal (by T+4:45)
-- [ ] Write `docs/demo-script.md`: a 5-minute run sheet with timings. Suggested flow:
+- [x] Write `docs/demo-script.md`: a 5-minute run sheet with timings. Suggested flow:
   1. (0:30) The problem and what SentinelDesk does
   2. (1:00) German VPN outage (`demo-01`): ON_CALL badge, German draft, English precedents cited (cross-lingual)
   3. (0:45) Password reset (`demo-02`): Auto-Draft Ready, grounded draft with citations
