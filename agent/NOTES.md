@@ -125,11 +125,11 @@ Demo-02 returned `AUTO_DRAFT` with drafting off. With Gemini enabled it escalate
   - `HIGH_PRIORITY_INCIDENT` → `ON_CALL` when high-priority probability is ≥ 0.20 and incident probability is ≥ 0.30.
   - `PROMPT_INJECTION_SUSPECTED` → `HUMAN_REVIEW` when an override attempt blocks drafting.
   - `LOW_CLASSIFIER_CONFIDENCE` → `HUMAN_REVIEW` when type or priority confidence falls below 0.50, or queue confidence falls below 0.25.
-  - `NO_PRECEDENT` → `HUMAN_REVIEW` when retrieval is empty or the top score is below 0.55. Drafting is blocked.
+  - `NO_PRECEDENT` → `HUMAN_REVIEW` when retrieval is empty or the top score is below 0.50. Drafting is blocked.
   - `UNSUPPORTED_REQUEST` → `HUMAN_REVIEW` when the ticket asks for a sensitive category (refund, pricing, legal, SLA or security) that no retrieved precedent answer covers.
   - `LLM_INSUFFICIENT_EVIDENCE` → `HUMAN_REVIEW` when Gemini returns a holding reply because the evidence is insufficient.
   - `CITATION_CHECK_FAILED` → `HUMAN_REVIEW` when a citation or figure fails validation.
   - `LLM_UNAVAILABLE` → `HUMAN_REVIEW` when generation fails.
 
-- **Cross-language evidence.** Showcase demo-01 is a German VPN outage. It retrieved 2 English VPN tickets at 0.81 and 0.80. In live runs with English precedents, German drafts cited them (for example `TKT-00412` and `TKT-03187`). Replies used the requested language in 7 of 7 live runs. The German printer ticket demo-15 topped out at 0.53, below `T_SIM` (0.55), so it triggered `NO_PRECEDENT`. B1.5's full 5+5 table is pending merge.
+- **Cross-language evidence.** Showcase demo-01 is a German VPN outage. It retrieved 2 English VPN tickets at 0.81 and 0.80. In live runs with English precedents, German drafts cited them (for example `TKT-00412` and `TKT-03187`). Replies used the requested language in 7 of 7 live runs. The German printer ticket demo-15 now clears `T_SIM` with a top score of 0.533, and its German draft cited the English printer ticket `TKT-11933`. B1.5's full 5+5 table is pending merge.
 - **Limitations.** Sensitive terms can overmatch or miss rephrased requests. The figure check covers money and percentages. Other claims still need human review. Thresholds were tuned on KB validation data (A2.7 sweep, applied in #30). Live drafts ran 81–97 words, with about 1–3.5 s per Gemini call. With B2.6, an HTTP 504 or timeout ends generation on that attempt and becomes `LLM_UNAVAILABLE`.
