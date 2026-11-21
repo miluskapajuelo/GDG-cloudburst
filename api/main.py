@@ -37,10 +37,10 @@ CORS_ORIGINS = [
     "http://127.0.0.1:8501",
 ]
 
-# Contract example values; /config returns these in mock mode (nothing is loaded there).
+# agent/config.py defaults (tuned, B2.7); /config returns these in mock mode (nothing is loaded there).
 MOCK_CONFIG: dict[str, Any] = {
-    "T_HIGH_PRIORITY_P": 0.35, "T_INCIDENT_P": 0.40, "T_CONF_TYPE": 0.45, "T_CONF_PRIORITY": 0.45,
-    "T_CONF_QUEUE": 0.25, "T_SIM": 0.55, "TOP_K": 5, "BURST_SIM": 0.75, "BURST_MIN": 3, "BURST_WINDOW_MIN": 15,
+    "T_HIGH_PRIORITY_P": 0.20, "T_INCIDENT_P": 0.30, "T_CONF_TYPE": 0.50, "T_CONF_PRIORITY": 0.50,
+    "T_CONF_QUEUE": 0.25, "T_SIM": 0.55, "TOP_K": 5, "BURST_SIM": 0.65, "BURST_MIN": 3, "BURST_WINDOW_MIN": 15,
 }
 
 HEALTH_DEFAULTS: dict[str, Any] = {
