@@ -31,8 +31,8 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 **Done when:** the 3 files exist, the asserts pass, and the fingerprint is posted.
 
 ### A1.3 Quick EDA (by T+0:45)
-- [ ] Write `python -m ml.eda`. It prints: language mix, null/empty subject %, class counts for `type`, `priority` and `queue` (KB only), the number of high-priority Incidents in KB and in val (test support is reported later by `eval/run_eval.py`; EDA never reads test labels), text length percentiles, the count of exact-duplicate bodies shared between KB and test, and any `<placeholder>` tokens found in body/answer.
-- [ ] Write the results to `ml/EDA.md`. Paste the headline numbers into §6 of `data-and-leakage.md` (an allowed edit for A1).
+- [x] Write `python -m ml.eda`. It prints: language mix, null/empty subject %, class counts for `type`, `priority` and `queue` (KB only), the number of high-priority Incidents in KB and in val (test support is reported later by `eval/run_eval.py`; EDA never reads test labels), text length percentiles, the count of exact-duplicate bodies shared between KB and test, and any `<placeholder>` tokens found in body/answer.
+- [x] Write the results to `ml/EDA.md`. Paste the headline numbers into §6 of `data-and-leakage.md` (an allowed edit for A1).
 
 ### A1.4 Classifier (by T+1:30)
 - [ ] `ml/train.py`:
