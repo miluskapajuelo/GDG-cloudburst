@@ -1,4 +1,4 @@
-﻿# --- data & build artifacts (never commit: leakage + size) ---
+# --- data & build artifacts (never commit: leakage + size) ---
 /data/
 artifacts/
 *.parquet
