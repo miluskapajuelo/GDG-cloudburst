@@ -149,7 +149,7 @@ def get_metrics() -> dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"could not read metrics.json: {exc}") from exc
 
 
-def _mock_triage(req: TriageRequest) -> TriageResponse:
+def _mock_triage(req: TriageRequest, *, skip_llm: bool = False) -> TriageResponse:
     data = json.loads(MOCK_FIXTURE_PATH.read_text(encoding="utf-8"))
     data["request_id"] = str(uuid.uuid4())
     data["mock"] = True
@@ -158,6 +158,11 @@ def _mock_triage(req: TriageRequest) -> TriageResponse:
         "body_chars": len(req.body),  # length as received, before truncation
         "truncated": len(req.body) > MAX_BODY_CHARS,
     }
+    if skip_llm:  # contract: no LLM call -> draft is null and generate is 0
+        lat = data["latency_ms"]
+        lat["total"] = max(0, lat["total"] - lat["generate"])
+        lat["generate"] = 0
+        data["draft"] = None
     return TriageResponse.model_validate(data)
 
 
@@ -168,7 +173,7 @@ def triage(
 ) -> TriageResponse:
     if is_mock_mode():
         try:
-            return _mock_triage(req)
+            return _mock_triage(req, skip_llm=skip_llm)
         except Exception as exc:
             log.exception("mock triage failed")
             raise HTTPException(status_code=500, detail=str(exc)) from exc
