@@ -35,15 +35,15 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [x] Write the results to `ml/EDA.md`. Paste the headline numbers into §6 of `data-and-leakage.md` (an allowed edit for A1).
 
 ### A1.4 Classifier (by T+1:30)
-- [ ] `ml/train.py`:
+- [x] `ml/train.py`:
   - Train only on rows of `data/kb_train.parquet` with `is_val == False`. Input text: `build_text(subject, body)`.
   - Features: one shared `FeatureUnion` of `TfidfVectorizer(analyzer="word", ngram_range=(1,2), min_df=2, sublinear_tf=True, max_features=200_000)` and `TfidfVectorizer(analyzer="char_wb", ngram_range=(3,5), min_df=3, sublinear_tf=True, max_features=300_000)`. Fit it once.
   - Heads: one `LogisticRegression(class_weight="balanced", max_iter=2000, C=4.0)` per target (`type`, `queue`, `priority`), using the `saga` or `liblinear` solver.
   - Evaluate on the val rows. Print macro-F1 and accuracy per head, and val HPI recall (predicted high **and** Incident, among true high Incidents).
   - Save one bundle to `artifacts/clf.joblib`: `{"vectorizer", "heads": {...}, "labels": {...}, "trained_on": "kb_fit", "version"}`. Also write `artifacts/labels.json`.
   - Write val probabilities to `artifacts/val_preds.parquet` (`ticket_id`, and per-head `probs` as columns). A2 uses them for threshold tuning.
-- [ ] `ml/predict.py`: `TriageClassifier.load()` and `.predict(text)` returning the contract shape (`label`, `confidence`, `probs` as plain Python floats).
-- [ ] `__main__` smoke test: predict on 3 hand-written tickets (one en, one de, one with an empty subject).
+- [x] `ml/predict.py`: `TriageClassifier.load()` and `.predict(text)` returning the contract shape (`label`, `confidence`, `probs` as plain Python floats).
+- [x] `__main__` smoke test: predict on 3 hand-written tickets (one en, one de, one with an empty subject).
 
 **Done when:** training takes under 5 minutes on a laptop, `predict` takes under 20 ms per ticket, and val metrics are printed and pasted into the PR description.
 
