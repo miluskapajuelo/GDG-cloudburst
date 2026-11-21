@@ -1,6 +1,6 @@
 # SentinelDesk: speaker notes
 
-Presenter: Shaad. The slot is 5 minutes, then 3 minutes of judge questions. These notes follow the 16 slides in [slides.html](slides.html). The demo part follows the run sheet in [docs/demo-script.md](../demo-script.md), cut down to fit around the slides.
+Presenter: Shaad. The slot is 5 minutes, then 3 minutes of judge questions. These notes follow the 15 slides in [slides.html](slides.html). The demo part follows the run sheet in [docs/demo-script.md](../demo-script.md), cut down to fit around the slides.
 
 ## Set up (10 minutes before)
 
@@ -21,11 +21,10 @@ Presenter: Shaad. The slot is 5 minutes, then 3 minutes of judge questions. Thes
 | 9 | Live demo (switch to the console) | 2:20 | 4:00 |
 | 10 | Results | 0:30 | 4:30 |
 | 11 | Leakage controls | 0:20 | 4:50 |
-| 12 | Limitations and next steps | skip if late | 4:50 |
-| 13 | Questions | 0:10 | 5:00 |
-| 14 to 16 | Backup, for questions only | | |
+| 12 | Limitations and next steps, then the closing line | 0:10 | 5:00 |
+| 13 to 15 | Backup, for questions only | | |
 
-If you run late, skip slide 12 and drop demo-07 from the demo. Say one sentence for slide 11.
+If you run late, cut slide 12 down to the closing line and drop demo-07 from the demo. Say one sentence for slide 11.
 
 ## Slide by slide
 
@@ -127,19 +126,17 @@ Close the dialog. The red banner stays at the top of the inbox. Switch back to t
 
 > "On leakage: we fixed the split with seed 42, and every laptop checked the same fingerprint. Only the scorer reads the test labels, after the predictions exist. We tuned thresholds on a validation slice of the training data, never on the test set."
 
-### 12. Limitations and next steps (skip if late)
+### 12. Limitations and next steps, and the close (0:10)
 
 > "Queue and priority are still modest, and German retrieval is weaker than English. Next, we'd try a fine-tuned multilingual encoder and hybrid retrieval for German."
 
-### 13. Questions (0:10)
+If you are late, skip the line above and say only the closing line:
 
 > "That's SentinelDesk. Each of us can take questions on our own part. Thank you."
 
-Stay on this slide during questions. It shows who owns what.
-
 ## Questions: who answers and what to say
 
-Hand each question to the person who built that part. If they are not in the room, use the answer below. The backup slides are at the end of the deck: press End for slide 16, then the left arrow for 15 and 14.
+Hand each question to the person who built that part. If they are not in the room, use the answer below. The backup slides are at the end of the deck: press End for slide 15, then the left arrow for 14 and 13.
 
 | Topic | Who |
 |---|---|
