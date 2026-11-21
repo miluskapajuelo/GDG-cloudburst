@@ -16,35 +16,35 @@ Read first: [contract.md](../contract.md) (§2 has your exact function signature
 Agent: work only on the tasks in this section, in order. Tick each box in the same commit as the work.
 
 ### B1.0 Start the model download (T+0:00, takes 2 minutes)
-- [ ] After `pip install -r requirements.txt`, run `python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"`. This caches the model while you work on B1.1.
+- [x] After `pip install -r requirements.txt`, run `python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"`. This caches the model while you work on B1.1.
 
 ### B1.1 Language detection: `agent/lang.py` (by T+0:30)
-- [ ] Use `lingua-language-detector`: `LanguageDetectorBuilder.from_languages(ENGLISH, GERMAN, FRENCH, SPANISH, PORTUGUESE, ITALIAN).build()`, built once at module import.
-- [ ] `detect_language(text)` returns `{"code", "confidence", "reply_language"}`. `reply_language` is `"de"` only when `code == "de"`, otherwise `"en"`. For empty or undetectable text, return `{"code": "en", "confidence": 0.0, "reply_language": "en"}`.
-- [ ] Test on 6 strings: en, de, short de ("VPN geht nicht"), mixed de with English tech words, empty, numbers only.
+- [x] Use `lingua-language-detector`: `LanguageDetectorBuilder.from_languages(ENGLISH, GERMAN, FRENCH, SPANISH, PORTUGUESE, ITALIAN).build()`, built once at module import.
+- [x] `detect_language(text)` returns `{"code", "confidence", "reply_language"}`. `reply_language` is `"de"` only when `code == "de"`, otherwise `"en"`. For empty or undetectable text, return `{"code": "en", "confidence": 0.0, "reply_language": "en"}`.
+- [x] Test on 6 strings: en, de, short de ("VPN geht nicht"), mixed de with English tech words, empty, numbers only.
 
 **Done when:** tests pass and a call takes under 5 ms after warm-up.
 
 ### B1.2 PII masking: `agent/pii.py` (by T+0:50)
-- [ ] Use regexes, applied in this order so that longer patterns win: `IBAN` (`\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,3})?\b`), `EMAIL`, `CARD` (13–19 digits with optional spaces/dashes), `IP` (IPv4 + simple IPv6), `PHONE` (international `+49 …`, `0049`, and national `0…` with 7 or more digits; avoid matching dates and ticket IDs), `ACCOUNT` (a keyword such as `account|acct|customer no|kundennummer|konto(nummer)?|vertragsnummer` followed by 5 or more digits).
-- [ ] Return `(masked_text, counts)` with all 6 keys always present.
-- [ ] Inspect 20 KB bodies first. If the dataset already uses placeholders (such as `<name>` or `<tel_num>`), leave them unchanged and note it in `agent/NOTES.md`.
-- [ ] Tests: each type, a German phone number, an IPv4 in a log line, `TKT-01234` must **not** be masked, and a date `21.11.2026` must **not** be masked.
+- [x] Use regexes, applied in this order so that longer patterns win: `IBAN` (`\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,3})?\b`), `EMAIL`, `CARD` (13–19 digits with optional spaces/dashes), `IP` (IPv4 + simple IPv6), `PHONE` (international `+49 …`, `0049`, and national `0…` with 7 or more digits; avoid matching dates and ticket IDs), `ACCOUNT` (a keyword such as `account|acct|customer no|kundennummer|konto(nummer)?|vertragsnummer` followed by 5 or more digits).
+- [x] Return `(masked_text, counts)` with all 6 keys always present.
+- [x] Inspect 20 KB bodies first. If the dataset already uses placeholders (such as `<name>` or `<tel_num>`), leave them unchanged and note it in `agent/NOTES.md`.
+- [x] Tests: each type, a German phone number, an IPv4 in a log line, `TKT-01234` must **not** be masked, and a date `21.11.2026` must **not** be masked.
 
 ### B1.3 Index build: `agent/build_index.py` (by T+1:30)
-- [ ] Read **only** `data/kb_train.parquet` (all rows, including `is_val`). Assert that no indexed `ticket_id` appears in `data/test_inputs.parquet` (see the leakage rules).
-- [ ] Index text: `build_text(subject, body)` from `shared/text.py`.
-- [ ] Embed with `SentenceTransformer(SENTINEL_EMBED_MODEL)`, `max_seq_length = 256`, `encode(batch_size=64, normalize_embeddings=True, convert_to_numpy=True, show_progress_bar=True)`, as float32.
-- [ ] Use FAISS `IndexFlatIP(384)` and save it as `artifacts/kb.faiss`.
-- [ ] `artifacts/kb_meta.parquet`: rows in index order. Columns: `ticket_id`, `language`, `subject`, `body_snippet` (300 chars), `answer` (full), `type`, `queue`, `priority`, `tags`, `is_val`. Run **`mask_pii` on `subject`, `body_snippet` and `answer` before saving**, because these go to the LLM.
-- [ ] Print the row count and the build time.
+- [x] Read **only** `data/kb_train.parquet` (all rows, including `is_val`). Assert that no indexed `ticket_id` appears in `data/test_inputs.parquet` (see the leakage rules).
+- [x] Index text: `build_text(subject, body)` from `shared/text.py`.
+- [x] Embed with `SentenceTransformer(SENTINEL_EMBED_MODEL)`, `max_seq_length = 256`, `encode(batch_size=64, normalize_embeddings=True, convert_to_numpy=True, show_progress_bar=True)`, as float32.
+- [x] Use FAISS `IndexFlatIP(384)` and save it as `artifacts/kb.faiss`.
+- [x] `artifacts/kb_meta.parquet`: rows in index order. Columns: `ticket_id`, `language`, `subject`, `body_snippet` (300 chars), `answer` (full), `type`, `queue`, `priority`, `tags`, `is_val`. Run **`mask_pii` on `subject`, `body_snippet` and `answer` before saving**, because these go to the LLM.
+- [x] Print the row count and the build time.
 
 **Done when:** the build finishes in under 15 minutes on CPU. If it is slower, ask the human about building once on the fastest laptop and sharing `artifacts/` outside git.
 
 ### B1.4 Retriever: `agent/retrieve.py` (by T+1:45)
-- [ ] Implement `Retriever.load()`, `.size`, `.embed(text)` (normalised, shape (384,)) and `.search(vector, k=5, exclude_ids=None)` exactly as the contract specifies.
-- [ ] `search` over-fetches `k + len(exclude_ids or ()) + 5`, drops excluded IDs, and keeps the top `k`. Clip similarity to [0, 1] and round it to 3 decimals. Build `answer_snippet` from the first 400 chars of `answer`.
-- [ ] `__main__`: run 3 queries (en VPN, de printer, en billing) and print the top 3 for each.
+- [x] Implement `Retriever.load()`, `.size`, `.embed(text)` (normalised, shape (384,)) and `.search(vector, k=5, exclude_ids=None)` exactly as the contract specifies.
+- [x] `search` over-fetches `k + len(exclude_ids or ()) + 5`, drops excluded IDs, and keeps the top `k`. Clip similarity to [0, 1] and round it to 3 decimals. Build `answer_snippet` from the first 400 chars of `answer`.
+- [x] `__main__`: run 3 queries (en VPN, de printer, en billing) and print the top 3 for each.
 
 **Done when:** search takes under 50 ms per query after warm-up. Merge for Integration 1 at T+2:00.
 
@@ -53,10 +53,10 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [ ] **(optional, only if the precedents look off-topic)** Add hybrid retrieval: BM25 (`rank_bm25`) top 20 + dense top 20, merged with reciprocal rank fusion. Ask the human first.
 
 ### B1.6 Burst detection: `agent/burst.py` (by T+3:15)
-- [ ] `BurstDetector(sim_threshold, min_cluster, window_minutes)`. Keep a `deque` of `(ts, request_id, vector, summary)`, prune entries older than the window, and protect it with a `threading.Lock`.
-- [ ] `observe(...)`: compare the new vector with the window. The cluster is the new ticket plus every ticket with cosine ≥ `sim_threshold` to it. `active = len(cluster) >= min_cluster`. `label`: the most common non-empty first 6 words of the cluster summaries, or the earliest summary truncated to 60 chars.
-- [ ] Return the contract burst object. `reset()` clears the window.
-- [ ] Test: 4 VPN-failure tickets (mixed en/de) become active at the 3rd, and 1 unrelated ticket leaves it inactive.
+- [x] `BurstDetector(sim_threshold, min_cluster, window_minutes)`. Keep a `deque` of `(ts, request_id, vector, summary)`, prune entries older than the window, and protect it with a `threading.Lock`.
+- [x] `observe(...)`: compare the new vector with the window. The cluster is the new ticket plus every ticket with cosine ≥ `sim_threshold` to it. `active = len(cluster) >= min_cluster`. `label`: the most common non-empty first 6 words of the cluster summaries, or the earliest summary truncated to 60 chars.
+- [x] Return the contract burst object. `reset()` clears the window.
+- [x] Test: 4 VPN-failure tickets (mixed en/de) become active at the 3rd, and 1 unrelated ticket leaves it inactive.
 
 ### B1.7 Tuning support (T+3:30)
 - [ ] Give A2 the distribution of val top-1 similarity (self-excluded): p1, p5, p10, p50. Also give the similarity of demo ticket `demo-08` (out-of-scope). This feeds `T_SIM`.
