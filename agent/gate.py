@@ -68,7 +68,7 @@ def pre_draft_gate(predictions: dict, precedents: list[dict], text: str) -> dict
 def _unsupported_requests(text: str, precedents: list[dict]) -> list[dict[str, str]]:
     folded_text = text.casefold()
     answers = [precedent.get("answer", "").casefold() for precedent in precedents]
-    reasons = []
+    unsupported = []
     for category, terms in config.SENSITIVE_LEXICON.items():
         patterns = [(term, _sensitive_term_pattern(term)) for term in terms]
         request_term = next((term for term, pattern in patterns if pattern.search(folded_text)), None)
@@ -76,14 +76,14 @@ def _unsupported_requests(text: str, precedents: list[dict]) -> list[dict[str, s
             continue
         has_support = any(pattern.search(answer) for _, pattern in patterns for answer in answers)
         if not has_support:
-            reasons.append({
-                "code": "UNSUPPORTED_REQUEST",
-                "message": (
-                    f'Ticket requests {category} ("{request_term}"); '
-                    "no retrieved precedent resolves this."
-                ),
-            })
-    return reasons
+            unsupported.append(f'{category} ("{request_term}")')
+
+    if not unsupported:
+        return []
+    return [{
+        "code": "UNSUPPORTED_REQUEST",
+        "message": f"Ticket requests {', '.join(unsupported)}; no retrieved precedent resolves this.",
+    }]
 
 
 def finalize_escalation(

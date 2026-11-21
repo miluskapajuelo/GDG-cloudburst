@@ -71,7 +71,11 @@ The injection filter also handles variable whitespace, formal German imperatives
 
 Sensitive terms now match from the start of a word in both tickets and precedent answers, so compounds such as `Rückerstattungsantrag` still count. `SLA`, `SLAs`, and `umgehen` require whole words. This avoids false matches in `bislang`, `Slack`, `translate`, and `umgehend`.
 
-Reply length: a grounded reply must now be 80 to 100 words (previously about 80 to 180), not counting citations. With the prompt alone, all 3 English test drafts but only 1 of 3 German drafts landed in range, because German compounds use fewer words for the same content. The prompt now aims for about 90 words, and a reply outside the range gets one rewrite request. The rewrite is kept only if it is closer to the target. The limits are `REPLY_MIN_WORDS` and `REPLY_MAX_WORDS` in `agent/config.py`, overridable with `SENTINEL_REPLY_MIN_WORDS` and `SENTINEL_REPLY_MAX_WORDS`.
+B2.6 normalizes dataset placeholders to `[name]`, `[tel_num]`, and `[acc_num]` and converts HTML line breaks before escaping ticket and precedent text. The prompt names both sets of placeholders. The final reply decodes HTML entities before citation extraction and validation.
+
+The prompt targets 80 to 100 words for a grounded reply, excluding citations. B2.6 removes the length rewrite so each successful draft uses one Gemini generation request. `.env.example` shows the `SENTINEL_REPLY_MIN_WORDS` and `SENTINEL_REPLY_MAX_WORDS` overrides.
+
+The demo-07 fixture expects `ON_CALL` when the incident thresholds fire. Prompt injection still blocks drafting. The gate reports all unsupported sensitive categories in a single `UNSUPPORTED_REQUEST` reason.
 
 ### Judge Q&A
 
