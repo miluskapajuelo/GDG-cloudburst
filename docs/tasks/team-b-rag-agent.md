@@ -59,7 +59,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [x] Test: 4 VPN-failure tickets (mixed en/de) become active at the 3rd, and 1 unrelated ticket leaves it inactive.
 
 ### B1.7 Tuning support (T+3:30)
-- [ ] Give A2 the distribution of val top-1 similarity (self-excluded): p1, p5, p10, p50. Also give the similarity of demo ticket `demo-08` (out-of-scope). This feeds `T_SIM`.
+- [x] Give A2 the distribution of val top-1 similarity (self-excluded): p1, p5, p10, p50. Also give the similarity of demo ticket `demo-08` (out-of-scope). This feeds `T_SIM`.
 
 ---
 
@@ -188,4 +188,4 @@ return {"precedents", "escalation", "draft", "burst", "latency_ms": {"retrieve",
 - [x] Take A2's recommended row from `eval/results/threshold_sweep.md`, update the defaults in `agent/config.py`, and log the change in the decision log in `docs/plan.md`.
 
 ### B2.8 Judge Q&A notes (by T+4:30)
-- [ ] Write 5 bullet points in `agent/NOTES.md`: how grounding is enforced (prompt + structured output + citation validator + figure check), how injection is handled, what each reason code means, what the cross-lingual evidence shows (from B1), and the known limitations.
+- [x] Write 5 bullet points in `agent/NOTES.md`: how grounding is enforced (prompt + structured output + citation validator + figure check), how injection is handled, what each reason code means, what the cross-lingual evidence shows (from B1), and the known limitations.

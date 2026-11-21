@@ -1,6 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { Icon } from '../../components/ui'
-import { buildAnalytics } from '../../data/mockBackend'
+import { Icon, Segmented } from '../../components/ui'
+import { buildAnalytics as demoAnalytics } from '../../data/mockBackend'
+import { buildAnalytics } from '../../lib/analytics'
+import { DEMO_MODE } from '../../lib/demoMode'
+import { useMetrics } from '../../lib/useApi'
+import { useStore } from '../../store'
 import { pct } from '../../lib/format'
 import { HBars, Histogram, Legend, StackedBars, type Series } from './charts'
 
@@ -12,7 +16,9 @@ const PRIO_SERIES: Series[] = [
 
 export default function Analytics() {
   const [days, setDays] = useState<7 | 14 | 30>(14)
-  const a = useMemo(() => buildAnalytics(days), [days])
+  const { tickets } = useStore()
+  const m = useMetrics()
+  const a = useMemo(() => (DEMO_MODE ? demoAnalytics(days) : buildAnalytics(tickets, days, m.state === 'ok' ? m.metrics : null)), [tickets, days, m])
   const [table, setTable] = useState(false)
 
   const fmtDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -20,24 +26,20 @@ export default function Analytics() {
   const totalConf = a.confidence_histogram.reduce((s, r) => s + r.count, 0)
   const topReason = a.feedback_reasons[0]
   const totalFeedback = a.feedback_reasons.reduce((s, r) => s + r.count, 0)
-  const highShare = a.by_priority.high / a.total_tickets
+  const highShare = a.total_tickets ? a.by_priority.high / a.total_tickets : 0
 
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-[1400px] space-y-8 px-4 pb-12 pt-8 sm:px-8">
         <div className="flex flex-wrap items-end gap-4">
           <div>
-            <h1 className="text-[32px] leading-[1.15] text-ink">Analytics</h1>
+            <h1 className="text-[40px] leading-[1.1] text-ink">Analytics</h1>
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">How fast the team responds, how often the safety check escalates, and how much agents trust the suggestions.</p>
           </div>
-          <div role="group" aria-label="Time range" className="ml-auto flex h-9 items-center rounded-lg border border-line-strong bg-surface p-0.5 text-sm">
-            {([7, 14, 30] as const).map((d) => (
-              <button key={d} aria-pressed={days === d} onClick={() => setDays(d)} className={`tabular h-full rounded-md px-3 transition-colors ${days === d ? 'bg-accent-soft font-medium text-accent' : 'text-muted hover:text-ink'}`}>{d} days</button>
-            ))}
-          </div>
+          <div className="ml-auto"><Segmented label="Time range" value={String(days) as '7' | '14' | '30'} options={[['7', '7 days'], ['14', '14 days'], ['30', '30 days']] as const} onChange={(v) => setDays(Number(v) as 7 | 14 | 30)} /></div>
         </div>
 
-        <section className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-auto/25 bg-auto-soft px-5 py-4">
+        <section className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-auto/25 bg-auto-soft px-5 py-4">
           <Icon name="shieldCheck" className="h-6 w-6 text-auto" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-ink">{a.hpi_recall !== null ? `${pct(a.hpi_recall)} of high-priority incidents were escalated` : 'High-priority incident recall: evaluation not run yet'}</p>
@@ -46,7 +48,7 @@ export default function Analytics() {
           <span className="text-xs text-muted">{pct(a.on_call_rate, 1)} of tickets go to on-call</span>
         </section>
 
-        <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-line bg-surface shadow-soft md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           <Kpi label="Total tickets" value={a.total_tickets.toLocaleString()} cur={a.total_tickets} prev={a.previous.total_tickets} neutral />
           <Kpi label="Escalation rate" value={pct(a.escalation_rate)} cur={a.escalation_rate} prev={a.previous.escalation_rate} goodWhenDown />
           <Kpi label="Avg triage time" value={`${(a.avg_triage_ms / 1000).toFixed(1)} s`} cur={a.avg_triage_ms} prev={a.previous.avg_triage_ms} goodWhenDown />
@@ -56,7 +58,7 @@ export default function Analytics() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <Panel className="xl:col-span-2" title="Ticket volume" takeaway={`${pct(highShare)} of tickets are high priority. The latest day shows a spike from the VPN incident.`}
+          <Panel className="xl:col-span-2" title="Ticket volume" takeaway={`${pct(highShare)} of tickets are high priority.`}
             action={<button onClick={() => setTable((t) => !t)} aria-pressed={table} className="text-xs font-medium text-accent hover:underline">{table ? 'Show chart' : 'Show table'}</button>}>
             <div className="mb-3"><Legend series={[...PRIO_SERIES].reverse()} /></div>
             {table ? (
@@ -79,9 +81,9 @@ export default function Analytics() {
                   <li key={p}>
                     <div className="mb-1.5 flex items-baseline justify-between text-sm">
                       <span className="flex items-center gap-2 font-medium capitalize text-ink"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: `var(--chart-${p})` }} />{p}</span>
-                      <span className="tabular text-ink">{n.toLocaleString()} <span className="text-muted">· {pct(n / a.total_tickets)}</span></span>
+                      <span className="tabular text-ink">{n.toLocaleString()} <span className="text-muted">· {pct(a.total_tickets ? n / a.total_tickets : 0)}</span></span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-surface-3"><div className="h-full rounded-full" style={{ width: pct(n / a.total_tickets), background: `var(--chart-${p})` }} /></div>
+                    <div className="h-2 overflow-hidden rounded-full bg-surface-3"><div className="h-full rounded-full" style={{ width: pct(a.total_tickets ? n / a.total_tickets : 0), background: `var(--chart-${p})` }} /></div>
                   </li>
                 )
               })}
@@ -90,7 +92,7 @@ export default function Analytics() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <Panel title="Confidence distribution" takeaway={`${pct(lowConf / totalConf)} of tickets fall below 40% confidence and always go to a person. Most predictions are confident.`}>
+          <Panel title="Confidence distribution" takeaway={`${pct(totalConf ? lowConf / totalConf : 0)} of tickets fall below 40% confidence and always go to a person. Most predictions are confident.`}>
             <Histogram rows={a.confidence_histogram} markerAfter={1} markerLabel="Left of the line: classifier unsure → human review" />
           </Panel>
           <Panel title="Why agents rejected suggestions" takeaway={topReason ? `“${topReason.reason}” is the most common reason (${pct(topReason.count / totalFeedback)} of negative feedback). Use it to improve the knowledge base.` : 'No negative feedback in this period.'}>
@@ -99,7 +101,7 @@ export default function Analytics() {
           </Panel>
         </div>
 
-        <p className="pb-4 text-xs text-muted">Demo data in the shape the analytics endpoint will return. Holdout recall comes from the evaluation run.</p>
+        <p className="pb-4 text-xs text-muted">{DEMO_MODE ? 'Demo data, not live. Switch off "Demo data" in the top bar to see real numbers.' : 'Computed from tickets triaged by the live API in this session. Holdout recall comes from the evaluation run (GET /metrics).'}</p>
       </div>
     </div>
   )
@@ -110,9 +112,9 @@ function Kpi({ label, value, cur, prev, goodWhenDown, neutral }: { label: string
   const up = delta > 0
   const good = neutral ? null : up !== !!goodWhenDown
   return (
-    <div className="border-b border-r border-line px-4 py-4 xl:border-b-0 xl:last:border-r-0">
-      <p className="text-[13px] text-muted">{label}</p>
-      <p className="tabular mt-1.5 font-mono text-[24px] font-medium leading-none tracking-[-0.02em] text-ink">{value}</p>
+    <div className="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+      <p className="text-[13px] text-ink-2">{label}</p>
+      <p className="numeral mt-3 text-[34px] text-ink">{value}</p>
       <p className={`mt-2 inline-flex items-center gap-0.5 text-xs ${good === null ? 'text-muted' : good ? 'text-auto' : 'text-oncall'}`}>
         <Icon name="chevronDown" className={`h-3.5 w-3.5 ${up ? 'rotate-180' : ''}`} />
         {Math.abs(delta * 100).toFixed(0)}%{good !== null && <span className="ml-1">{good ? 'better' : 'worse'}</span>}
@@ -124,7 +126,7 @@ function Kpi({ label, value, cur, prev, goodWhenDown, neutral }: { label: string
 
 function Panel({ title, takeaway, action, children, className = '' }: { title: string; takeaway: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-xl border border-line bg-surface shadow-soft ${className}`}>
+    <section className={`rounded-2xl border border-line bg-surface shadow-soft ${className}`}>
       <header className="flex items-start gap-3 px-5 pt-4">
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold text-ink">{title}</h2>

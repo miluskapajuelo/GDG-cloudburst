@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LatencyBar, SignalChips } from '../../components/results'
-import { Avatar, Button, EmptyState, Icon, Kbd, LangChip, PriorityBadge, RouteBadge, type IconName } from '../../components/ui'
-import { precedentDate } from '../../data/mockBackend'
+import { Avatar, Button, EmptyState, Icon, Kbd, LangChip, PanelHeader, PriorityBadge, RouteBadge, type IconName } from '../../components/ui'
 import { AGENT } from '../../lib/session'
 import { ago, band, dateTime, duration, LANG_LABEL, pct, PRIORITY_LABEL, REASON_COPY, STATUS_LABEL } from '../../lib/format'
 import { usePrefs } from '../../lib/prefs'
@@ -38,6 +37,14 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
     window.addEventListener('keydown', on)
     return () => window.removeEventListener('keydown', on)
   }, [next, prev, section])
+
+  // Publish the scroll area's height as --ws-h so the sticky history column can cap itself to it.
+  const scrollRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return
+    const ro = new ResizeObserver(() => node.style.setProperty('--ws-h', `${node.clientHeight}px`))
+    ro.observe(node)
+    return () => ro.disconnect()
+  }, [])
 
   if (!t) {
     return <div className="flex h-full items-center justify-center"><EmptyState icon="inbox" title="Ticket not found"><a className="text-accent hover:underline" href={`#/${section}`}>Back to {section}</a></EmptyState></div>
@@ -105,12 +112,12 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
         </div>
       </header>
 
-      {/* 3-column workspace */}
-      <div className="min-h-0 flex-1 overflow-y-auto xl:grid xl:grid-cols-[minmax(320px,30fr)_minmax(420px,42fr)_minmax(300px,28fr)] xl:overflow-hidden">
-        <section aria-label="Customer ticket" className="border-b border-line bg-surface-2 xl:overflow-y-auto xl:border-b-0 xl:border-r">
+      {/* 3-column workspace: one scroll for the page; columns hug their content; side columns stay in view and scroll on their own. */}
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto xl:grid xl:grid-cols-[minmax(320px,30fr)_minmax(420px,42fr)_minmax(300px,28fr)] xl:items-start xl:gap-6 xl:p-6">
+        <section aria-label="Customer ticket" className="border-b border-line bg-surface-2 xl:sticky xl:top-0 xl:max-h-[calc(var(--ws-h,100dvh)-3rem)] xl:overflow-y-auto xl:rounded-2xl xl:border">
           <CustomerColumn t={t} now={now} />
         </section>
-        <section aria-label="Decision and response" className="space-y-5 p-4 sm:p-6 xl:overflow-y-auto">
+        <section aria-label="Decision and response" className="space-y-5 p-4 sm:p-6 xl:p-0">
           <DecisionCard t={t} now={now} />
           <Classification t={t} />
           {t.triage && <LatencyBar latency={t.triage.latency_ms} />}
@@ -119,7 +126,7 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
             <span><Kbd>J</Kbd><Kbd>K</Kbd> next / previous</span><span><Kbd>Esc</Kbd> back</span><span><Kbd>⌘</Kbd><Kbd>↵</Kbd> send</span>
           </p>
         </section>
-        <section aria-label="Supporting history" className="border-t border-line bg-surface-2 xl:overflow-y-auto xl:border-l xl:border-t-0">
+        <section aria-label="Supporting history" className="border-t border-line bg-surface-2 xl:sticky xl:top-0 xl:max-h-[calc(var(--ws-h,100dvh)-3rem)] xl:overflow-y-auto xl:rounded-2xl xl:border">
           <HistoryColumn t={t} highlight={highlight} />
         </section>
       </div>
@@ -131,7 +138,7 @@ function DecisionPill({ t }: { t: Ticket }) {
   const d = decision(t)
   const map: Record<string, [IconName, string]> = { critical: ['siren', 'bg-oncall-soft text-oncall'], review: ['eye', 'bg-review-soft text-review'], ready: ['shieldCheck', 'bg-auto-soft text-auto'], pending: ['circleDashed', 'bg-surface-3 text-muted'] }
   const [icon, cls] = map[d]
-  return <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium ${cls}`}><Icon name={icon} className="h-3.5 w-3.5" />{DECISION_COPY[d].label}</span>
+  return <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}><Icon name={icon} className="h-3.5 w-3.5" />{DECISION_COPY[d].label}</span>
 }
 
 // ---------------------------------------------------------------------------
@@ -157,7 +164,7 @@ function CustomerColumn({ t, now }: { t: Ticket; now: number }) {
           <p className="truncate text-xs text-muted">{t.requester.email}</p>
         </div>
       </div>
-      <dl className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border border-line p-3 text-xs">
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-2xl border border-line bg-surface p-4 text-xs">
         <dt className="text-muted">Received</dt><dd className="text-right text-ink-2" title={dateTime(t.created_at)}>{ago(t.created_at, now)}</dd>
         <dt className="text-muted">Channel</dt><dd className="text-right capitalize text-ink-2">{t.channel}</dd>
         <dt className="text-muted">Original language</dt><dd className="text-right text-ink-2">{LANG_LABEL[lang] ?? lang.toUpperCase()}{t.triage && <span className="text-muted"> ({pct(t.triage.language.confidence)})</span>}</dd>
@@ -165,7 +172,7 @@ function CustomerColumn({ t, now }: { t: Ticket; now: number }) {
       </dl>
 
       {/* Original message */}
-      <article className="rounded-lg border border-line">
+      <article className="overflow-hidden rounded-2xl border border-line bg-surface">
         <header className="flex items-center gap-2 border-b border-line px-3 py-2">
           <LangChip code={lang} />
           <span className="text-xs font-medium text-ink-2">Original message</span>
@@ -218,7 +225,7 @@ function CustomerColumn({ t, now }: { t: Ticket; now: number }) {
       <form onSubmit={(e) => { e.preventDefault(); if (note.trim()) { store.message(t.id, { author: AGENT.name, role: 'agent', internal: true, body: note.trim() }); setNote('') } }}>
         <label htmlFor="note" className="mb-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-ink-2"><Icon name="lock" className="h-3 w-3" />Internal note</label>
         <div className="flex gap-2">
-          <input id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Visible to your team only" className="h-9 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-sm placeholder:text-muted" />
+          <input id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Visible to your team only" className="h-9 min-w-0 flex-1 rounded-full border border-line bg-surface-2 px-4 text-sm placeholder:text-muted" />
           <Button type="submit" disabled={!note.trim()}>Add</Button>
         </div>
       </form>
@@ -268,15 +275,15 @@ function DecisionCard({ t, now }: { t: Ticket; now: number }) {
   const related = tri.burst.active ? store.tickets.filter((x) => x.id !== t.id && x.triage?.burst.active && x.triage.burst.label === tri.burst.label) : []
 
   const cfg = {
-    critical: { cls: 'border-oncall/30', head: 'bg-oncall-soft text-oncall', icon: 'siren' as const, title: 'Escalated: critical service impact detected', sub: 'Routed to the on-call engineer. Nothing is sent to the customer automatically.' },
-    review: { cls: 'border-review/35', head: 'bg-review-soft text-review', icon: 'eye' as const, title: 'Human review required', sub: 'Read the reason below before you respond. You decide what is sent.' },
-    ready: { cls: 'border-auto/30', head: 'bg-auto-soft text-auto', icon: 'shieldCheck' as const, title: 'Safe for AI draft', sub: `No risk signals found. The suggested response is based on ${cited} historical resolution${cited === 1 ? '' : 's'}. Review it before sending.` },
-    pending: { cls: 'border-line', head: 'bg-surface-3 text-muted', icon: 'circleDashed' as const, title: 'Classification pending', sub: '' },
+    critical: { cls: 'border-oncall/30', head: '', icon: 'siren' as const, title: 'Escalated: critical service impact detected', sub: 'Routed to the on-call engineer. Nothing is sent to the customer automatically.' },
+    review: { cls: 'border-review/30', head: '', icon: 'eye' as const, title: 'Human review required', sub: 'Read the reason below before you respond. You decide what is sent.' },
+    ready: { cls: 'border-auto/25', head: '', icon: 'shieldCheck' as const, title: 'Safe for AI draft', sub: `No risk signals found. The suggested response is based on ${cited} historical resolution${cited === 1 ? '' : 's'}. Review it before sending.` },
+    pending: { cls: 'border-line', head: '', icon: 'circleDashed' as const, title: 'Classification pending', sub: '' },
   }[d]
 
   return (
-    <section aria-label="Safety decision" className={`overflow-hidden rounded-xl border bg-surface shadow-soft ${cfg.cls}`}>
-      <div className={`space-y-3 px-5 py-4 ${cfg.head}`}>
+    <section aria-label="Safety decision" className={`overflow-hidden rounded-2xl border bg-surface shadow-soft ${cfg.cls}`}>
+      <div className={`space-y-4 px-5 pb-5 pt-5 ${cfg.head}`}>
         <h2 className="sr-only">Escalation decision</h2>
         <RouteBadge route={tri.escalation.route} label={tri.escalation.badge} size="lg" />
         <p className="text-sm text-ink-2">{cfg.sub}</p>
@@ -284,11 +291,11 @@ function DecisionCard({ t, now }: { t: Ticket; now: number }) {
       </div>
       {tri.escalation.reasons.length > 0 && (
         <div className="border-t border-line">
-          <h3 className="px-5 pt-3 text-sm font-semibold text-ink">Why this decision</h3>
+          <h3 className="px-5 pt-4 text-sm font-medium text-ink-2">Why this decision</h3>
           <ul className="divide-y divide-line">
             {tri.escalation.reasons.map((r, i) => (
               <li key={i} className="px-5 py-3 text-sm">
-                <p className="text-ink"><code className="font-mono text-[13px] font-semibold">{r.code}</code>: {r.message}</p>
+                <p className="text-ink"><code className="rounded-md bg-surface-3 px-1.5 py-px font-mono text-xs font-medium">{r.code}</code> {r.message}</p>
                 {REASON_COPY[r.code] && <p className="mt-1 text-xs text-muted">What to do: {REASON_COPY[r.code].hint}</p>}
               </li>
             ))}
@@ -296,7 +303,7 @@ function DecisionCard({ t, now }: { t: Ticket; now: number }) {
         </div>
       )}
       {d === 'critical' && (
-        <div className="grid gap-3 border-t border-line px-4 py-3 text-sm sm:grid-cols-2">
+        <div className="grid gap-3 border-t border-line px-5 py-4 text-sm sm:grid-cols-2">
           <div>
             <p className="text-xs text-muted">Owner</p>
             <p className="font-medium text-ink">{t.acknowledged_by ? <span className="inline-flex items-center gap-1.5"><Icon name="check" className="h-4 w-4 text-auto" />{t.acknowledged_by}</span> : <span className="text-oncall">Not yet acknowledged</span>}</p>
@@ -334,11 +341,9 @@ function Classification({ t }: { t: Ticket }) {
   const store = useStore()
   const p = t.triage?.predictions
   return (
-    <section aria-label="Classification" className="rounded-xl border border-line bg-surface shadow-soft">
-      <header className="flex items-center justify-between border-b border-line px-5 py-3">
-        <h3 className="text-sm font-semibold text-ink">Predictions</h3>
-        <span className="inline-flex items-center gap-2 text-xs text-muted"><span className="rounded border border-ai/30 bg-ai-soft px-1.5 py-px font-medium text-ai">AI</span>Suggested by the classifier, edit if wrong</span>
-      </header>
+    <section aria-label="Classification" className="rounded-2xl border border-line bg-surface shadow-soft">
+      <PanelHeader icon="layers" tone="ai" title="Predictions" sub="Suggested by the classifier. Edit if wrong."
+        actions={<span className="rounded-full bg-ai-soft px-2.5 py-0.5 text-xs font-medium text-ai">AI</span>} />
       <div className="divide-y divide-line">
         <Field label="Type" value={t.type} options={TYPES} pred={p?.type}
           onChange={(v) => store.patch(t.id, { type: v as TicketType }, { kind: 'reclassify', text: `Type corrected: ${t.type} → ${v}` }, AGENT.name)} />
@@ -436,7 +441,6 @@ function HistoryColumn({ t, highlight }: { t: Ticket; highlight: { id: string; n
 function PrecedentCard({ p, cited, cross, highlight, onHide }: { p: Precedent; cited: boolean; cross: boolean; highlight: number; onHide: () => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLLIElement>(null)
-  const date = precedentDate(p.ticket_id)
   useEffect(() => {
     if (!highlight) return
     setOpen(true)
@@ -446,11 +450,11 @@ function PrecedentCard({ p, cited, cross, highlight, onHide }: { p: Precedent; c
     ref.current?.classList.add('flash')
   }, [highlight])
   return (
-    <li ref={ref} id={`prec-${p.ticket_id}`} className={`rounded-xl border bg-surface transition-colors ${highlight ? 'border-accent ring-2 ring-accent/25' : 'border-line'}`}>
+    <li ref={ref} id={`prec-${p.ticket_id}`} className={`rounded-2xl border bg-surface transition-colors ${highlight ? 'border-accent ring-2 ring-accent/25' : 'border-line'}`}>
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="block w-full px-3.5 py-3 text-left">
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs font-medium text-accent">{p.ticket_id}</span>
-          {cited && <span className="rounded bg-accent-soft px-1.5 py-px text-[11px] font-semibold text-accent">Cited</span>}
+          {cited && <span className="rounded-full bg-ai-soft px-2 py-px text-xs font-medium text-ai">Cited</span>}
           <span className="ml-auto flex items-center gap-1.5" title={`Cosine similarity ${p.similarity.toFixed(3)}`}>
             <span className="h-1.5 w-12 overflow-hidden rounded-full bg-surface-3"><span className="block h-full rounded-full bg-accent" style={{ width: pct(Math.max(0, Math.min(1, p.similarity))) }} /></span>
             <span className="tabular font-mono text-xs font-semibold text-ink-2">{p.similarity.toFixed(2)}</span>
@@ -459,8 +463,7 @@ function PrecedentCard({ p, cited, cross, highlight, onHide }: { p: Precedent; c
         <p className="mt-1.5 text-sm font-medium leading-snug text-ink">{p.subject || '(no subject)'}</p>
         <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
           <LangChip code={p.language} />
-          {cross && <span className="rounded border border-accent/30 bg-accent-soft px-1.5 py-px text-xs font-semibold text-accent" title="Retrieved across languages: this past ticket is in a different language than the new one">Cross-lingual</span>}
-          {date && <span>Resolved {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+          {cross && <span className="rounded-full bg-accent-soft px-2 py-px text-xs font-medium text-accent" title="Retrieved across languages: this past ticket is in a different language than the new one">Cross-lingual</span>}
         </p>
         {(p.type || p.queue || p.priority) && (
           <p className="mt-1 text-xs text-muted">{[p.type, p.queue, p.priority && `${PRIORITY_LABEL[p.priority as Priority] ?? p.priority} priority`].filter(Boolean).join(', ')}</p>

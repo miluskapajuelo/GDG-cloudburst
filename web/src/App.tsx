@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Avatar, Icon, Kbd, type IconName } from './components/ui'
 import { buildTickets } from './data/mockBackend'
+import { DEMO_MODE, setDemoMode } from './lib/demoMode'
 import { PrefsProvider } from './lib/prefs'
 import { AGENT } from './lib/session'
 import { isEscalated, isOpen } from './lib/ticket'
@@ -22,7 +23,7 @@ export default function App() {
   return (
     <ToastProvider>
       <PrefsProvider>
-        <StoreProvider seed={buildTickets}>
+        <StoreProvider seed={DEMO_MODE ? buildTickets : () => []}>
           <Workspace route={route} />
         </StoreProvider>
       </PrefsProvider>
@@ -59,6 +60,12 @@ function Workspace({ route }: { route: string[] }) {
       {navOpen && <div className="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] lg:hidden" onClick={() => setNavOpen(false)} aria-hidden />}
       <Sidebar section={section} open={navOpen} />
       <div className="flex min-w-0 flex-1 flex-col">
+        {DEMO_MODE && (
+          <div role="status" className="flex shrink-0 items-center gap-3 bg-review px-4 py-1.5 text-sm font-medium text-on-route">
+            <span className="flex-1">Demo data: built-in sample tickets and a local heuristic, not the trained model.</span>
+            <button onClick={() => setDemoMode(false)} className="rounded-full border border-current px-3 py-0.5 text-xs hover:bg-black/10">Back to live API</button>
+          </div>
+        )}
         <TopBar onMenu={() => setNavOpen(true)} onTest={() => setTestOpen(true)} />
         <main id="main" className="min-h-0 flex-1 overflow-hidden">
           {listSection && ticketId ? (
@@ -94,9 +101,9 @@ function Sidebar({ section, open }: { section: Section; open: boolean }) {
       aria-label="Main navigation"
       className={`fixed inset-y-0 left-0 z-40 glass-strong flex w-60 flex-col border-r border-line bg-chrome transition-transform lg:static lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
     >
-      <a href="#/inbox" className="flex h-14 items-center gap-2.5 px-5">
+      <a href="#/inbox" className="flex h-16 items-center gap-2.5 px-5">
         <img src="/favicon.svg" alt="" className="h-6 w-6" />
-        <span className="font-display text-[18px] font-semibold tracking-[-0.01em] text-brand">SentinelDesk</span>
+        <span className="text-[16px] font-semibold tracking-[-0.015em] text-brand">SentinelDesk</span>
       </a>
       <nav className="flex-1 space-y-0.5 px-3 pb-3 pt-2">
         {items.map((it) => (
@@ -104,13 +111,13 @@ function Sidebar({ section, open }: { section: Section; open: boolean }) {
             key={it.id}
             href={`#/${it.id}`}
             aria-current={section === it.id ? 'page' : undefined}
-            className={`group flex h-9 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors ${section === it.id ? 'bg-accent-soft font-medium text-ink' : 'text-ink-2 hover:bg-surface-3 hover:text-ink'}`}
+            className={`group flex h-9 items-center gap-3 rounded-full px-3 text-sm transition-colors ${section === it.id ? 'bg-surface-3 font-medium text-ink' : 'text-ink-2 hover:bg-surface-3/60 hover:text-ink'}`}
           >
-            <Icon name={it.icon} className={`h-4 w-4 ${section === it.id ? 'text-accent' : 'text-muted group-hover:text-ink-2'}`} />
+            <Icon name={it.icon} className={`h-4 w-4 ${section === it.id ? 'text-ink' : 'text-muted group-hover:text-ink-2'}`} />
             <span className="flex-1">{it.label}</span>
             {it.count !== undefined && (
               <span
-                className={`tabular min-w-6 rounded-md px-1.5 py-px text-center font-mono text-xs font-medium ${it.alert ? 'bg-oncall text-on-route' : section === it.id ? 'text-ink-2' : 'text-muted'}`}
+                className={`tabular min-w-6 rounded-full px-1.5 py-px text-center text-xs font-medium ${it.alert ? 'bg-oncall text-on-route' : section === it.id ? 'text-ink-2' : 'text-muted'}`}
                 title={it.alert ? 'Includes an unacknowledged critical incident' : undefined}
               >
                 {it.count}
@@ -121,7 +128,7 @@ function Sidebar({ section, open }: { section: Section; open: boolean }) {
         ))}
       </nav>
       <div className="border-t border-line p-3">
-        <a href="#/settings" className="flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors hover:bg-surface-3">
+        <a href="#/settings" className="flex items-center gap-3 rounded-full py-1.5 pl-1.5 pr-3 transition-colors hover:bg-surface-3">
           <Avatar name={AGENT.name} size="md" />
           <span className="min-w-0 flex-1 leading-tight">
             <span className="block truncate text-sm font-medium text-ink">{AGENT.name}</span>
@@ -135,21 +142,30 @@ function Sidebar({ section, open }: { section: Section; open: boolean }) {
 
 function TopBar({ onMenu, onTest }: { onMenu: () => void; onTest: () => void }) {
   return (
-    <header className="glass-strong relative z-20 flex h-14 shrink-0 items-center gap-3 border-b border-line bg-chrome px-3 sm:px-6">
-      <button className="rounded-lg p-2 text-ink-2 hover:bg-surface-3 lg:hidden" aria-label="Open navigation" onClick={onMenu}>
+    <header className="glass-strong relative z-20 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-chrome px-3 sm:px-6">
+      <button className="rounded-full p-2 text-ink-2 hover:bg-surface-3 lg:hidden" aria-label="Open navigation" onClick={onMenu}>
         <Icon name="layers" className="h-5 w-5" />
       </button>
       <button
         onClick={() => { navigate('/inbox'); requestAnimationFrame(() => document.getElementById('inbox-search')?.focus()) }}
-        className="flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-lg border border-line bg-surface-2 px-3 text-sm text-muted transition-colors hover:border-line-strong hover:text-ink-2 sm:max-w-md"
+        className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-line bg-surface-2 px-4 text-sm text-muted transition-colors hover:border-line-strong hover:text-ink-2 sm:max-w-sm lg:ml-auto"
       >
         <Icon name="search" className="h-4 w-4" />
         <span className="truncate">Search tickets, customers, IDs</span>
         <Kbd className="ml-auto hidden sm:inline">⌘K</Kbd>
       </button>
-      <div className="ml-auto flex items-center gap-3 sm:gap-4">
+      <div className="ml-auto flex items-center gap-2 sm:gap-3 lg:ml-0">
         <HealthDot />
-        <button onClick={onTest} className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-3.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-strong">
+        <button
+          onClick={() => setDemoMode(!DEMO_MODE)}
+          aria-pressed={DEMO_MODE}
+          title={DEMO_MODE ? 'Switch back to the live triage API' : 'Fallback for the presentation: load built-in demo data instead of the API'}
+          className={`inline-flex h-10 items-center rounded-full border px-3 text-xs font-medium transition-colors ${DEMO_MODE ? 'border-review bg-review-soft text-review' : 'border-line bg-surface-2 text-muted hover:text-ink'}`}
+        >
+          {DEMO_MODE ? 'Demo data on' : 'Demo data'}
+        </button>
+        <Bell />
+        <button onClick={onTest} className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover">
           <Icon name="plus" className="h-4 w-4" />
           <span className="hidden sm:inline">Test a ticket</span>
         </button>
@@ -165,11 +181,24 @@ export function HealthDot() {
       ? ['bg-auto', h.health.mock ? 'Live (mock)' : 'Live', `Model ${h.health.llm_model}, ${h.health.index_size.toLocaleString()} past tickets indexed`]
       : h.state === 'checking'
         ? ['bg-review', 'Connecting', 'Checking the triage service']
-        : ['bg-oncall', 'API offline', 'The triage API is not reachable. You are viewing demo data, and new tickets use a local fallback marked as mock.']
+        : ['bg-oncall', 'API offline', 'The triage API is not reachable. Start it with: uvicorn api.main:app --port 8000']
   return (
     <span className="hidden items-center gap-2 text-xs font-medium text-muted sm:inline-flex" title={title} role="status">
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />
       {text}
     </span>
+  )
+}
+
+/** Round bell with a coral dot while an on-call incident is unacknowledged. */
+function Bell() {
+  const { tickets } = useStore()
+  const pending = tickets.filter((t) => isOpen(t) && t.triage?.escalation.route === 'ON_CALL' && !t.acknowledged_by).length
+  return (
+    <a href="#/escalated" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-2 text-ink-2 transition-colors hover:text-ink"
+      aria-label={pending ? `${pending} unacknowledged critical incident${pending > 1 ? 's' : ''}` : 'No unacknowledged incidents'}>
+      <Icon name="bell" className="h-4 w-4" />
+      {pending > 0 && <span aria-hidden className="absolute right-2 top-2 h-2 w-2 rounded-full bg-oncall ring-2 ring-surface-2" />}
+    </a>
   )
 }
