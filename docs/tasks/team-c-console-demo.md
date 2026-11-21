@@ -17,14 +17,14 @@ If the `frontend-design` skill is available, load it before building the UI.
 ---
 
 ### C.1 Stack decision (by T+0:15)
-- [ ] The default is **Vite + React + TypeScript + Tailwind** in `web/`. Choose **Streamlit** (`web/app.py`, one file) only if the human prefers Python or is not comfortable with React. Log the choice in the decision log in `docs/plan.md`.
+- [x] The default is **Vite + React + TypeScript + Tailwind** in `web/`. Choose **Streamlit** (`web/app.py`, one file) only if the human prefers Python or is not comfortable with React. Log the choice in the decision log in `docs/plan.md`.
 - The rest of this file assumes React. For Streamlit, build the same sections with `st.columns`, `st.metric`, `st.progress`, `st.dataframe` and `st.expander`.
 
 ### C.2 Scaffold (by T+0:30)
-- [ ] Run `npm create vite@latest web -- --template react-ts`, add Tailwind, and add `web/.env.local` with `VITE_API_URL=http://localhost:8000`. Commit a `web/.env.example`.
-- [ ] In `vite.config.ts`, set `server.fs.allow: [".."]` so you can import `../shared/fixtures/*.json`.
-- [ ] `web/src/types.ts`: TypeScript types that mirror the contract response exactly. Copy the field names; do not rename them.
-- [ ] `web/src/api.ts`: `triage(subject, body)`, `health()`, `config()`, `metrics()` and `resetBurst()`, with a 60 s timeout and typed errors.
+- [x] Run `npm create vite@latest web -- --template react-ts`, add Tailwind, and add `web/.env.local` with `VITE_API_URL=http://localhost:8000`. Commit a `web/.env.example`.
+- [x] In `vite.config.ts`, set `server.fs.allow: [".."]` so you can import `../shared/fixtures/*.json`.
+- [x] `web/src/types.ts`: TypeScript types that mirror the contract response exactly. Copy the field names; do not rename them.
+- [x] `web/src/api.ts`: `triage(subject, body)`, `health()`, `config()`, `metrics()` and `resetBurst()`, with a 60 s timeout and typed errors.
 
 **Done when:** the page renders the mock fixture with no API running.
 
