@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Avatar, Button, EmptyState, Icon, IconChip, Kbd, LangChip, PriorityBadge, type IconName } from '../../components/ui'
+import { BurstBanner } from '../../components/BurstBanner'
+import { MetricsStrip } from '../../components/MetricsStrip'
+import { Avatar, Button, EmptyState, Icon, Kbd, LangChip, PriorityBadge, type IconName } from '../../components/ui'
 import { band, duration, PRIORITY_LABEL, pct, sla, STATUS_LABEL } from '../../lib/format'
 import { isTyping } from '../../lib/router'
+import { useBurstReset } from '../../lib/useBurstReset'
 import { decision, DECISION_COPY, DECISION_ORDER, isEscalated, isOpen, minConfidence, riskSort, waitingMs, type Decision } from '../../lib/ticket'
 import { useNow, useStore } from '../../store'
 import { PRIORITIES, QUEUES, type Ticket, type WorkflowStatus } from '../../types'
+import BurstScenarioDialog from './BurstScenarioDialog'
 
 type View = 'inbox' | 'escalated' | 'resolved'
 
@@ -18,8 +22,11 @@ const DECISION_ICON: Record<Decision, IconName> = { critical: 'siren', review: '
 const DECISION_CLS: Record<Decision, string> = { critical: 'text-oncall', review: 'text-review', ready: 'text-auto', pending: 'text-muted' }
 
 export default function Inbox({ view, onTest }: { view: View; onTest: () => void }) {
-  const { tickets } = useStore()
+  const { tickets, burstClearedAt } = useStore()
   const now = useNow()
+  const resetBurst = useBurstReset()
+  const [resetting, setResetting] = useState(false)
+  const [burstOpen, setBurstOpen] = useState(false)
   const [q, setQ] = useState('')
   const [prio, setPrio] = useState('all')
   const [queue, setQueue] = useState('all')
@@ -70,8 +77,17 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
 
   const open = tickets.filter(isOpen)
   const unackCritical = open.filter((t) => t.triage?.escalation.route === 'ON_CALL' && !t.acknowledged_by)
-  const burst = open.find((t) => t.triage?.burst.active)?.triage?.burst
-  const burstTickets = burst ? open.filter((t) => t.triage?.burst.active && t.triage.burst.label === burst.label) : []
+  // Live burst = the newest active burst flag raised since the last "Reset burst".
+  const burst = open
+    .filter((t) => t.triage?.burst.active && Date.parse(t.created_at) > burstClearedAt)
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0]?.triage?.burst
+  const burstTickets = burst ? open.filter((t) => t.triage?.burst.active && t.triage.burst.label === burst.label && Date.parse(t.created_at) > burstClearedAt) : []
+  // One incident card per burst: keep the oldest unacknowledged member, fold the rest into the banner.
+  const burstIds = new Set(burstTickets.map((t) => t.id))
+  const unackBurst = unackCritical.filter((t) => burstIds.has(t.id)).sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at))
+  const criticalCards = unackCritical.filter((t) => !burstIds.has(t.id) || t === unackBurst[0])
+  const folded = Math.max(0, unackBurst.length - 1)
+  const onResetBurst = async () => { setResetting(true); await resetBurst(); setResetting(false) }
   const longest = Math.max(0, ...open.map((t) => waitingMs(t, now)))
   const escalatedCritical = scoped.filter((t) => decision(t) === 'critical').length
   const escalatedReview = scoped.filter((t) => decision(t) === 'review').length
@@ -91,26 +107,35 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
               </p>
             )}
           </div>
-          <div className="ml-auto hidden items-center gap-4 pb-1 text-xs text-muted md:flex">
+          <div className="ml-auto flex items-center gap-4 pb-1">
+          {view !== 'resolved' && <Button size="sm" icon="zap" onClick={() => setBurstOpen(true)}>Run burst scenario</Button>}
+          <div className="hidden items-center gap-4 text-xs text-muted md:flex">
             <span className="inline-flex items-center gap-1"><Kbd>J</Kbd><Kbd>K</Kbd><span className="ml-1">move</span></span>
             <span className="inline-flex items-center gap-1"><Kbd>↵</Kbd><span className="ml-1">open</span></span>
             <span className="inline-flex items-center gap-1"><Kbd>/</Kbd><span className="ml-1">search</span></span>
+          </div>
           </div>
         </header>
 
         {/* Attention: what must not get buried */}
         {view !== 'resolved' && (unackCritical.length > 0 || burst) && (
           <div className="mt-8 space-y-3">
-            {unackCritical.map((t) => (
+            {burst && (
+              <BurstBanner burst={burst} onReset={onResetBurst} resetting={resetting}>
+                {folded > 0 && <span className="text-[13px] font-medium">+{folded} more not acknowledged</span>}
+                <Button size="sm" onClick={() => setQ('VPN')} className="border-transparent bg-on-route text-oncall hover:opacity-90">Show related tickets</Button>
+              </BurstBanner>
+            )}
+            {criticalCards.map((t) => (
               <a key={t.id} href={`#/${view}/${t.id}`}
                 className="group flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-oncall/25 bg-oncall-soft px-4 py-4 transition-colors hover:border-oncall/45 sm:px-5">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-oncall text-on-route"><Icon name="siren" className="h-5 w-5" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-x-2 text-[13px] font-semibold text-oncall">
                     Critical incident
-                    <span className="rounded-full bg-oncall/15 px-2 py-px text-xs font-medium">Not acknowledged</span>
+                    <span className="rounded-full bg-oncall px-2 py-px text-xs font-semibold text-on-route">Not acknowledged</span>
                   </p>
-                  <p className="mt-0.5 truncate text-[15px] font-medium text-ink" title={t.translation?.subject ?? t.subject}>{t.translation?.subject ?? t.subject}</p>
+                  <p className="mt-0.5 truncate text-[15px] font-medium text-ink" title={t.translation?.subject ?? (t.subject || t.body)}>{t.translation?.subject ?? (t.subject || `${t.body.slice(0, 60)}…`)}</p>
                   <p className="mt-0.5 flex flex-wrap gap-x-4 text-[13px] text-ink-2">
                     <span>{t.requester.org}</span>
                     <span className="tabular">Waiting {duration(waitingMs(t, now))}</span>
@@ -122,20 +147,11 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
                 </span>
               </a>
             ))}
-            {burst && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-line bg-surface px-4 py-3.5 sm:px-5">
-                <IconChip icon="zap" tone="review" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-ink">
-                    Possible major incident: <span className="tabular">{burst.cluster_size}</span> similar reports in <span className="tabular">{burst.window_minutes}</span> minutes
-                  </p>
-                  <p className="mt-0.5 text-[13px] text-muted">“{burst.label}” from {burstTickets.map((t) => t.requester.org).join(', ')}</p>
-                </div>
-                <Button size="sm" onClick={() => setQ('VPN')}>Show related tickets</Button>
-              </div>
-            )}
           </div>
         )}
+
+        {/* Holdout metrics (C.6): the offline evaluation, separate from this session's tickets */}
+        {view === 'inbox' && <div className="mt-8"><MetricsStrip /></div>}
 
         {/* Summary */}
         {view === 'inbox' && (
@@ -195,6 +211,7 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
           )}
         </div>
       </div>
+      {burstOpen && <BurstScenarioDialog onClose={() => setBurstOpen(false)} />}
     </div>
   )
 }

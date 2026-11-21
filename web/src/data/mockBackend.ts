@@ -13,6 +13,7 @@
  */
 import type { AnalyticsSummary, Pred, Precedent, Priority, Queue, Reason, Ticket, TicketType, TriageResponse, WorkflowStatus } from '../types'
 import examples from './dataset_examples.json'
+import { AGENT } from '../lib/session'
 
 const real = Object.fromEntries((examples as { tickets: { ticket_id: string; subject: string; body: string; answer: string; type: string; queue: string; priority: string; language: string; tags: string[] }[] }).tickets.map((t) => [t.ticket_id, t]))
 
@@ -310,7 +311,7 @@ const SPECS: Spec[] = [
     agentReply: { by: 'Markus Brandt', after: 25, body: 'Hello Grace,\n\nthank you for reporting this. We are aware that the account management portal is unavailable and our engineers are working on it with the highest priority. We will update you as soon as the service is back online.\n\nKind regards,\nMarkus Brandt' },
   },
   {
-    id: 'SD-24852', minutesAgo: 230, status: 'open', assignee: 'Lucía Romero',
+    id: 'SD-24852', minutesAgo: 230, status: 'open', assignee: AGENT.name,
     requester: { name: 'Daniel Brooks', email: 'daniel.brooks@example.com', org: 'Brooks Home Studio' }, channel: 'portal',
     subject: real['TKT-18680'].subject, body: real['TKT-18680'].body,
     triage: triage({
@@ -394,7 +395,7 @@ const SPECS: Spec[] = [
     }),
   },
   {
-    id: 'SD-24866', minutesAgo: 160, status: 'open', assignee: 'Lucía Romero',
+    id: 'SD-24866', minutesAgo: 160, status: 'open', assignee: AGENT.name,
     requester: { name: 'Felix Wagner', email: 'felix.wagner@example.de', org: 'Wagner Bau AG' }, channel: 'portal',
     subject: 'Drucker druckt nur leere Seiten',
     body: 'Hallo,\n\nseit dem letzten Treiber-Update druckt unser Laserdrucker im 2. OG nur noch leere Seiten. Neustart haben wir schon versucht.\n\nDanke\nFelix Wagner',
@@ -416,7 +417,7 @@ const SPECS: Spec[] = [
     }),
   },
   {
-    id: 'SD-24840', minutesAgo: 26 * 60, status: 'resolved', assignee: 'Lucía Romero',
+    id: 'SD-24840', minutesAgo: 26 * 60, status: 'resolved', assignee: AGENT.name,
     requester: { name: 'Sophie Laurent', email: 'sophie.laurent@example.fr', org: 'Laurent Design' }, channel: 'email',
     subject: real['TKT-05099'].subject, body: real['TKT-05099'].body,
     triage: triage({
@@ -427,7 +428,7 @@ const SPECS: Spec[] = [
       precedents: [prec('TKT-07788', 0.633)],
       draft: { text: 'Hello Sophie,\n\nthank you for your billing questions. Our billing team will send you a breakdown of the charges on your account.\n\nKind regards,\nSupport Team', cited: [] },
     }),
-    agentReply: { by: 'Lucía Romero', after: 40, body: real['TKT-05099'].answer, unedited: false },
+    agentReply: { by: AGENT.name, after: 40, body: real['TKT-05099'].answer, unedited: false },
     csat: 5,
   },
   {

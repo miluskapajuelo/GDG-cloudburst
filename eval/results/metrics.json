@@ -1,0 +1,102 @@
+{
+  "generated_at": "2026-11-21T19:51:30Z",
+  "split_fingerprint": "5a2ede85f9fb",
+  "n_test": 5718,
+  "classifier": {
+    "type": {
+      "macro_f1": 0.8781,
+      "weighted_f1": 0.8694,
+      "accuracy": 0.8697
+    },
+    "queue": {
+      "macro_f1": 0.5936,
+      "weighted_f1": 0.6047,
+      "accuracy": 0.6055
+    },
+    "priority": {
+      "macro_f1": 0.6304,
+      "weighted_f1": 0.6416,
+      "accuracy": 0.6418
+    }
+  },
+  "high_priority_incident": {
+    "support": 995,
+    "classifier_recall": 0.6915,
+    "escalation_recall": 0.9065
+  },
+  "escalation": {
+    "rate": 0.4685,
+    "reason_counts": {
+      "PROMPT_INJECTION_SUSPECTED": 0,
+      "HIGH_PRIORITY_INCIDENT": 1984,
+      "LOW_CLASSIFIER_CONFIDENCE": 1078,
+      "NO_PRECEDENT": 0,
+      "UNSUPPORTED_REQUEST": 57
+    }
+  },
+  "language_detection_accuracy": 0.8827,
+  "latency_ms": {
+    "skip_llm": {
+      "p50": 40,
+      "p95": 60,
+      "n": 5718
+    },
+    "with_llm": {
+      "p50": 1116,
+      "p95": 14697,
+      "generate_p50": 1080,
+      "generate_p95": 14633,
+      "n": 40
+    },
+    "skip_llm_stages": {
+      "pii": {
+        "p50": 0,
+        "p95": 0
+      },
+      "language": {
+        "p50": 1,
+        "p95": 2
+      },
+      "classify": {
+        "p50": 5,
+        "p95": 8
+      },
+      "retrieve": {
+        "p50": 29,
+        "p95": 47
+      },
+      "gate": {
+        "p50": 1,
+        "p95": 1
+      },
+      "generate": {
+        "p50": 0,
+        "p95": 0
+      },
+      "eval_wall": {
+        "p50": 40,
+        "p95": 60
+      }
+    }
+  },
+  "grounding": {
+    "n": 40,
+    "citation_valid_rate": 1.0,
+    "draft_with_citation_rate": 1.0,
+    "insufficient_evidence_rate": 0.05,
+    "llm_unavailable_rate": 0.025,
+    "reply_language_match_rate": 1.0
+  },
+  "thresholds": {
+    "T_HIGH_PRIORITY_P": 0.2,
+    "T_INCIDENT_P": 0.3,
+    "T_CONF_TYPE": 0.5,
+    "T_CONF_PRIORITY": 0.5,
+    "T_CONF_QUEUE": 0.25,
+    "T_SIM": 0.5,
+    "TOP_K": 5,
+    "BURST_SIM": 0.65,
+    "BURST_MIN": 3,
+    "BURST_WINDOW_MIN": 15
+  }
+}

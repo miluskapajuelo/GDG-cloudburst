@@ -59,7 +59,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [x] Test: 4 VPN-failure tickets (mixed en/de) become active at the 3rd, and 1 unrelated ticket leaves it inactive.
 
 ### B1.7 Tuning support (T+3:30)
-- [ ] Give A2 the distribution of val top-1 similarity (self-excluded): p1, p5, p10, p50. Also give the similarity of demo ticket `demo-08` (out-of-scope). This feeds `T_SIM`.
+- [x] Give A2 the distribution of val top-1 similarity (self-excluded): p1, p5, p10, p50. Also give the similarity of demo ticket `demo-08` (out-of-scope). This feeds `T_SIM`.
 
 ---
 
@@ -176,7 +176,7 @@ return {"precedents", "escalation", "draft", "burst", "latency_ms": {"retrieve",
 - [x] Until B1 merges, use a `FakeRetriever` in `tests/` that returns the fixture precedents. Merge for Integration 1 (a stub draft is acceptable at that point).
 
 ### B2.6 Prompt hardening and red-team (T+2:15–3:15)
-- [ ] Run every ticket in [docs/demo-tickets.md](../demo-tickets.md) through `api.service.triage` (or the console). For each one, check:
+- [x] Run every ticket in [docs/demo-tickets.md](../demo-tickets.md) through `api.service.triage` (or the console). For each one, check:
   - Is the German natural and formal?
   - Are there invented facts?
   - Does the injection ticket get blocked?

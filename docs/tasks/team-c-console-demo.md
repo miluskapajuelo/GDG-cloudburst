@@ -71,31 +71,31 @@ Layout, wide screen (projector-friendly, base font 16px or larger):
 
 ### C.5 Burst demo (by T+2:45)
 - [x] Show the burst banner when `burst.active`: red, full width, with `cluster_size`, `window_minutes` and `label`.
-- [ ] Add a **Run burst scenario** button: it calls `POST /burst/reset`, then sends the presets tagged `"burst": true` one after another (with a 1 s gap), and shows each result as it arrives.
-- [ ] Add a **Reset burst** button.
+- [x] Add a **Run burst scenario** button: it calls `POST /burst/reset`, then sends the presets tagged `"burst": true` one after another (with a 1 s gap), and shows each result as it arrives.
+- [x] Add a **Reset burst** button.
 
 ### C.6 Context widgets (by T+3:15)
-- [ ] Holdout metrics strip from `GET /metrics`: macro-F1 for type, queue and priority, HPI escalation recall, and p50 latency. On 404, show "Eval not run yet".
+- [x] Holdout metrics strip from `GET /metrics`: macro-F1 for type, queue and priority, HPI escalation recall, and p50 latency. On 404, show "Eval not run yet".
 - [x] A thresholds popover from `GET /config`, so a judge asking "what is your threshold?" can be answered in one click.
-- [ ] A history sidebar: the last 10 results in memory, each showing the badge colour, subject or the first 40 chars, and the time. Clicking one shows that result again.
+- [x] A history sidebar: the last 10 results in memory, each showing the badge colour, subject or the first 40 chars, and the time. Clicking one shows that result again.
 
 ### C.7 Polish and robustness (T+3:15–4:00)
-- [ ] Test with: an empty subject, a 7,000-char body, German umlauts, a body with HTML-like `<script>` text (render it as text; never use `dangerouslySetInnerHTML`), the API returning 422, and the API down.
-- [ ] Check readability at 1280×720 (projector). Use high contrast. Do not use colour alone for meaning: the badge text matters.
+- [x] Test with: an empty subject, a 7,000-char body, German umlauts, a body with HTML-like `<script>` text (render it as text; never use `dangerouslySetInnerHTML`), the API returning 422, and the API down.
+- [x] Check readability at 1280×720 (projector). Use high contrast. Do not use colour alone for meaning: the badge text matters.
 
 ### C.8 README.md (draft by T+3:30, final by T+4:30)
 Fill in the skeleton `README.md` (already in the repo). Get the numbers from A2 and the architecture notes from B2. Required sections:
-- [ ] What it does (3 lines) and a screenshot of the console
-- [ ] Architecture (copy the diagram from `docs/plan.md`)
+- [x] What it does (3 lines) and a screenshot of the console
+- [x] Architecture (copy the diagram from `docs/plan.md`)
 - [ ] Setup: venv, `pip install -r requirements.txt`, `.env`, `make_split`, `train`, `build_index`, the API, the web app. Get A1 to follow it on a fresh clone.
-- [ ] Evaluation: the command plus the metrics table from `eval/results/metrics.md`, with the split fingerprint
-- [ ] Escalation policy summary (link `docs/escalation-policy.md`)
-- [ ] Leakage controls (link `docs/data-and-leakage.md`)
-- [ ] Bonus features: cross-lingual, burst, PII
-- [ ] Limitations and next steps, and the team with their roles
+- [x] Evaluation: the command plus the metrics table from `eval/results/metrics.md`, with the split fingerprint
+- [x] Escalation policy summary (link `docs/escalation-policy.md`)
+- [x] Leakage controls (link `docs/data-and-leakage.md`)
+- [x] Bonus features: cross-lingual, burst, PII
+- [x] Limitations and next steps, and the team with their roles
 
 ### C.9 Demo script and rehearsal (by T+4:45)
-- [ ] Write `docs/demo-script.md`: a 5-minute run sheet with timings. Suggested flow:
+- [x] Write `docs/demo-script.md`: a 5-minute run sheet with timings. Suggested flow:
   1. (0:30) The problem and what SentinelDesk does
   2. (1:00) German VPN outage (`demo-01`): ON_CALL badge, German draft, English precedents cited (cross-lingual)
   3. (0:45) Password reset (`demo-02`): Auto-Draft Ready, grounded draft with citations

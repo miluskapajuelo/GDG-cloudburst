@@ -1,6 +1,7 @@
 """Generate structured, precedent-grounded replies with Gemini."""
 
 import re
+import time
 from functools import cache
 from html import unescape
 from importlib import import_module
@@ -41,7 +42,11 @@ def _transport_errors() -> tuple[tuple[type[Exception], ...], tuple[type[Excepti
 
 _TIMEOUT_ERRORS, _CONNECTION_ERRORS = _transport_errors()
 
-_CITATION_TOKEN = re.compile(r"\[TKT-\d{5}\]")
+_TICKET_ID = r"TKT-\d{5}"
+_CITATION_TOKEN = re.compile(rf"\[{_TICKET_ID}\]")
+_GROUPED_CITATION = re.compile(
+    rf"\[\s*{_TICKET_ID}(?:(?:[\s,;/&]+|\s+(?i:and|und)\s+){_TICKET_ID})+\s*\]"
+)
 _WORD = re.compile(r"\w+(?:[-'’]\w+)*")
 
 
@@ -75,15 +80,16 @@ def _call(system: str, contents: str) -> types.GenerateContentResponse:
         response_schema=DraftOut,
     )
 
-    can_retry = True
+    # Back off on rate limits (429) and transient server errors: 2s, 4s, 8s.
+    delays = [2.0, 4.0, 8.0]
     while True:
         try:
             return client.models.generate_content(
                 model=config.LLM_MODEL, contents=contents, config=generation_config
             )
         except errors.APIError as error:
-            if can_retry and error.code in (429, 500, 502, 503):
-                can_retry = False
+            if delays and error.code in (429, 500, 502, 503):
+                time.sleep(delays.pop(0))
                 continue
             raise DraftError(f"Gemini returned HTTP {error.code}.") from None
         except _TIMEOUT_ERRORS:
@@ -121,6 +127,10 @@ def generate_draft(
     reply = unescape(result.reply).strip()
     if not reply:
         raise DraftError("Gemini returned an empty draft.")
+    reply = _GROUPED_CITATION.sub(
+        lambda match: "".join(f"[{ticket_id}]" for ticket_id in re.findall(_TICKET_ID, match[0])),
+        reply,
+    )
 
     return {
         "status": result.status,

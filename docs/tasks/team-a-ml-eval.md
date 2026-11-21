@@ -62,12 +62,12 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [ ] **(optional)** After thresholds are locked, retrain on all KB rows (fit + val) for the final model. Log it in the decision log.
 
 ### A1.8 Demo machine ready (by T+4:00)
-- [ ] Fresh `git pull`, then: `make_split`, `train`, `build_index`, eval run, API, web. Follow the README word for word and report any README gaps to `miluskapajuelo`.
+- [x] Fresh `git pull`, then: `make_split`, `train`, `build_index`, eval run, API, web. Follow the README word for word and report any README gaps to `miluskapajuelo`.
 - [x] Make the API warm up models at startup (A2 implements it, you verify): the first request after startup must take under 3 s, excluding the LLM.
 - [x] `.env` holds a working key. Test the `SENTINEL_LLM_MODEL` switch once.
 
 ### A1.9 Q&A prep (by T+4:30)
-- [ ] Write 5 bullet points in `ml/EDA.md` under "Judge Q&A": why TF-IDF + LR, how leakage is prevented, why priority F1 is modest, how HPI recall is achieved (gate probabilities), and what we would do with more time.
+- [x] Write 5 bullet points in `ml/EDA.md` under "Judge Q&A": why TF-IDF + LR, how leakage is prevented, why priority F1 is modest, how HPI recall is achieved (gate probabilities), and what we would do with more time.
 
 ---
 
@@ -108,7 +108,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [x] Batch the classifier/embedding work if the full test run takes over 10 minutes, but keep the per-ticket latency numbers honest: measure them on a 300-ticket sample through `triage()`.
 
 ### A2.4 Integration 1 (T+2:00)
-- [ ] Wire the real classifier and retriever into `service.py` (replace stubs). Merge after A1.
+- [x] Wire the real classifier and retriever into `service.py` (replace stubs). Merge after A1.
 
 ### A2.5 LLM sample evaluation (by T+3:15)
 - [x] `--llm-sample 40`: a stratified sample of test inputs (at least 10 predicted high/Incident; mixed en/de), run with `skip_llm=False`. Measure:

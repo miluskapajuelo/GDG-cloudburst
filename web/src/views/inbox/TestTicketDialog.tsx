@@ -4,9 +4,9 @@ import { ResultSkeleton } from '../../components/results'
 import { TriageProgress } from '../../components/TriageProgress'
 import { Button, Icon } from '../../components/ui'
 import { DEMO_TICKETS } from '../../data/demoTickets'
+import { ticketFromTriage } from '../../lib/liveTicket'
 import { navigate } from '../../lib/router'
 import { useStore, useToast } from '../../store'
-import type { Priority, Queue, Ticket, TicketType } from '../../types'
 
 /**
  * Paste any ticket and run it through the real pipeline (POST /triage).
@@ -37,19 +37,7 @@ export default function TestTicketDialog({ onClose }: { onClose: () => void }) {
     try {
       const { data, fallback } = await api.triage(subject.trim() || null, body)
       const id = store.nextId()
-      const now = new Date().toISOString()
-      const ticket: Ticket = {
-        id, subject: subject.trim(), body,
-        requester: { name: 'Test customer', email: 'test@sentineldesk.local', org: 'Live test' },
-        channel: 'email', created_at: now, updated_at: now, status: 'new', assignee: null, tags: [],
-        type: data.predictions.type.label as TicketType, queue: data.predictions.queue.label as Queue, priority: data.predictions.priority.label as Priority,
-        triage: data, acknowledged_by: null, linked_incidents: [],
-        messages: [{ id: crypto.randomUUID(), author: 'Test customer', role: 'customer', internal: false, body, at: now }],
-        audit: [
-          { id: crypto.randomUUID(), at: now, actor: 'System', kind: 'status', text: 'Received via "Test a ticket"' },
-          { id: crypto.randomUUID(), at: now, actor: 'SentinelDesk', kind: 'ai', text: `Classified as ${data.predictions.type.label}, ${data.predictions.queue.label}, ${data.predictions.priority.label} priority in ${data.latency_ms.total} ms. ${data.escalation.badge}.${fallback ? ' (offline fallback)' : ''}` },
-        ],
-      }
+      const ticket = ticketFromTriage(id, subject.trim(), body, data, { fallback, source: '"Test a ticket"' })
       store.add(ticket)
       if (fallback) toast({ tone: 'info', text: 'The triage service is offline. Showing a local fallback result.' })
       onClose()
@@ -57,7 +45,6 @@ export default function TestTicketDialog({ onClose }: { onClose: () => void }) {
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong. Please try again.'
       setError(msg)
-      toast({ tone: 'error', text: msg })
       setBusy(false)
     }
   }
@@ -106,8 +93,12 @@ export default function TestTicketDialog({ onClose }: { onClose: () => void }) {
             <p id="body-count" aria-live="polite" className={`tabular -mt-2 text-right text-xs ${body.length > 8000 ? 'font-semibold text-review' : 'text-muted'}`}>
               {body.length.toLocaleString()} characters{body.length > 8000 ? ' (only the first 8,000 are analysed)' : ''}
             </p>
-            {error && <p role="alert" className="rounded-lg bg-oncall-soft px-3 py-2 text-sm text-oncall">{error}</p>}
           </form>
+        )}
+        {error && !busy && (
+          <p role="alert" className="flex items-start gap-2 border-t border-oncall/30 bg-oncall-soft px-5 py-3 text-sm font-medium text-oncall">
+            <Icon name="alertCircle" className="mt-0.5 h-4 w-4" />{error}
+          </p>
         )}
         <footer className="flex items-center gap-2 border-t border-line px-5 py-3">
           <span className="text-xs text-muted">Ctrl or ⌘ + Enter to triage</span>
