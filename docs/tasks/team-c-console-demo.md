@@ -35,9 +35,9 @@ If the `frontend-design` skill is available, load it before building the UI.
 **Done when:** the page renders the mock fixture with no API running.
 
 ### C.3 Input panel (by T+1:15)
-- [ ] Inputs: Subject (optional, single line), Body (required, multi-line, at least 8 rows), and a **Triage** button. Ctrl+Enter submits. Disable the button while the body is empty or a request is in flight.
-- [ ] A **Presets** dropdown loaded from `shared/fixtures/demo_tickets.json`. Selecting one fills Subject and Body without submitting. Show the `title` and the `purpose`.
-- [ ] Show a character count, and a "subject empty: fine" hint when the subject is blank. This shows judges that null subjects are handled.
+- [x] Inputs: Subject (optional, single line), Body (required, multi-line, at least 8 rows), and a **Triage** button. Ctrl+Enter submits. Disable the button while the body is empty or a request is in flight.
+- [x] A **Presets** dropdown loaded from `shared/fixtures/demo_tickets.json`. Selecting one fills Subject and Body without submitting. Show the `title` and the `purpose`.
+- [x] Show a character count, and a "subject empty: fine" hint when the subject is blank. This shows judges that null subjects are handled.
 
 ### C.4 Results view (by T+2:00, then connect to the real API at Integration 1)
 Layout, wide screen (projector-friendly, base font 16px or larger):
