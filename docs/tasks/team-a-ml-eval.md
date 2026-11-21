@@ -144,7 +144,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 ```
 
 ### A2.7 Threshold tuning (T+3:30–3:50)
-- [ ] `eval/tune_thresholds.py`, on **KB val rows only**, following [escalation-policy.md](../escalation-policy.md) §5:
+- [x] `eval/tune_thresholds.py`, on **KB val rows only**, following [escalation-policy.md](../escalation-policy.md) §5:
   - Use `artifacts/val_preds.parquet` for the classifier probabilities and `Retriever.search(exclude_ids={ticket_id})` for similarities.
   - Sweep `T_HIGH_PRIORITY_P`, `T_INCIDENT_P`, the `T_CONF_*` values and `T_SIM`.
   - Report HPI escalation recall, escalation rate and NO_PRECEDENT rate for each setting.
