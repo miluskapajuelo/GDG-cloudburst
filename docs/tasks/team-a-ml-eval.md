@@ -48,8 +48,8 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 **Done when:** training takes under 5 minutes on a laptop, `predict` takes under 20 ms per ticket, and val metrics are printed and pasted into the PR description.
 
 ### A1.5 Integration 1 (T+2:00)
-- [ ] Merge the A1 PR first (merge order: A1, A2, B1, B2, C).
-- [ ] Your laptop is the **demo machine**: build `data/` and `artifacts/` there (the B1 index too), and host the checkpoint run.
+- [x] Merge the A1 PR first (merge order: A1, A2, B1, B2, C).
+- [x] Your laptop is the **demo machine**: build `data/` and `artifacts/` there (the B1 index too), and host the checkpoint run.
 
 ### A1.6 Improve and calibrate (T+2:15–3:15)
 - [x] Compute the expected calibration error (ECE, 10 bins) on val per head. If ECE is above 0.08, wrap the heads in `CalibratedClassifierCV(method="sigmoid", cv=3)` and keep the change only if val macro-F1 does not drop.
