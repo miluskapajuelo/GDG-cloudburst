@@ -18,7 +18,7 @@ TODO: copy the diagram from [docs/plan.md](docs/plan.md) §3.
 python -m venv .venv
 # Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env              # add ANTHROPIC_API_KEY
+cp .env.example .env              # add GEMINI_API_KEY
 
 python -m ml.make_split           # download the dataset, 80/20 split (seed 42)
 python -m ml.train                # train the triage classifier

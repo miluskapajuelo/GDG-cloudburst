@@ -23,7 +23,7 @@ faiss-cpu>=1.8
 lingua-language-detector>=2.0
 
 # ---- B2: Gate & drafting (prithvipoojari) ----
-anthropic
+google-genai
 
 # ---- C: Frontend (miluskapajuelo) — only if Streamlit fallback is chosen ----
 # streamlit>=1.35

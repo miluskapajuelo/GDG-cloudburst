@@ -29,7 +29,7 @@ Rule 2 uses **probabilities, not argmax labels**. This lets us trade a little pr
 |---|---|---|---|
 | 6 | `LLM_INSUFFICIENT_EVIDENCE` | `draft.status == "INSUFFICIENT_EVIDENCE"` | HUMAN_REVIEW |
 | 7 | `CITATION_CHECK_FAILED` | `validate_citations` returned problems (the message lists them) | HUMAN_REVIEW |
-| 8 | `LLM_UNAVAILABLE` | API error, timeout or `stop_reason == "refusal"`. The draft is `null`. | HUMAN_REVIEW |
+| 8 | `LLM_UNAVAILABLE` | API error, timeout, safety block or empty response. The draft is `null`. | HUMAN_REVIEW |
 
 When `skip_llm=true`, Phase 2 adds nothing.
 

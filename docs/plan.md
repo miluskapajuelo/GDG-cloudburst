@@ -45,7 +45,7 @@ The source of truth for who does what is the roster in [CLAUDE.md](../CLAUDE.md)
 │     ├─ Retriever.embed + search (top-5)   agent/retrieve.py   (B1)       │
 │     ├─ BurstDetector.observe              agent/burst.py      (B1)       │
 │     ├─ pre_draft_gate                     agent/gate.py       (B2)       │
-│     ├─ generate_draft → Claude API        agent/draft.py      (B2)       │
+│     ├─ generate_draft → Gemini API        agent/draft.py      (B2)       │
 │     ├─ validate_citations                 agent/citations.py  (B2)       │
 │     └─ finalize_escalation                agent/gate.py       (B2)       │
 │ 6 assemble response + latency_ms          api/service.py      (A)        │
@@ -63,7 +63,7 @@ The source of truth for who does what is the roster in [CLAUDE.md](../CLAUDE.md)
 | Embeddings | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (384-dim, normalised) | Fast on CPU, en↔de cross-lingual retrieval included |
 | Vector store | FAISS `IndexFlatIP` (exact cosine) | About 50k vectors: exact search takes milliseconds, no tuning |
 | Language detection | `lingua-language-detector` | Accurate on short text |
-| LLM | Claude via the `anthropic` Python SDK. Default `claude-opus-5-5` at `effort: low`, set by `SENTINEL_LLM_MODEL` | Strongest grounding and German quality. The team can switch the env var to `claude-haiku-5-5` if live latency is too high |
+| LLM | Google Gemini via the `google-genai` Python SDK. Default `gemini-3.5-flash-lite` (stable, free tier), set by `SENTINEL_LLM_MODEL` | Free, fast, stable. If grounding or German quality is weak, switch the env var to `gemini-3.8-flash` (stable, also free tier). Confirm the model supports `response_schema` with a test call at kickoff |
 | API | FastAPI + Uvicorn on port 8000 | Typed, quick |
 | Frontend | Vite + React + TypeScript + Tailwind on port 5173. Fallback: Streamlit `web/app.py` on 8501 | C decides at T+0:15 and logs it below |
 
@@ -93,7 +93,7 @@ The source of truth for who does what is the roster in [CLAUDE.md](../CLAUDE.md)
 
 | Risk | Fallback |
 |---|---|
-| LLM latency > 10 s or API down | Set `SENTINEL_LLM_MODEL=claude-haiku-5-5`. If the API is down, the gate returns `LLM_UNAVAILABLE` and the console still shows triage + precedents. |
+| LLM latency > 10 s or API down | Already on the fastest free model (`gemini-3.5-flash-lite`); lower `max_output_tokens` or trim precedent text. If the API is down, the gate returns `LLM_UNAVAILABLE` and the console still shows triage + precedents. |
 | Index build too slow on a laptop | Build once on the fastest machine and share `artifacts/` via USB or a drive link (never git). Use the 20k file only as a last resort, and log it. |
 | React UI behind schedule at T+2:00 | C switches to Streamlit `web/app.py` (same contract). |
 | Classifier priority F1 is low (noisy labels) | Expected. Report honestly. Recall on high-priority incidents comes from the gate's probability thresholds, not from argmax. |

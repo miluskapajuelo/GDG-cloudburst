@@ -17,7 +17,7 @@ CORS must allow `http://localhost:5173` (Vite) and `http://localhost:8501` (Stre
 
 ### `GET /health`
 ```json
-{ "status": "ok", "mock": false, "classifier_loaded": true, "index_size": 49440, "llm_configured": true, "llm_model": "claude-opus-5-5" }
+{ "status": "ok", "mock": false, "classifier_loaded": true, "index_size": 49440, "llm_configured": true, "llm_model": "gemini-3.5-flash-lite" }
 ```
 
 ### `GET /config`
@@ -91,7 +91,7 @@ Response `200`:
     "cited_ids": ["TKT-00412", "TKT-01877"],// subset of precedents[].ticket_id (checked by validate_citations)
     "language": "de",
     "for_human_review": true,               // true when escalation.status == "ESCALATE"
-    "model": "claude-opus-5-5"
+    "model": "gemini-3.5-flash-lite"
   },
   // draft is null when: skip_llm=true, NO_PRECEDENT, PROMPT_INJECTION_SUSPECTED, or LLM_UNAVAILABLE
 

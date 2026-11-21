@@ -68,7 +68,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 Agent: work only on the tasks in this section, in order. Tick each box in the same commit as the work.
 
 ### B2.1 Config and API access (by T+0:30)
-- [ ] `agent/config.py`: every threshold in [escalation-policy.md](../escalation-policy.md) §4 with its default, each one overridable by an env var `SENTINEL_<NAME>`. Also `SENSITIVE_LEXICON`, `INJECTION_PATTERNS` (compiled, case-insensitive), `LLM_MODEL`, `LLM_EFFORT` and `LLM_TIMEOUT_S`, read from `.env` via `python-dotenv`.
+- [ ] `agent/config.py`: every threshold in [escalation-policy.md](../escalation-policy.md) §4 with its default, each one overridable by an env var `SENTINEL_<NAME>`. Also `SENSITIVE_LEXICON`, `INJECTION_PATTERNS` (compiled, case-insensitive), `LLM_MODEL` and `LLM_TIMEOUT_S`, and `GEMINI_API_KEY`, read from `.env` via `python-dotenv`.
 - [ ] Check that the API key works with a one-off call (do not commit a script that prints the key).
 
 ### B2.2 Prompt and drafting: `agent/prompts.py` + `agent/draft.py` (by T+1:15)
@@ -105,45 +105,45 @@ The user message is built by `prompts.build_user_message(text, reply_language, p
 Write the draft reply.
 ```
 
-The call in `draft.py` uses the `anthropic` Python SDK. Use this exact shape; do not guess other parameters:
+The call in `draft.py` uses Google's `google-genai` Python SDK (`pip install google-genai`; it is **not** the older `google-generativeai` package). The shape below is a starting point. If a parameter name differs in the installed SDK version, check the SDK docs or `help(genai.types.GenerateContentConfig)` and adjust:
 ```python
 from typing import Literal
-from pydantic import BaseModel, ConfigDict
-import anthropic
+from pydantic import BaseModel
+from google import genai
+from google.genai import types, errors
 
 class DraftOut(BaseModel):
-    model_config = ConfigDict(extra="forbid")   # emits additionalProperties: false
     status: Literal["OK", "INSUFFICIENT_EVIDENCE"]
     reply: str
     cited_ids: list[str]
 
 class DraftError(Exception): ...
 
-_client = anthropic.Anthropic(timeout=config.LLM_TIMEOUT_S, max_retries=1)  # reads ANTHROPIC_API_KEY
+_client = genai.Client(
+    api_key=config.GEMINI_API_KEY,             # from GEMINI_API_KEY in .env
+    http_options=types.HttpOptions(timeout=int(config.LLM_TIMEOUT_S * 1000)),  # milliseconds
+)
 
 def _call(system: str, user: str):
-    kwargs = dict(
-        model=config.LLM_MODEL,                     # default "claude-opus-5-5"
-        max_tokens=16000,
-        system=system,
-        messages=[{"role": "user", "content": user}],
-        output_config={
-            "effort": config.LLM_EFFORT,            # default "low", for latency
-            "format": {"type": "json_schema", "schema": DraftOut.model_json_schema()},
-        },
+    return _client.models.generate_content(
+        model=config.LLM_MODEL,                 # default "gemini-3.5-flash-lite"
+        contents=user,
+        config=types.GenerateContentConfig(
+            system_instruction=system,
+            temperature=0.2,                    # low: factual, grounded output
+            max_output_tokens=2048,
+            response_mime_type="application/json",
+            response_schema=DraftOut,           # SDK converts the pydantic model to a schema
+        ),
     )
-    if config.LLM_MODEL in ("claude-opus-5-5", "claude-sonnet-5-5"):
-        # server-side refusal fallback; remove if the API rejects it
-        return _client.beta.messages.create(**kwargs, betas=["server-side-fallback-2026-07-01"], fallbacks="default")
-    return _client.messages.create(**kwargs)
 ```
 Handle the response like this:
-- `stop_reason == "refusal"` or `"max_tokens"`: raise `DraftError`.
-- The response can contain thinking blocks. Take the **first block with `type == "text"`** and parse it with `DraftOut.model_validate_json(...)`.
-- Catch `anthropic.APIConnectionError`, `anthropic.RateLimitError` and `anthropic.APIStatusError`, plus pydantic's `ValidationError`, and raise `DraftError(<short reason>)`.
-- Do not send `temperature`, and do not send a `thinking` parameter. This model rejects disabled thinking; `effort` is the control.
+- Use `resp.parsed` (a `DraftOut` instance). If it is `None`, try `DraftOut.model_validate_json(resp.text)`.
+- If there is no text, or `resp.candidates[0].finish_reason` is `SAFETY`, `MAX_TOKENS` or another non-`STOP` value, or `resp.prompt_feedback` shows the prompt was blocked: raise `DraftError`.
+- Catch `errors.APIError` (it covers both `ClientError` 4xx and `ServerError` 5xx), timeouts and pydantic's `ValidationError`, and raise `DraftError(<short reason>)`. Retry once on a 429 or 5xx before giving up.
+- Verify the model name at kickoff with `[m.name for m in _client.models.list()]`. If `gemini-3.5-flash-lite` is missing or rejects `response_schema`, use `gemini-3.8-flash` (also stable and free) and log the switch in `docs/plan.md`.
 
-`generate_draft` returns the contract draft object, with `model = response.model` (it can differ if a fallback ran). `cited_ids` is taken from the IDs actually found in the text (see B2.3), not from what the model claims.
+`generate_draft` returns the contract draft object, with `model = config.LLM_MODEL`. `cited_ids` is taken from the IDs actually found in the text (see B2.3), not from what the model claims.
 
 **Done when:** running `python -m agent.draft` with the mock precedents from the fixture produces a German and an English draft with valid citations in under 10 s each.
 

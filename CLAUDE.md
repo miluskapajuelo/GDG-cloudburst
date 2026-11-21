@@ -81,7 +81,7 @@ Before you write or change any file:
   - known gaps and follow-ups
 
 ### 5. Secrets and privacy
-- The API key comes from `ANTHROPIC_API_KEY` in `.env` (copy `.env.example`). Never hard-code or print it, and never commit it.
+- The API key comes from `GEMINI_API_KEY` in `.env` (copy `.env.example`). Never hard-code or print it, and never commit it.
 - Ticket text goes through `agent.pii.mask_pii` before any external LLM call.
 
 ### 6. Time discipline
@@ -108,7 +108,7 @@ Before you write or change any file:
 python -m venv .venv
 # Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env                 # then add ANTHROPIC_API_KEY
+cp .env.example .env                 # then add GEMINI_API_KEY
 
 python -m ml.make_split              # writes data/kb_train.parquet (with is_val column), data/test_inputs.parquet, data/test_labels.parquet
 python -m ml.train                   # writes artifacts/clf.joblib
