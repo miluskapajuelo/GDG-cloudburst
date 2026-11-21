@@ -28,8 +28,8 @@ export function Icon({ name, className = 'h-4 w-4', label }: { name: IconName; c
 // ---------------------------------------------------------------------------
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-accent text-on-accent hover:bg-accent-strong border-transparent',
-  secondary: 'bg-surface text-ink border-line-strong hover:border-ink-2/30 hover:bg-surface-2',
+  primary: 'bg-primary text-on-primary hover:bg-primary-hover border-transparent',
+  secondary: 'bg-surface-3 text-ink border-line hover:border-line-strong',
   ghost: 'bg-transparent text-ink-2 border-transparent hover:bg-surface-3 hover:text-ink',
   danger: 'bg-oncall text-on-route border-transparent hover:opacity-90',
   success: 'bg-auto text-on-route border-transparent hover:opacity-90',
@@ -43,11 +43,11 @@ export function Button({
   className = '',
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: 'sm' | 'md' | 'lg'; icon?: IconName; kbd?: string }) {
-  const sz = size === 'sm' ? 'h-8 px-3 text-[13px]' : size === 'lg' ? 'h-11 px-5 text-[15px]' : 'h-9 px-3.5 text-sm'
+  const sz = size === 'sm' ? 'h-8 px-3.5 text-[13px]' : size === 'lg' ? 'h-11 px-6 text-[15px]' : 'h-9 px-4 text-sm'
   return (
     <button
       {...rest}
-      className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${sz} ${VARIANT[variant]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${sz} ${VARIANT[variant]} ${className}`}
     >
       {icon && <Icon name={icon} />}
       {children}
@@ -66,14 +66,14 @@ export function Kbd({ children, className = '' }: { children: ReactNode; classNa
 // Badges: colour + icon + text, never colour alone.
 // ---------------------------------------------------------------------------
 const PRIO_STYLE: Record<Priority, { cls: string; icon: IconName; bars: number }> = {
-  high: { cls: 'bg-p-high-soft text-p-high border-p-high/30', icon: 'alert', bars: 3 },
-  medium: { cls: 'bg-p-medium-soft text-p-medium border-p-medium/30', icon: 'chevronDown', bars: 2 },
-  low: { cls: 'bg-p-low-soft text-p-low border-p-low/25', icon: 'chevronDown', bars: 1 },
+  high: { cls: 'bg-p-high-soft text-p-high border-transparent', icon: 'alert', bars: 3 },
+  medium: { cls: 'bg-p-medium-soft text-p-medium border-transparent', icon: 'chevronDown', bars: 2 },
+  low: { cls: 'bg-p-low-soft text-p-low border-transparent', icon: 'chevronDown', bars: 1 },
 }
 export function PriorityBadge({ priority, compact }: { priority: Priority; compact?: boolean }) {
   const s = PRIO_STYLE[priority]
   return (
-    <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs font-semibold ${s.cls}`} title={`Priority: ${PRIORITY_LABEL[priority]}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${s.cls}`} title={`Priority: ${PRIORITY_LABEL[priority]}`}>
       <span aria-hidden className="flex items-end gap-[2px]">
         {[1, 2, 3].map((i) => (
           <span key={i} className={`w-[3px] rounded-sm ${i <= s.bars ? 'bg-current' : 'bg-current opacity-20'}`} style={{ height: 4 + i * 2 }} />
@@ -86,9 +86,9 @@ export function PriorityBadge({ priority, compact }: { priority: Priority; compa
 }
 
 export const ROUTE_STYLE: Record<'AUTO' | 'HUMAN_REVIEW' | 'ON_CALL', { cls: string; solid: string; icon: IconName; short: string }> = {
-  AUTO: { cls: 'bg-auto-soft text-auto border-auto/30', solid: 'bg-auto text-on-route', icon: 'checkCircle', short: 'Draft ready' },
-  HUMAN_REVIEW: { cls: 'bg-review-soft text-review border-review/35', solid: 'bg-review text-on-route', icon: 'eye', short: 'Human review' },
-  ON_CALL: { cls: 'bg-oncall-soft text-oncall border-oncall/35', solid: 'bg-oncall text-on-route', icon: 'siren', short: 'On-call' },
+  AUTO: { cls: 'bg-auto-soft text-auto', solid: 'bg-auto text-on-route', icon: 'checkCircle', short: 'Draft ready' },
+  HUMAN_REVIEW: { cls: 'bg-review-soft text-review', solid: 'bg-review text-on-route', icon: 'eye', short: 'Human review' },
+  ON_CALL: { cls: 'bg-oncall-soft text-oncall', solid: 'bg-oncall text-on-route', icon: 'siren', short: 'On-call' },
 }
 export const routeKey = (r: Route) => (r ?? 'AUTO') as 'AUTO' | 'HUMAN_REVIEW' | 'ON_CALL'
 
@@ -96,14 +96,14 @@ export function RouteBadge({ route, label, size = 'sm' }: { route: Route; label?
   const s = ROUTE_STYLE[routeKey(route)]
   if (size === 'lg') {
     return (
-      <div className={`inline-flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-[17px] font-semibold tracking-[-0.005em] ${s.solid}`} role="status">
-        <Icon name={s.icon} className="h-5 w-5" />
+      <div className={`inline-flex items-center gap-3 rounded-full py-1.5 pl-1.5 pr-5 text-[17px] font-medium tracking-[-0.01em] ${s.cls}`} role="status">
+        <span className={`flex h-9 w-9 items-center justify-center rounded-full ${s.solid}`}><Icon name={s.icon} className="h-[18px] w-[18px]" /></span>
         {label ?? s.short}
       </div>
     )
   }
   return (
-    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded border px-1.5 py-0.5 text-xs font-medium ${s.cls}`}>
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>
       <Icon name={s.icon} className="h-3.5 w-3.5" />
       {label ?? s.short}
     </span>
@@ -111,11 +111,11 @@ export function RouteBadge({ route, label, size = 'sm' }: { route: Route; label?
 }
 
 const STATUS_STYLE: Record<WorkflowStatus, string> = {
-  new: 'bg-accent-soft text-accent border-accent/30',
-  open: 'bg-surface-3 text-ink-2 border-line-strong',
-  awaiting_customer: 'bg-review-soft text-review border-review/30',
-  resolved: 'bg-auto-soft text-auto border-auto/30',
-  closed: 'bg-surface-3 text-muted border-line',
+  new: 'bg-accent-soft text-accent border-transparent',
+  open: 'bg-surface-3 text-ink-2 border-transparent',
+  awaiting_customer: 'bg-review-soft text-review border-transparent',
+  resolved: 'bg-auto-soft text-auto border-transparent',
+  closed: 'bg-surface-3 text-muted border-transparent',
 }
 export function StatusBadge({ status }: { status: WorkflowStatus }) {
   return <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[status]}`}>{STATUS_LABEL[status]}</span>
@@ -138,7 +138,7 @@ export function SlaTimer({ ticket, now }: { ticket: Ticket; now: number }) {
 
 export function LangChip({ code, confidence }: { code: string; confidence?: number }) {
   return (
-    <span className="tabular inline-flex items-center gap-1 rounded border border-line bg-surface-2 px-1.5 py-px font-mono text-xs font-medium uppercase text-ink-2" title={confidence ? `Detected language ${code.toUpperCase()} (${pct(confidence)})` : `Language ${code.toUpperCase()}`}>
+    <span className="tabular inline-flex items-center gap-1 rounded-md bg-surface-3 px-1.5 py-px font-mono text-xs font-medium uppercase text-ink-2" title={confidence ? `Detected language ${code.toUpperCase()} (${pct(confidence)})` : `Language ${code.toUpperCase()}`}>
       <Icon name="globe" className="h-3 w-3 text-muted" />
       {code}
       {confidence !== undefined && <span className="font-normal text-muted">{pct(confidence)}</span>}
@@ -178,7 +178,7 @@ export function Avatar({ name, size = 'sm' }: { name: string; size?: 'sm' | 'md'
 export function EmptyState({ icon, title, children }: { icon: IconName; title: string; children?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
-      <span className="mb-1 rounded-lg border border-line bg-surface-2 p-3 text-muted"><Icon name={icon} className="h-5 w-5" /></span>
+      <IconChip icon={icon} size="lg" />
       <p className="text-[15px] font-semibold text-ink">{title}</p>
       {children && <div className="max-w-sm text-sm text-muted">{children}</div>}
     </div>
@@ -187,14 +187,50 @@ export function EmptyState({ icon, title, children }: { icon: IconName; title: s
 
 export function Card({ title, actions, children, className = '' }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-xl border border-line bg-surface shadow-soft ${className}`}>
-      {title && (
-        <header className="flex items-center justify-between gap-2 border-b border-line px-5 py-3">
-          <h3 className="text-sm font-semibold text-ink">{title}</h3>
-          {actions}
-        </header>
-      )}
+    <section className={`rounded-2xl border border-line bg-surface shadow-soft ${className}`}>
+      {title && <PanelHeader title={title} actions={actions} />}
       {children}
     </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Panel anatomy: round icon chip + quiet label + optional action on the right
+// ---------------------------------------------------------------------------
+type Tone = 'neutral' | 'oncall' | 'review' | 'auto' | 'ai' | 'accent'
+const TONE_TEXT: Record<Tone, string> = { neutral: 'text-ink-2', oncall: 'text-oncall', review: 'text-review', auto: 'text-auto', ai: 'text-ai', accent: 'text-accent' }
+
+export function IconChip({ icon, tone = 'neutral', size = 'md' }: { icon: IconName; tone?: Tone; size?: 'md' | 'lg' }) {
+  return (
+    <span aria-hidden className={`inline-flex shrink-0 items-center justify-center rounded-full bg-surface-3 ${TONE_TEXT[tone]} ${size === 'lg' ? 'mb-1 h-12 w-12' : 'h-8 w-8'}`}>
+      <Icon name={icon} className={size === 'lg' ? 'h-5 w-5' : 'h-4 w-4'} />
+    </span>
+  )
+}
+
+export function PanelHeader({ title, icon, tone, actions, sub }: { title: ReactNode; icon?: IconName; tone?: Tone; actions?: ReactNode; sub?: ReactNode }) {
+  return (
+    <header className="flex items-center gap-3 px-5 pt-4 pb-3">
+      {icon && <IconChip icon={icon} tone={tone} />}
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-sm font-medium text-ink-2">{title}</h3>
+        {sub && <p className="truncate text-xs text-muted">{sub}</p>}
+      </div>
+      {actions}
+    </header>
+  )
+}
+
+/** Pill segmented control: the selected option is a solid white (or ink) pill. */
+export function Segmented<T extends string>({ value, options, onChange, label, size = 'md' }: { value: T; options: readonly (readonly [T, string])[]; onChange: (v: T) => void; label: string; size?: 'sm' | 'md' }) {
+  return (
+    <div role="group" aria-label={label} className={`inline-flex items-center rounded-full border border-line bg-surface-2 p-1 ${size === 'sm' ? 'text-xs' : 'text-[13px]'}`}>
+      {options.map(([v, l]) => (
+        <button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}
+          className={`rounded-full font-medium transition-colors ${size === 'sm' ? 'h-6 px-2.5' : 'h-7 px-4'} ${value === v ? 'bg-primary text-on-primary' : 'text-muted hover:text-ink'}`}>
+          {l}
+        </button>
+      ))}
+    </div>
   )
 }

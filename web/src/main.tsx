@@ -4,7 +4,6 @@ import '@fontsource-variable/ibm-plex-sans'
 import '@fontsource/ibm-plex-mono/400.css'
 import '@fontsource/ibm-plex-mono/500.css'
 import '@fontsource/ibm-plex-mono/600.css'
-import '@fontsource-variable/source-serif-4'
 import './index.css'
 import App from './App.tsx'
 

@@ -59,16 +59,16 @@ export function StackedBars({ data, series, height = 220 }: { data: { label: str
         <line x1={pad.l} x2={W - pad.r} y1={y(0)} y2={y(0)} stroke="var(--axis)" strokeWidth={1} />
       </svg>
       {hover !== null && (
-        <div className="pointer-events-none absolute top-2 z-10 min-w-36 glass-strong rounded-xl border border-line bg-dialog px-3 py-2 text-xs shadow-pop"
+        <div className="pointer-events-none absolute top-2 z-10 min-w-36 rounded-2xl bg-primary px-3 py-2 text-xs text-on-primary shadow-pop"
           style={{ left: `clamp(0px, calc(${((pad.l + bw * hover + bw / 2) / W) * 100}% - 72px), calc(100% - 150px))` }}>
-          <p className="mb-1 font-semibold text-ink">{data[hover].label}</p>
+          <p className="mb-1 font-semibold text-on-primary">{data[hover].label}</p>
           {[...series].reverse().map((s) => (
-            <p key={s.key} className="flex items-center gap-2 text-ink-2">
+            <p key={s.key} className="flex items-center gap-2 text-on-primary/75">
               <span className="h-2 w-2 rounded-sm" style={{ background: s.color }} />{s.label}
-              <span className="tabular ml-auto font-semibold text-ink">{data[hover].values[s.key] ?? 0}</span>
+              <span className="tabular ml-auto font-semibold text-on-primary">{data[hover].values[s.key] ?? 0}</span>
             </p>
           ))}
-          <p className="mt-1 flex border-t border-line pt-1 text-ink-2">Total<span className="tabular ml-auto font-semibold text-ink">{totals[hover]}</span></p>
+          <p className="mt-1 flex border-t border-line pt-1 text-on-primary/75">Total<span className="tabular ml-auto font-semibold text-on-primary">{totals[hover]}</span></p>
         </div>
       )}
     </div>
@@ -121,7 +121,7 @@ export function Histogram({ rows, markerAfter, markerLabel }: { rows: { bucket: 
             <span className="tabular mb-1 text-center text-xs text-muted">{Math.round((r.count / total) * 100)}%</span>
             <div className="rounded-t-[4px] transition-[filter] hover:brightness-110" style={{ height: `${(r.count / max) * 78}%`, background: `color-mix(in oklab, var(--chart-bar) ${45 + i * 13}%, var(--surface))` }} />
             {hover === i && (
-              <div className="pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg border border-line bg-dialog px-2 py-1 text-xs shadow-pop">
+              <div className="pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-on-primary shadow-pop">
                 <span className="text-ink-2">{r.bucket}</span> <span className="tabular font-semibold text-ink">{r.count.toLocaleString()}</span>
               </div>
             )}
