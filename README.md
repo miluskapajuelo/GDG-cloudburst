@@ -60,7 +60,7 @@ TODO
 | Member | Role |
 |---|---|
 | shaadqrsh | A1: data split, classifier |
-| GUSTAVO_LOGIN | A2: API service, evaluation |
+| gbuitra | A2: API service, evaluation |
 | Karanpatel3114 | B1: retrieval, language, PII, burst |
 | prithvipoojari | B2: escalation gate, grounded drafting |
 | miluskapajuelo | C: console, README, demo |
