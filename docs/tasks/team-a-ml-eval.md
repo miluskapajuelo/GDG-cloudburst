@@ -52,10 +52,10 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [ ] Your laptop is the **demo machine**: build `data/` and `artifacts/` there (the B1 index too), and host the checkpoint run.
 
 ### A1.6 Improve and calibrate (T+2:15–3:15)
-- [ ] Compute the expected calibration error (ECE, 10 bins) on val per head. If ECE is above 0.08, wrap the heads in `CalibratedClassifierCV(method="sigmoid", cv=3)` and keep the change only if val macro-F1 does not drop.
-- [ ] Try one cheap improvement and keep it only if val macro-F1 improves: tune `C` ∈ {1, 4, 10}, or add simple features (has_subject, body length bucket).
+- [x] Compute the expected calibration error (ECE, 10 bins) on val per head. If ECE is above 0.08, wrap the heads in `CalibratedClassifierCV(method="sigmoid", cv=3)` and keep the change only if val macro-F1 does not drop.
+- [x] Try one cheap improvement and keep it only if val macro-F1 improves: tune `C` ∈ {1, 4, 10}, or add simple features (has_subject, body length bucket).
 - [ ] **(optional)** Compare with logistic regression on B1's multilingual embeddings (`Retriever.embed`). Keep the winner. Record the comparison in `ml/EDA.md`.
-- [ ] Never look at test metrics while making these choices.
+- [x] Never look at test metrics while making these choices.
 
 ### A1.7 Threshold tuning support (T+3:30)
 - [ ] Make sure `artifacts/val_preds.parquet` is current. Pair with A2 on `eval/tune_thresholds.py` if needed.
