@@ -46,7 +46,7 @@ export default function TestTicketDialog({ onClose }: { onClose: () => void }) {
         messages: [{ id: crypto.randomUUID(), author: 'Test customer', role: 'customer', internal: false, body, at: now }],
         audit: [
           { id: crypto.randomUUID(), at: now, actor: 'System', kind: 'status', text: 'Received via "Test a ticket"' },
-          { id: crypto.randomUUID(), at: now, actor: 'SentinelDesk', kind: 'ai', text: `Classified as ${data.predictions.type.label} · ${data.predictions.queue.label} · ${data.predictions.priority.label} in ${data.latency_ms.total} ms. ${data.escalation.badge}.${fallback ? ' (offline fallback)' : ''}` },
+          { id: crypto.randomUUID(), at: now, actor: 'SentinelDesk', kind: 'ai', text: `Classified as ${data.predictions.type.label}, ${data.predictions.queue.label}, ${data.predictions.priority.label} priority in ${data.latency_ms.total} ms. ${data.escalation.badge}.${fallback ? ' (offline fallback)' : ''}` },
         ],
       }
       store.add(ticket)
@@ -72,31 +72,41 @@ export default function TestTicketDialog({ onClose }: { onClose: () => void }) {
         {busy ? (
           <div className="px-5 py-8"><TriageProgress /></div>
         ) : (
-          <form className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4" onSubmit={(e) => { e.preventDefault(); run() }}>
-            <label className="block text-sm font-medium text-ink-2">Start from an example
+          <form className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4" onSubmit={(e) => { e.preventDefault(); run() }}
+            onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run() } }}>
+            <label className="block text-sm font-medium text-ink-2">Presets
               <select value={preset} onChange={(e) => { const d = DEMO_TICKETS.find((x) => x.id === e.target.value); setPreset(e.target.value); if (d) { setSubject(d.subject); setBody(d.body) } }}
-                className="mt-1.5 h-9 w-full rounded-md border border-line-strong bg-surface px-2 text-sm text-ink">
-                <option value="">Choose an example…</option>
+                className="mt-1.5 h-10 w-full rounded-xl border border-line-strong bg-surface px-3 text-sm text-ink">
+                <option value="">Choose a demo or red-team ticket</option>
                 {DEMO_TICKETS.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
               </select>
             </label>
-            {info && <p className="-mt-2 text-xs text-muted">{info.purpose}</p>}
+            {info && (
+              <div className="-mt-1 rounded-xl border border-line bg-surface-2 px-3.5 py-2.5" aria-live="polite">
+                <p className="text-sm font-semibold text-ink">{info.title}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted">{info.purpose}</p>
+              </div>
+            )}
             <label className="block text-sm font-medium text-ink-2">Subject <span className="font-normal text-muted">(optional)</span>
-              <input value={subject} onChange={(e) => setSubject(e.target.value)} className="mt-1.5 h-9 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink" />
+              <input value={subject} onChange={(e) => setSubject(e.target.value)} aria-describedby="subject-hint"
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); bodyRef.current?.focus() } }}
+                className="mt-1.5 h-10 w-full rounded-xl border border-line-strong bg-surface px-3 text-sm text-ink" />
             </label>
-            <label className="block text-sm font-medium text-ink-2">Message
-              <textarea ref={bodyRef} value={body} onChange={(e) => setBody(e.target.value)} rows={9}
-                onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run() } }}
-                className="mt-1.5 block w-full resize-y rounded-md border border-line-strong bg-surface px-3 py-2 text-sm leading-relaxed text-ink" />
+            {!subject.trim() && <p id="subject-hint" className="-mt-2 text-xs text-muted">Subject empty: fine. Many real tickets have none, so triage uses the message alone.</p>}
+            <label className="block text-sm font-medium text-ink-2">Message <span className="font-normal text-muted">(required)</span>
+              <textarea ref={bodyRef} value={body} onChange={(e) => setBody(e.target.value)} rows={9} required aria-describedby="body-count"
+                className="mt-1.5 block w-full resize-y rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-sm leading-relaxed text-ink" />
             </label>
-            <p className={`text-xs ${body.length > 8000 ? 'text-review' : 'text-muted'}`}>{body.length.toLocaleString()} characters{body.length > 8000 ? ' · only the first 8,000 are analysed' : ''}</p>
-            {error && <p role="alert" className="rounded-md bg-oncall-soft px-3 py-2 text-sm text-oncall">{error}</p>}
+            <p id="body-count" aria-live="polite" className={`tabular -mt-2 text-right text-xs ${body.length > 8000 ? 'font-semibold text-review' : 'text-muted'}`}>
+              {body.length.toLocaleString()} characters{body.length > 8000 ? ' (only the first 8,000 are analysed)' : ''}
+            </p>
+            {error && <p role="alert" className="rounded-xl bg-oncall-soft px-3 py-2 text-sm text-oncall">{error}</p>}
           </form>
         )}
         <footer className="flex items-center gap-2 border-t border-line px-5 py-3">
-          <span className="text-xs text-muted">⌘/Ctrl + Enter</span>
+          <span className="text-xs text-muted">Ctrl or ⌘ + Enter to triage</span>
           <Button variant="ghost" className="ml-auto" onClick={onClose} disabled={busy}>Cancel</Button>
-          <Button variant="primary" icon="sparkle" onClick={run} disabled={!body.trim() || busy}>{busy ? 'Analysing…' : 'Analyse ticket'}</Button>
+          <Button variant="primary" icon="send" onClick={run} disabled={!body.trim() || busy} title={!body.trim() ? 'Write a message first' : undefined}>{busy ? 'Triaging…' : 'Triage'}</Button>
         </footer>
       </div>
     </div>

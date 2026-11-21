@@ -152,7 +152,7 @@ export default function Inbox({ view, onTest }: { view: View; onTest: () => void
             ) : (
               <EmptyState icon="checkCircle" title={view === 'resolved' ? 'Nothing resolved yet' : 'All caught up'}>
                 {view === 'resolved' ? 'Resolved tickets will appear here.' : 'No open tickets need your attention right now.'}
-                {view !== 'resolved' && <div className="mt-3"><Button size="sm" icon="sparkle" onClick={onTest}>Test a ticket</Button></div>}
+                {view !== 'resolved' && <div className="mt-3"><Button size="sm" icon="plus" onClick={onTest}>Test a ticket</Button></div>}
               </EmptyState>
             )
           ) : (
