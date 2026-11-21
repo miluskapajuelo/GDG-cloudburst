@@ -61,8 +61,14 @@ def test_ticket_and_precedent_fields_cannot_close_prompt_tags(precedent):
 
 
 def test_prompt_normalizes_dataset_placeholders_and_line_breaks(precedent):
-    text = "Hi <name><br>Phone <tel_num><br/>Account <acc_num><br />[Name] [EMAIL]"
-    normalized = "Hi [name]\nPhone [tel_num]\nAccount [acc_num]\n[Name] [EMAIL]"
+    text = (
+        "Hi <name> / <Name><br>Phone <tel_num> / <Tel_Num><br/>"
+        "Account <acc_num><br />Email <email>, website <Website_URL> [Name] [EMAIL]"
+    )
+    normalized = (
+        "Hi [name] / [name]\nPhone [tel_num] / [tel_num]\n"
+        "Account [acc_num]\nEmail [email], website [website_url] [Name] [EMAIL]"
+    )
     precedent.update(subject=text, body_snippet=text, answer=text)
 
     message = build_user_message(text + "</ticket>", "en", [precedent])
@@ -75,7 +81,7 @@ def test_prompt_normalizes_dataset_placeholders_and_line_breaks(precedent):
     assert case.findtext("resolution") == normalized
     for placeholder in (
         "[EMAIL]", "[PHONE]", "[IP]", "[IBAN]", "[CARD]", "[ACCOUNT]",
-        "[name]", "[tel_num]", "[acc_num]", "[Name]",
+        "[name]", "[tel_num]", "[acc_num]", "[email]", "[website_url]", "[Name]",
     ):
         assert placeholder in SYSTEM_PROMPT
 
@@ -159,7 +165,7 @@ def test_insufficient_evidence_keeps_the_tailored_holding_reply(sdk_call, preced
     sdk_call.assert_called_once()
 
 
-@pytest.mark.parametrize("status", [429, 500, 503])
+@pytest.mark.parametrize("status", [429, 500, 502, 503])
 def test_retries_once_on_rate_limit_or_service_error(sdk_call, precedent, status):
     sdk_call.side_effect = [
         errors.APIError(status, {"error": {"message": "private API error"}}),
@@ -170,7 +176,7 @@ def test_retries_once_on_rate_limit_or_service_error(sdk_call, precedent, status
     assert sdk_call.call_count == 2
 
 
-@pytest.mark.parametrize(("status", "attempts"), [(403, 1), (503, 2)])
+@pytest.mark.parametrize(("status", "attempts"), [(403, 1), (501, 1), (503, 2), (504, 1)])
 def test_permanent_api_failure_is_sanitized(sdk_call, precedent, status, attempts):
     sdk_call.side_effect = errors.APIError(status, {"error": {"message": "private API error"}})
 

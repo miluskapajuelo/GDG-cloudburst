@@ -82,7 +82,7 @@ def _call(system: str, contents: str) -> types.GenerateContentResponse:
                 model=config.LLM_MODEL, contents=contents, config=generation_config
             )
         except errors.APIError as error:
-            if can_retry and (error.code == 429 or 500 <= error.code < 600):
+            if can_retry and error.code in (429, 500, 502, 503):
                 can_retry = False
                 continue
             raise DraftError(f"Gemini returned HTTP {error.code}.") from None
