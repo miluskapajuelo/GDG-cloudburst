@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Segmented } from '../../components/ui'
 import { usePrefs } from '../../lib/prefs'
 import { AGENT } from '../../lib/session'
 import { useConfig } from '../../lib/useApi'
@@ -26,13 +27,19 @@ export default function Settings() {
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-3xl space-y-8 px-4 pb-12 pt-8 sm:px-8">
         <div>
-          <h1 className="text-[32px] leading-[1.15] text-ink">Settings</h1>
+          <h1 className="text-[40px] leading-[1.1] text-ink">Settings</h1>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">Your workspace preferences and how the safety check decides.</p>
         </div>
 
         <Group title="Profile">
           <Row label="Name" hint="Shown to customers on sent responses">{AGENT.name}</Row>
           <Row label="Languages" hint="Tickets in other languages show a translation">English, German</Row>
+        </Group>
+
+        <Group title="Appearance">
+          <Row label="Theme" hint="Dark is the default. Use light in bright rooms or on a washed-out projector.">
+            <Segmented label="Theme" value={prefs.theme} onChange={(v) => set({ theme: v })} options={[['dark', 'Dark'], ['light', 'Light'], ['system', 'System']] as const} />
+          </Row>
         </Group>
 
         <Group title="Workspace">
@@ -50,7 +57,7 @@ export default function Settings() {
 
         <Group title="Keyboard shortcuts">
           {[['J / K', 'Next / previous ticket'], ['Enter', 'Open ticket'], ['/', 'Search'], ['⌘K', 'Search from anywhere'], ['Esc', 'Back to list'], ['⌘ Enter', 'Review and send']].map(([k, d]) => (
-            <Row key={k} label={d}><kbd className="rounded border border-line-strong bg-surface-2 px-1.5 font-mono text-xs">{k}</kbd></Row>
+            <Row key={k} label={d}><kbd className="rounded-md bg-surface-3 px-2 py-0.5 font-mono text-xs text-ink-2">{k}</kbd></Row>
           ))}
         </Group>
       </div>
@@ -63,7 +70,7 @@ function Group({ title, description, children }: { title: string; description?: 
     <section>
       <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
       {description && <p className="mt-1 text-[13px] text-muted">{description}</p>}
-      <div className="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface shadow-soft">{children}</div>
+      <div className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">{children}</div>
     </section>
   )
 }
@@ -73,7 +80,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
     <div className="flex items-center gap-4 px-5 py-3.5">
       <div className="min-w-0 flex-1">
         <p className="text-sm text-ink">{label}</p>
-        {hint && <p className="mt-0.5 font-mono text-xs text-muted">{hint}</p>}
+        {hint && <p className={`mt-0.5 text-xs text-muted ${/^[A-Z0-9_]+$/.test(hint) ? 'font-mono' : ''}`}>{hint}</p>}
       </div>
       <div className="shrink-0 text-sm text-ink-2">{children}</div>
     </div>
