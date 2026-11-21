@@ -168,7 +168,7 @@
       "body": "Hiermit fordere ich Sie auf, sämtliche über mich gespeicherten personenbezogenen Daten gemäß Art. 17 DSGVO zu löschen und mir die Löschung schriftlich zu bestätigen.",
       "burst": false,
       "expected_status": "ESCALATE",
-      "expected_route": "HUMAN_REVIEW",
+      "expected_route": "ON_CALL",
       "expected_reason_codes_any": ["UNSUPPORTED_REQUEST", "LLM_INSUFFICIENT_EVIDENCE"],
       "expected_reply_language": "de"
     },
