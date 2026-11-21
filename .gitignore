@@ -1,0 +1,37 @@
+# --- data & build artifacts (never commit: leakage + size) ---
+data/
+artifacts/
+*.parquet
+*.faiss
+*.joblib
+*.npy
+*.pkl
+eval/results/test_predictions.parquet
+
+# --- secrets ---
+.env
+.env.*
+!.env.example
+web/.env.local
+
+# --- python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- node / web ---
+node_modules/
+web/dist/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# --- local agent settings ---
+.claude/settings.local.json
