@@ -80,8 +80,8 @@ Layout, wide screen (projector-friendly, base font 16px or larger):
 - [x] A history sidebar: the last 10 results in memory, each showing the badge colour, subject or the first 40 chars, and the time. Clicking one shows that result again.
 
 ### C.7 Polish and robustness (T+3:15–4:00)
-- [ ] Test with: an empty subject, a 7,000-char body, German umlauts, a body with HTML-like `<script>` text (render it as text; never use `dangerouslySetInnerHTML`), the API returning 422, and the API down.
-- [ ] Check readability at 1280×720 (projector). Use high contrast. Do not use colour alone for meaning: the badge text matters.
+- [x] Test with: an empty subject, a 7,000-char body, German umlauts, a body with HTML-like `<script>` text (render it as text; never use `dangerouslySetInnerHTML`), the API returning 422, and the API down.
+- [x] Check readability at 1280×720 (projector). Use high contrast. Do not use colour alone for meaning: the badge text matters.
 
 ### C.8 README.md (draft by T+3:30, final by T+4:30)
 Fill in the skeleton `README.md` (already in the repo). Get the numbers from A2 and the architecture notes from B2. Required sections:
