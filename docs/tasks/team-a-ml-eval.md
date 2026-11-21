@@ -52,19 +52,19 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [ ] Your laptop is the **demo machine**: build `data/` and `artifacts/` there (the B1 index too), and host the checkpoint run.
 
 ### A1.6 Improve and calibrate (T+2:15–3:15)
-- [ ] Compute the expected calibration error (ECE, 10 bins) on val per head. If ECE is above 0.08, wrap the heads in `CalibratedClassifierCV(method="sigmoid", cv=3)` and keep the change only if val macro-F1 does not drop.
-- [ ] Try one cheap improvement and keep it only if val macro-F1 improves: tune `C` ∈ {1, 4, 10}, or add simple features (has_subject, body length bucket).
+- [x] Compute the expected calibration error (ECE, 10 bins) on val per head. If ECE is above 0.08, wrap the heads in `CalibratedClassifierCV(method="sigmoid", cv=3)` and keep the change only if val macro-F1 does not drop.
+- [x] Try one cheap improvement and keep it only if val macro-F1 improves: tune `C` ∈ {1, 4, 10}, or add simple features (has_subject, body length bucket).
 - [ ] **(optional)** Compare with logistic regression on B1's multilingual embeddings (`Retriever.embed`). Keep the winner. Record the comparison in `ml/EDA.md`.
-- [ ] Never look at test metrics while making these choices.
+- [x] Never look at test metrics while making these choices.
 
 ### A1.7 Threshold tuning support (T+3:30)
-- [ ] Make sure `artifacts/val_preds.parquet` is current. Pair with A2 on `eval/tune_thresholds.py` if needed.
+- [x] Make sure `artifacts/val_preds.parquet` is current. Pair with A2 on `eval/tune_thresholds.py` if needed.
 - [ ] **(optional)** After thresholds are locked, retrain on all KB rows (fit + val) for the final model. Log it in the decision log.
 
 ### A1.8 Demo machine ready (by T+4:00)
 - [ ] Fresh `git pull`, then: `make_split`, `train`, `build_index`, eval run, API, web. Follow the README word for word and report any README gaps to `miluskapajuelo`.
-- [ ] Make the API warm up models at startup (A2 implements it, you verify): the first request after startup must take under 3 s, excluding the LLM.
-- [ ] `.env` holds a working key. Test the `SENTINEL_LLM_MODEL` switch once.
+- [x] Make the API warm up models at startup (A2 implements it, you verify): the first request after startup must take under 3 s, excluding the LLM.
+- [x] `.env` holds a working key. Test the `SENTINEL_LLM_MODEL` switch once.
 
 ### A1.9 Q&A prep (by T+4:30)
 - [ ] Write 5 bullet points in `ml/EDA.md` under "Judge Q&A": why TF-IDF + LR, how leakage is prevented, why priority F1 is modest, how HPI recall is achieved (gate probabilities), and what we would do with more time.
@@ -111,14 +111,14 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [ ] Wire the real classifier and retriever into `service.py` (replace stubs). Merge after A1.
 
 ### A2.5 LLM sample evaluation (by T+3:15)
-- [ ] `--llm-sample 40`: a stratified sample of test inputs (at least 10 predicted high/Incident; mixed en/de), run with `skip_llm=False`. Measure:
+- [x] `--llm-sample 40`: a stratified sample of test inputs (at least 10 predicted high/Incident; mixed en/de), run with `skip_llm=False`. Measure:
   - `generate` latency p50/p95 and total latency p50/p95
   - citation validity rate (no `CITATION_CHECK_FAILED`)
   - the fraction of OK drafts with at least 1 citation
   - `INSUFFICIENT_EVIDENCE` rate and `LLM_UNAVAILABLE` rate
   - reply-language match rate (detect the language of `draft.text`, compare with `language.reply_language`)
-- [ ] Save the drafts to `eval/results/llm_samples.jsonl`: `ticket_id`, predictions, escalation, draft. **No test labels and no test answers.**
-- [ ] LLM calls cost money and time. Run the sample at most 3 times in total.
+- [x] Save the drafts to `eval/results/llm_samples.jsonl`: `ticket_id`, predictions, escalation, draft. **No test labels and no test answers.**
+- [x] LLM calls cost money and time. Run the sample at most 3 times in total.
 
 ### A2.6 `GET /metrics` and the `metrics.json` shape
 ```json
