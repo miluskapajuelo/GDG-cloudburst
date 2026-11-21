@@ -148,7 +148,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
   - Use `artifacts/val_preds.parquet` for the classifier probabilities and `Retriever.search(exclude_ids={ticket_id})` for similarities.
   - Sweep `T_HIGH_PRIORITY_P`, `T_INCIDENT_P`, the `T_CONF_*` values and `T_SIM`.
   - Report HPI escalation recall, escalation rate and NO_PRECEDENT rate for each setting.
-- [ ] Write `eval/results/threshold_sweep.md` with a recommended row. Send it to `prithvipoojari`, who updates `agent/config.py`.
+- [x] Write `eval/results/threshold_sweep.md` with a recommended row. Send it to `prithvipoojari`, who updates `agent/config.py`.
 
 ### A2.8 Red-team runner (by T+3:50)
 - [x] `eval/run_redteam.py`: run every ticket in `shared/fixtures/demo_tickets.json` through `triage()` with the LLM on. Compare against `expected_status` / `expected_reason_codes`. Write `eval/results/redteam.md` (a pass/fail table, plus the draft text for failures).

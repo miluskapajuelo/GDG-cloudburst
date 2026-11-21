@@ -74,11 +74,19 @@ def load_val(ddir: Path) -> pd.DataFrame:
     return val
 
 
+def prob_columns(columns: Iterable[str], head: str) -> list[str]:
+    """The '<head>__<label>' probability columns. Skips '<head>__true' (gold val label, a string column)."""
+    return [c for c in columns if c.startswith(f"{head}__") and c != f"{head}__true"]
+
+
 def load_val_probs(adir: Path) -> pd.DataFrame:
-    """artifacts/val_preds.parquet: ticket_id plus one '<head>__<label>' column per class (A1.4)."""
+    """artifacts/val_preds.parquet: ticket_id plus one '<head>__<label>' column per class (A1.4).
+
+    A1 also writes '<head>__true' (gold val label). It is ignored here; labels come from kb_train val rows.
+    """
     probs = pd.read_parquet(adir / "val_preds.parquet")
     for head in HEADS:
-        assert any(c.startswith(f"{head}__") for c in probs.columns), f"val_preds has no {head}__* columns"
+        assert prob_columns(probs.columns, head), f"val_preds has no {head}__* probability columns"
     return probs
 
 
@@ -86,7 +94,7 @@ def classifier_features(probs: pd.DataFrame) -> pd.DataFrame:
     """Per ticket: P(priority=high), P(type=Incident) and the top-class confidence per head."""
     out = pd.DataFrame({"ticket_id": probs["ticket_id"].astype(str)})
     for head in HEADS:
-        cols = [c for c in probs.columns if c.startswith(f"{head}__")]
+        cols = prob_columns(probs.columns, head)
         out[f"conf_{head}"] = probs[cols].max(axis=1).to_numpy(dtype=float)
     out["p_high"] = probs.get("priority__high", pd.Series(0.0, index=probs.index)).to_numpy(dtype=float)
     out["p_incident"] = probs.get("type__Incident", pd.Series(0.0, index=probs.index)).to_numpy(dtype=float)
@@ -147,7 +155,7 @@ def retrieval_features(
     embed_search(text, ticket_id) must return precedents sorted by similarity, without ticket_id itself.
     """
     probs = probs.set_index(probs["ticket_id"].astype(str))
-    probs_cols = {h: [c for c in probs.columns if c.startswith(f"{h}__")] for h in HEADS}
+    probs_cols = {h: prob_columns(probs.columns, h) for h in HEADS}
     rows = []
     t0 = time.perf_counter()
     for i, (tid, subject, body) in enumerate(zip(val["ticket_id"], val["subject"], val["body"]), start=1):
