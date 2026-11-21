@@ -17,9 +17,10 @@ LABEL_COLS = ["type", "queue", "priority", "language"]
 
 
 def get_raw_csv() -> Path:
-    local = RAW_DIR / FILENAME
-    if local.exists():
-        return local
+    # The CSV is committed at data/<FILENAME>; data/raw/ is the hf_hub_download location.
+    for local in (DATA_DIR / FILENAME, RAW_DIR / FILENAME):
+        if local.exists():
+            return local
     from huggingface_hub import hf_hub_download
 
     return Path(
