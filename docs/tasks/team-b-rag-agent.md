@@ -68,8 +68,8 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 Agent: work only on the tasks in this section, in order. Tick each box in the same commit as the work.
 
 ### B2.1 Config and API access (by T+0:30)
-- [ ] `agent/config.py`: every threshold in [escalation-policy.md](../escalation-policy.md) §4 with its default, each one overridable by an env var `SENTINEL_<NAME>`. Also `SENSITIVE_LEXICON`, `INJECTION_PATTERNS` (compiled, case-insensitive), `LLM_MODEL` and `LLM_TIMEOUT_S`, and `GEMINI_API_KEY`, read from `.env` via `python-dotenv`.
-- [ ] Check that the API key works with a one-off call (do not commit a script that prints the key).
+- [x] `agent/config.py`: every threshold in [escalation-policy.md](../escalation-policy.md) §4 with its default, each one overridable by an env var `SENTINEL_<NAME>`. Also `SENSITIVE_LEXICON`, `INJECTION_PATTERNS` (compiled, case-insensitive), `LLM_MODEL` and `LLM_TIMEOUT_S`, and `GEMINI_API_KEY`, read from `.env` via `python-dotenv`.
+- [x] Check that the API key works with a one-off call (do not commit a script that prints the key).
 
 ### B2.2 Prompt and drafting: `agent/prompts.py` + `agent/draft.py` (by T+1:15)
 
@@ -148,16 +148,16 @@ Handle the response like this:
 **Done when:** running `python -m agent.draft` with the mock precedents from the fixture produces a German and an English draft with valid citations in under 10 s each.
 
 ### B2.3 Citation and fabrication check: `agent/citations.py` (by T+1:30)
-- [ ] Extract `text_ids = re.findall(r"\[(TKT-\d{5})\]", draft_text)`.
-- [ ] Report a problem when:
+- [x] Extract `text_ids = re.findall(r"\[(TKT-\d{5})\]", draft_text)`.
+- [x] Report a problem when:
   - an ID in the text, or in `cited_ids`, is not in `allowed_ids`
   - status is OK but `text_ids` is empty
   - a figure in the draft does not appear in **any** precedent answer. Figures are money or percentages: `\d+(?:[.,]\d+)?\s?(?:€|eur|euro|\$|usd|%|prozent|percent)` and `(?:€|\$)\s?\d+`, matched case-insensitively. Check by substring match of the number.
-- [ ] Tests: a valid draft, a hallucinated ID, a missing citation, and a "50% refund" that no precedent supports.
+- [x] Tests: a valid draft, a hallucinated ID, a missing citation, and a "50% refund" that no precedent supports.
 
 ### B2.4 Gate: `agent/gate.py` (by T+1:45)
-- [ ] Implement `pre_draft_gate` and `finalize_escalation` exactly as in [escalation-policy.md](../escalation-policy.md) §1–3: all 8 reason codes, the route, the badge, the reason order and messages that include the numbers.
-- [ ] Unit tests with hand-made predictions/precedents dicts, one per reason code, plus a clean AUTO_DRAFT case.
+- [x] Implement `pre_draft_gate` and `finalize_escalation` exactly as in [escalation-policy.md](../escalation-policy.md) §1–3: all 8 reason codes, the route, the badge, the reason order and messages that include the numbers.
+- [x] Unit tests with hand-made predictions/precedents dicts, one per reason code, plus a clean AUTO_DRAFT case.
 
 ### B2.5 Pipeline: `agent/pipeline.py` (by T+2:00)
 ```text
@@ -173,7 +173,7 @@ escalation = finalize_escalation(pre, draft, problems, llm_error)
 if draft: draft["for_human_review"] = escalation["status"] == "ESCALATE"
 return {"precedents", "escalation", "draft", "burst", "latency_ms": {"retrieve", "gate", "generate"}}
 ```
-- [ ] Until B1 merges, use a `FakeRetriever` in `tests/` that returns the fixture precedents. Merge for Integration 1 (a stub draft is acceptable at that point).
+- [x] Until B1 merges, use a `FakeRetriever` in `tests/` that returns the fixture precedents. Merge for Integration 1 (a stub draft is acceptable at that point).
 
 ### B2.6 Prompt hardening and red-team (T+2:15–3:15)
 - [ ] Run every ticket in [docs/demo-tickets.md](../demo-tickets.md) through `api.service.triage` (or the console). For each one, check:

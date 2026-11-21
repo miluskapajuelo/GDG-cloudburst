@@ -51,4 +51,20 @@ Order: IBAN → EMAIL → CARD (Luhn-checked, so long phone numbers aren't eaten
 
 ## B2
 
-_(prithvipoojari: add notes here)_
+### Prompt and gate changes
+
+The prompt escapes XML delimiters in the incoming ticket and in historical evidence. It asks Gemini to ground each substantive claim in a cited resolution, describe possible causes conditionally, and refer security changes and destructive actions to a specialist. Drafts avoid saying someone already performed work on the current ticket.
+
+The injection filter also handles variable whitespace, formal German imperatives, and reserved tags with attributes. The sensitive-request terms retain the documented defaults pending calibration. When the gate finds a sensitive request that no precedent answer supports, the ticket still escalates with `UNSUPPORTED_REQUEST`, and Gemini writes the reply. This replaces an earlier fixed template, because the assignment asks for a tailored response that refuses to fabricate. The prompt tells Gemini to promise nothing and to return `INSUFFICIENT_EVIDENCE` with a holding reply that acknowledges the issue, says a specialist will follow up and asks for missing details. The citation and figure check still runs on that reply, and a human reviews it before it is sent.
+
+Sensitive terms now match from the start of a word in both tickets and precedent answers, so compounds such as `Rückerstattungsantrag` still count. `SLA`, `SLAs`, and `umgehen` require whole words. This avoids false matches in `bislang`, `Slack`, `translate`, and `umgehend`.
+
+Reply length: a grounded reply must now be 80 to 100 words (previously about 80 to 180), not counting citations. With the prompt alone, all 3 English test drafts but only 1 of 3 German drafts landed in range, because German compounds use fewer words for the same content. The prompt now aims for about 90 words, and a reply outside the range gets one rewrite request. The rewrite is kept only if it is closer to the target. The limits are `REPLY_MIN_WORDS` and `REPLY_MAX_WORDS` in `agent/config.py`, overridable with `SENTINEL_REPLY_MIN_WORDS` and `SENTINEL_REPLY_MAX_WORDS`.
+
+### Judge Q&A
+
+- **Grounding.** Gemini returns a structured draft. The pipeline checks bracketed ticket IDs against the retrieved cases and compares currency amounts and percentages with the answers shown to Gemini. It flags drafts that fail validation for human review.
+- **Prompt injection.** The gate blocks drafting when it detects common English or German override attempts. The prompt treats both tickets and precedent excerpts as quoted data, with escaped field delimiters.
+- **Escalation reasons.** `HIGH_PRIORITY_INCIDENT` takes the on-call route when both model probabilities reach their thresholds. `LOW_CLASSIFIER_CONFIDENCE` flags a prediction head below its floor. `NO_PRECEDENT` means retrieval was empty or its top result was below the similarity floor. `PROMPT_INJECTION_SUSPECTED` flags an instruction override. `UNSUPPORTED_REQUEST` flags a sensitive action category missing from the retrieved answers. `LLM_INSUFFICIENT_EVIDENCE` records the model's abstention, `CITATION_CHECK_FAILED` reports invalid references or figures, and `LLM_UNAVAILABLE` covers generation failures.
+- **Cross-language evidence.** The offline German VPN case passes English precedent fixtures to drafting in German. B1's live retrieval results are needed to measure whether the index finds relevant cases across languages.
+- **Limitations.** Citation and figure checks verify IDs and amounts. Assessing whether every claim is supported still requires review. The lexicon can overmatch or miss rephrased requests. The 15 demo fixtures exercise B2 decisions with simulated upstream components. Live bilingual output, latency, and A2's threshold recommendations are pending.
