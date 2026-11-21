@@ -100,18 +100,18 @@ Results from `eval/results/metrics.md`: run on 2026-11-21, split fingerprint **`
 
 | Mode | p50 | p95 |
 |---|---|---|
-| Without LLM, all 5,718 tickets | 38 | 55 |
-| With LLM draft, 40-ticket sample | 940 | 1,416 |
+| Without LLM, all 5,718 tickets | 40 | 60 |
+| With LLM draft, 40-ticket sample | 1,116 | 14,697 |
 
 **Grounding** (40-ticket LLM sample)
 
 | Metric | Value |
 |---|---|
-| Citation validity (no `CITATION_CHECK_FAILED`) | 1.00 (22 of 22 drafts) |
-| OK drafts with at least one citation | 1.00 (21 of 21) |
-| Reply in the requested language | 1.00 (22 of 22) |
-| `INSUFFICIENT_EVIDENCE` rate | 0.025 (1 of 40) |
-| `LLM_UNAVAILABLE` rate | 0.45 (18 of 40) |
+| Citation validity (no `CITATION_CHECK_FAILED`) | 1.00 (39 of 39 drafts) |
+| OK drafts with at least one citation | 1.00 (37 of 37) |
+| Reply in the requested language | 1.00 (39 of 39) |
+| `INSUFFICIENT_EVIDENCE` rate | 0.05 (2 of 40) |
+| `LLM_UNAVAILABLE` rate | 0.025 (1 of 40) |
 
 Language detection agrees with the dataset's `language` label on 88.3% of tickets: 100% on `en` and 72.4% on `de`. Most of the `de` gap is label noise. About 29% of rows labelled `de` are English text ([agent/NOTES.md](agent/NOTES.md)).
 
@@ -158,7 +158,7 @@ Full rules: [docs/data-and-leakage.md](docs/data-and-leakage.md).
 - **Queue and priority predictions are modest** (macro-F1 0.59 and 0.63). Priority labels are noisy and depend on business context that the text often doesn't state. The gate compensates with probability thresholds, at the cost of a 47% escalation rate.
 - **German retrieval is weaker than English.** Some German phrasings embed poorly (for example "doppelt belastet"), so German tickets get `NO_PRECEDENT` more often.
 - **`T_SIM` = 0.50 still blocks some real tickets.** On 16 hand-written in-domain tickets, it blocks 12.5% of real IT questions and still catches 93% of off-topic ones. The earlier value, 0.55, blocked 25%.
-- **Gemini was unavailable for 45% of the LLM sample** (18 of 40). Those tickets fall back to human review with triage and precedents only.
+- **Gemini rate limits (HTTP 429) slow some drafts.** Draft calls back off and retry (2 s, 4 s, 8 s), so only 1 of 40 sampled tickets fell back to human review, but p95 latency with the LLM is about 15 s. Tickets that still fail fall back to human review with triage and precedents only.
 - **The sensitive-request lexicon can over-match or miss rephrased requests.** The figure check covers money and percentages only, and other claims rely on the human reviewer.
 - **The burst detector keeps its window in memory** in a single API process.
 - **The console's analytics and recent results cover only the current browser session.** There is no persistence.
