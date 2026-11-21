@@ -139,7 +139,6 @@ function TopBar({ onMenu, onTest }: { onMenu: () => void; onTest: () => void }) 
       <button className="rounded-full p-2 text-ink-2 hover:bg-surface-3 lg:hidden" aria-label="Open navigation" onClick={onMenu}>
         <Icon name="layers" className="h-5 w-5" />
       </button>
-      <Greeting />
       <button
         onClick={() => { navigate('/inbox'); requestAnimationFrame(() => document.getElementById('inbox-search')?.focus()) }}
         className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-line bg-surface-2 px-4 text-sm text-muted transition-colors hover:border-line-strong hover:text-ink-2 sm:max-w-sm lg:ml-auto"
@@ -173,22 +172,6 @@ export function HealthDot() {
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />
       {text}
     </span>
-  )
-}
-
-/** "Good evening, Lucía" with today's date: a calm anchor for a busy shift. */
-function Greeting() {
-  const now = new Date()
-  const h = now.getHours()
-  const part = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
-  return (
-    <div className="hidden min-w-0 items-center gap-3 lg:flex">
-      <Avatar name={AGENT.name} size="md" />
-      <div className="min-w-0 leading-tight">
-        <p className="truncate text-sm font-medium text-ink">{part}, {AGENT.name.split(' ')[0]}</p>
-        <p className="truncate text-xs text-muted">{now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-      </div>
-    </div>
   )
 }
 
