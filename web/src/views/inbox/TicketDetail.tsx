@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LatencyBar, SignalChips } from '../../components/results'
 import { Avatar, Button, EmptyState, Icon, Kbd, LangChip, PanelHeader, PriorityBadge, RouteBadge, type IconName } from '../../components/ui'
-import { precedentDate } from '../../data/mockBackend'
 import { AGENT } from '../../lib/session'
 import { ago, band, dateTime, duration, LANG_LABEL, pct, PRIORITY_LABEL, REASON_COPY, STATUS_LABEL } from '../../lib/format'
 import { usePrefs } from '../../lib/prefs'
@@ -38,6 +37,14 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
     window.addEventListener('keydown', on)
     return () => window.removeEventListener('keydown', on)
   }, [next, prev, section])
+
+  // Publish the scroll area's height as --ws-h so the sticky history column can cap itself to it.
+  const scrollRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return
+    const ro = new ResizeObserver(() => node.style.setProperty('--ws-h', `${node.clientHeight}px`))
+    ro.observe(node)
+    return () => ro.disconnect()
+  }, [])
 
   if (!t) {
     return <div className="flex h-full items-center justify-center"><EmptyState icon="inbox" title="Ticket not found"><a className="text-accent hover:underline" href={`#/${section}`}>Back to {section}</a></EmptyState></div>
@@ -105,12 +112,12 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
         </div>
       </header>
 
-      {/* 3-column workspace */}
-      <div className="min-h-0 flex-1 overflow-y-auto xl:grid xl:grid-cols-[minmax(320px,30fr)_minmax(420px,42fr)_minmax(300px,28fr)] xl:overflow-hidden">
-        <section aria-label="Customer ticket" className="border-b border-line bg-surface-2 xl:overflow-y-auto xl:border-b-0 xl:border-r">
+      {/* 3-column workspace: one scroll for the page; columns hug their content; side columns stay in view and scroll on their own. */}
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto xl:grid xl:grid-cols-[minmax(320px,30fr)_minmax(420px,42fr)_minmax(300px,28fr)] xl:items-start xl:gap-6 xl:p-6">
+        <section aria-label="Customer ticket" className="border-b border-line bg-surface-2 xl:sticky xl:top-0 xl:max-h-[calc(var(--ws-h,100dvh)-3rem)] xl:overflow-y-auto xl:rounded-2xl xl:border">
           <CustomerColumn t={t} now={now} />
         </section>
-        <section aria-label="Decision and response" className="space-y-5 p-4 sm:p-6 xl:overflow-y-auto">
+        <section aria-label="Decision and response" className="space-y-5 p-4 sm:p-6 xl:p-0">
           <DecisionCard t={t} now={now} />
           <Classification t={t} />
           {t.triage && <LatencyBar latency={t.triage.latency_ms} />}
@@ -119,7 +126,7 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
             <span><Kbd>J</Kbd><Kbd>K</Kbd> next / previous</span><span><Kbd>Esc</Kbd> back</span><span><Kbd>⌘</Kbd><Kbd>↵</Kbd> send</span>
           </p>
         </section>
-        <section aria-label="Supporting history" className="border-t border-line bg-surface-2 xl:overflow-y-auto xl:border-l xl:border-t-0">
+        <section aria-label="Supporting history" className="border-t border-line bg-surface-2 xl:sticky xl:top-0 xl:max-h-[calc(var(--ws-h,100dvh)-3rem)] xl:overflow-y-auto xl:rounded-2xl xl:border">
           <HistoryColumn t={t} highlight={highlight} />
         </section>
       </div>
@@ -434,7 +441,6 @@ function HistoryColumn({ t, highlight }: { t: Ticket; highlight: { id: string; n
 function PrecedentCard({ p, cited, cross, highlight, onHide }: { p: Precedent; cited: boolean; cross: boolean; highlight: number; onHide: () => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLLIElement>(null)
-  const date = precedentDate(p.ticket_id)
   useEffect(() => {
     if (!highlight) return
     setOpen(true)
@@ -458,7 +464,6 @@ function PrecedentCard({ p, cited, cross, highlight, onHide }: { p: Precedent; c
         <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
           <LangChip code={p.language} />
           {cross && <span className="rounded-full bg-accent-soft px-2 py-px text-xs font-medium text-accent" title="Retrieved across languages: this past ticket is in a different language than the new one">Cross-lingual</span>}
-          {date && <span>Resolved {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
         </p>
         {(p.type || p.queue || p.priority) && (
           <p className="mt-1 text-xs text-muted">{[p.type, p.queue, p.priority && `${PRIORITY_LABEL[p.priority as Priority] ?? p.priority} priority`].filter(Boolean).join(', ')}</p>

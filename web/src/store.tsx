@@ -58,6 +58,8 @@ interface Store {
   /** Time of the last "Reset burst". Burst flags on tickets created before it are no longer shown as live. */
   burstClearedAt: number
   clearBurst: () => void
+  /** Ids of the last 10 tickets triaged in this session, newest first (in memory only). */
+  history: string[]
 }
 
 const Ctx = createContext<Store | null>(null)
@@ -66,19 +68,24 @@ export function StoreProvider({ children, seed }: { children: ReactNode; seed: (
   const [tickets, dispatch] = useReducer(reducer, undefined, seed)
   const counter = useRef(24880)
   const [burstClearedAt, setBurstClearedAt] = useState(0)
+  const [history, setHistory] = useState<string[]>([])
   const store = useMemo<Store>(
     () => ({
       tickets,
       get: (id) => tickets.find((t) => t.id === id),
-      add: (ticket) => dispatch({ t: 'add', ticket }),
+      add: (ticket) => {
+        dispatch({ t: 'add', ticket })
+        setHistory((h) => [ticket.id, ...h.filter((x) => x !== ticket.id)].slice(0, 10))
+      },
       replace: (ticket) => dispatch({ t: 'replace', ticket }),
       patch: (ids, patch, audit, actor = 'Support team') => dispatch({ t: 'patch', ids: Array.isArray(ids) ? ids : [ids], patch, audit, actor }),
       message: (id, m, patch) => dispatch({ t: 'message', id, message: { ...m, id: newId('m'), at: new Date().toISOString() }, patch }),
       nextId: () => `SD-${String(++counter.current).padStart(5, '0')}`,
       burstClearedAt,
       clearBurst: () => setBurstClearedAt(Date.now()),
+      history,
     }),
-    [tickets, burstClearedAt],
+    [tickets, burstClearedAt, history],
   )
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }

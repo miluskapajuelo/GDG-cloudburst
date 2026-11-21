@@ -61,6 +61,37 @@ Same 5 topics, asked once in German and once in English. "Other lang" = how many
 - **Cross-lingual retrieval works:** 13 of 25 German-query hits are English tickets (52%), and 4 of 25 English-query hits are German (16%). They're on-topic in 4 of 5 topics. This is the evidence for the bonus feature: demo-01 and the VPN row show it best.
 - **Weak spot:** some German phrasings embed poorly ("doppelt belastet" = charged twice). Top-1 is 0.45, below `T_SIM` 0.55, so a German double-billing ticket would get `NO_PRECEDENT`, while the English one scores 0.74. Possible fixes (not done; optional, need team OK): hybrid BM25 + dense retrieval (B1.5 optional), or a stronger embedding model (`multilingual-e5-base`: better German, ~3–4× slower index build). Also relevant for B2/A2 tuning: German tickets will hit `NO_PRECEDENT` more often than English ones.
 
+### B1.7 Similarity numbers for `T_SIM` tuning (for A2 / B2)
+Computed with the live code path: `mask_pii(build_text(...))` → `Retriever.embed` → `search(k=1, exclude_ids={own id})`. Split `5a2ede85f9fb`. KB val only.
+
+**Val top-1 similarity, self-excluded (n = 2,287):**
+
+| | p1 | p5 | p10 | p25 | p50 |
+|---|---|---|---|---|---|
+| all | 0.769 | 0.825 | 0.851 | 0.897 | 0.939 |
+| text detected en (1,585) | 0.768 | 0.833 | 0.858 | 0.906 | 0.949 |
+| text detected de (701) | 0.772 | 0.817 | 0.838 | 0.882 | 0.916 |
+
+- **demo-08 (out of scope): 0.241.**
+- `NO_PRECEDENT` rate on val is **0.0% for every `T_SIM` ≤ 0.65**, so the "< 10% on val" target is always met and doesn't help choose a value.
+- **⚠️ Don't set `T_SIM` from val p5 (0.825), as policy §5 suggests.** Val is unrealistically easy: the dataset is templated, and 15.3% of val tickets have a near-duplicate in the KB (top-1 ≥ 0.98). Hand-written tickets, like the demo set and what judges will type, score far lower. At 0.825, 14 of 15 demo tickets would get `NO_PRECEDENT`.
+
+**Hand-written tickets (the realistic case):**
+- Demo set top-1: demo-01 0.815, 02 0.645, 03 0.706, **04 0.550**, 05 0.700, 06 0.606, 07 0.646, **08 0.241**, 09 0.698, 10 0.677, 11 0.746, **12 0.551**, 13 0.684, **14 0.543**, **15 0.533**.
+- 16 judge-style in-domain tickets (en/de, e.g. "VPN not working", "Rechnung wurde doppelt abgebucht", "help") vs 14 off-topic ones (jokes, weather, recipes, trivia):
+
+| `T_SIM` | real IT tickets blocked (`NO_PRECEDENT`) | off-topic tickets caught |
+|---|---|---|
+| 0.40 | 0% | 86% |
+| 0.45 | 6% | 86% |
+| **0.50** | **12.5%** | **93%** |
+| 0.55 (current) | 25% | 100% |
+
+  In-domain range is 0.44–0.77 (median 0.66). Off-topic range is 0.15–0.52 (median 0.28). The highest off-topic tickets were "I love your company, have a nice day!" (0.52) and "asdfghjkl" (0.48).
+- **Recommendation: `T_SIM = 0.50`.** It halves wrongly blocked real tickets (25% → 12.5%) and still catches 93% of off-topic ones, with demo-08 far below at 0.24. An off-topic ticket that gets past this rule still faces the second line of defence: the prompt's `INSUFFICIENT_EVIDENCE` path → `LLM_INSUFFICIENT_EVIDENCE` → ESCALATE. That costs one Gemini call but doesn't produce a bad answer.
+- **Fragility at 0.55:** demo-04 (0.550) and demo-12 (0.551) sit exactly on the line. Small numeric differences on another machine (CPU vs MPS, a different torch build on Python 3.14) could flip them between runs. 0.50 gives a safety margin.
+- Caveat: 30 hand-written tickets is a small sample. Treat these numbers as direction, not precision.
+
 ## B2
 
 ### Prompt and gate changes

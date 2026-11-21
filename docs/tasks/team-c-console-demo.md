@@ -75,9 +75,9 @@ Layout, wide screen (projector-friendly, base font 16px or larger):
 - [x] Add a **Reset burst** button.
 
 ### C.6 Context widgets (by T+3:15)
-- [ ] Holdout metrics strip from `GET /metrics`: macro-F1 for type, queue and priority, HPI escalation recall, and p50 latency. On 404, show "Eval not run yet".
-- [ ] A thresholds popover from `GET /config`, so a judge asking "what is your threshold?" can be answered in one click.
-- [ ] A history sidebar: the last 10 results in memory, each showing the badge colour, subject or the first 40 chars, and the time. Clicking one shows that result again.
+- [x] Holdout metrics strip from `GET /metrics`: macro-F1 for type, queue and priority, HPI escalation recall, and p50 latency. On 404, show "Eval not run yet".
+- [x] A thresholds popover from `GET /config`, so a judge asking "what is your threshold?" can be answered in one click.
+- [x] A history sidebar: the last 10 results in memory, each showing the badge colour, subject or the first 40 chars, and the time. Clicking one shows that result again.
 
 ### C.7 Polish and robustness (T+3:15–4:00)
 - [ ] Test with: an empty subject, a 7,000-char body, German umlauts, a body with HTML-like `<script>` text (render it as text; never use `dangerouslySetInnerHTML`), the API returning 422, and the API down.
