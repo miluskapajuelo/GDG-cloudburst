@@ -122,7 +122,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`glass-strong flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm shadow-pop ${
+            className={`glass-strong flex items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-pop ${
               t.tone === 'error'
                 ? 'border-oncall/40 bg-oncall-soft text-oncall'
                 : t.tone === 'success'

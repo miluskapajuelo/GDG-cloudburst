@@ -24,10 +24,10 @@ export default function Settings() {
   const thresholds = live ?? DEFAULT_THRESHOLDS
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 sm:px-8">
+      <div className="mx-auto max-w-3xl space-y-8 px-4 pb-12 pt-8 sm:px-8">
         <div>
-          <h1 className="text-[30px] leading-tight font-semibold text-ink">Settings</h1>
-          <p className="mt-1 text-sm text-muted">Your workspace preferences and how the safety check decides.</p>
+          <h1 className="text-[32px] leading-[1.15] text-ink">Settings</h1>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">Your workspace preferences and how the safety check decides.</p>
         </div>
 
         <Group title="Profile">
@@ -45,7 +45,7 @@ export default function Settings() {
           {Object.entries(thresholds).map(([k, v]) => (
             <Row key={k} label={EXPLAIN[k] ?? k} hint={k}><span className="tabular font-medium">{v}</span></Row>
           ))}
-          <p className="px-4 py-3 text-xs text-muted">When in doubt, tickets are escalated. A false escalation costs a few minutes; a missed incident can cost far more. Thresholds are tuned on a validation set, never on the test data.</p>
+          <p className="px-5 py-3.5 text-[13px] leading-relaxed text-muted">When in doubt, tickets are escalated. A false escalation costs a few minutes; a missed incident can cost far more. Thresholds are tuned on a validation set, never on the test data.</p>
         </Group>
 
         <Group title="Keyboard shortcuts">
@@ -61,19 +61,19 @@ export default function Settings() {
 function Group({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="text-sm font-semibold text-ink">{title}</h2>
-      {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
-      <div className="mt-3 divide-y divide-line rounded-lg border border-line bg-surface">{children}</div>
+      <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
+      {description && <p className="mt-1 text-[13px] text-muted">{description}</p>}
+      <div className="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface shadow-soft">{children}</div>
     </section>
   )
 }
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
-    <div className="flex items-center gap-4 px-4 py-3">
+    <div className="flex items-center gap-4 px-5 py-3.5">
       <div className="min-w-0 flex-1">
         <p className="text-sm text-ink">{label}</p>
-        {hint && <p className="font-mono text-[11px] text-muted">{hint}</p>}
+        {hint && <p className="mt-0.5 font-mono text-xs text-muted">{hint}</p>}
       </div>
       <div className="shrink-0 text-sm text-ink-2">{children}</div>
     </div>
@@ -82,10 +82,10 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 
 function Toggle({ label, hint, checked, onChange }: { label: string; hint: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-center gap-4 px-4 py-3">
+    <label className="flex cursor-pointer items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2">
       <div className="min-w-0 flex-1">
         <p className="text-sm text-ink">{label}</p>
-        <p className="text-xs text-muted">{hint}</p>
+        <p className="mt-0.5 text-[13px] text-muted">{hint}</p>
       </div>
       <input type="checkbox" role="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
       <span aria-hidden className="relative h-5 w-9 shrink-0 rounded-full bg-line-strong transition-colors peer-checked:bg-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-surface after:shadow after:transition-transform peer-checked:after:translate-x-4" />

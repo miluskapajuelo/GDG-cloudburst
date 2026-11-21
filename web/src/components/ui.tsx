@@ -28,11 +28,11 @@ export function Icon({ name, className = 'h-4 w-4', label }: { name: IconName; c
 // ---------------------------------------------------------------------------
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-accent text-on-accent hover:bg-accent-strong border-transparent shadow-soft',
-  secondary: 'bg-surface text-ink border-line-strong hover:bg-surface-3',
+  primary: 'bg-accent text-on-accent hover:bg-accent-strong border-transparent',
+  secondary: 'bg-surface text-ink border-line-strong hover:border-ink-2/30 hover:bg-surface-2',
   ghost: 'bg-transparent text-ink-2 border-transparent hover:bg-surface-3 hover:text-ink',
-  danger: 'bg-oncall text-on-route border-transparent hover:brightness-110',
-  success: 'bg-auto text-on-route border-transparent hover:brightness-110',
+  danger: 'bg-oncall text-on-route border-transparent hover:opacity-90',
+  success: 'bg-auto text-on-route border-transparent hover:opacity-90',
 }
 export function Button({
   variant = 'secondary',
@@ -43,11 +43,11 @@ export function Button({
   className = '',
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: 'sm' | 'md' | 'lg'; icon?: IconName; kbd?: string }) {
-  const sz = size === 'sm' ? 'h-8 px-3 text-[13px]' : size === 'lg' ? 'h-12 px-6 text-base' : 'h-10 px-4 text-sm'
+  const sz = size === 'sm' ? 'h-8 px-3 text-[13px]' : size === 'lg' ? 'h-11 px-5 text-[15px]' : 'h-9 px-3.5 text-sm'
   return (
     <button
       {...rest}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-full border font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${sz} ${VARIANT[variant]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${sz} ${VARIANT[variant]} ${className}`}
     >
       {icon && <Icon name={icon} />}
       {children}
@@ -58,7 +58,7 @@ export function Button({
 
 export function Kbd({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <kbd className={`ml-1 rounded border border-line-strong bg-surface-2 px-1 font-mono text-[11px] leading-4 text-muted ${className}`}>{children}</kbd>
+    <kbd className={`ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded border border-line-strong bg-surface-2 px-1 font-mono text-[11px] font-medium text-muted ${className}`}>{children}</kbd>
   )
 }
 
@@ -96,14 +96,14 @@ export function RouteBadge({ route, label, size = 'sm' }: { route: Route; label?
   const s = ROUTE_STYLE[routeKey(route)]
   if (size === 'lg') {
     return (
-      <div className={`inline-flex items-center gap-2.5 rounded-xl px-5 py-3 text-lg font-bold shadow-soft ${s.solid}`} role="status">
-        <Icon name={s.icon} className="h-6 w-6" />
+      <div className={`inline-flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-[17px] font-semibold tracking-[-0.005em] ${s.solid}`} role="status">
+        <Icon name={s.icon} className="h-5 w-5" />
         {label ?? s.short}
       </div>
     )
   }
   return (
-    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded border px-1.5 py-0.5 text-xs font-semibold ${s.cls}`}>
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded border px-1.5 py-0.5 text-xs font-medium ${s.cls}`}>
       <Icon name={s.icon} className="h-3.5 w-3.5" />
       {label ?? s.short}
     </span>
@@ -138,8 +138,8 @@ export function SlaTimer({ ticket, now }: { ticket: Ticket; now: number }) {
 
 export function LangChip({ code, confidence }: { code: string; confidence?: number }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-ink-2" title={confidence ? `Detected language ${code.toUpperCase()} (${pct(confidence)})` : `Language ${code.toUpperCase()}`}>
-      <Icon name="globe" className="h-3 w-3" />
+    <span className="tabular inline-flex items-center gap-1 rounded border border-line bg-surface-2 px-1.5 py-px font-mono text-xs font-medium uppercase text-ink-2" title={confidence ? `Detected language ${code.toUpperCase()} (${pct(confidence)})` : `Language ${code.toUpperCase()}`}>
+      <Icon name="globe" className="h-3 w-3 text-muted" />
       {code}
       {confidence !== undefined && <span className="font-normal text-muted">{pct(confidence)}</span>}
     </span>
@@ -167,8 +167,8 @@ export function Avatar({ name, size = 'sm' }: { name: string; size?: 'sm' | 'md'
   return (
     <span
       aria-hidden
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white ${size === 'sm' ? 'h-6 w-6 text-[10px]' : 'h-8 w-8 text-xs'}`}
-      style={{ background: `oklch(0.48 0.1 ${200 + (hue % 70)})` }}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white ring-1 ring-line ${size === 'sm' ? 'h-6 w-6 text-[11px]' : 'h-8 w-8 text-xs'}`}
+      style={{ background: `oklch(0.46 0.08 ${215 + (hue % 50)})` }}
     >
       {initials(name)}
     </span>
@@ -177,9 +177,9 @@ export function Avatar({ name, size = 'sm' }: { name: string; size?: 'sm' | 'md'
 
 export function EmptyState({ icon, title, children }: { icon: IconName; title: string; children?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
-      <span className="rounded-2xl border border-line bg-surface p-3.5 text-accent shadow-soft"><Icon name={icon} className="h-6 w-6" /></span>
-      <p className="font-display text-lg font-semibold text-ink">{title}</p>
+    <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
+      <span className="mb-1 rounded-lg border border-line bg-surface-2 p-3 text-muted"><Icon name={icon} className="h-5 w-5" /></span>
+      <p className="text-[15px] font-semibold text-ink">{title}</p>
       {children && <div className="max-w-sm text-sm text-muted">{children}</div>}
     </div>
   )
@@ -187,10 +187,10 @@ export function EmptyState({ icon, title, children }: { icon: IconName; title: s
 
 export function Card({ title, actions, children, className = '' }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`glass rounded-2xl border border-line bg-surface shadow-soft ${className}`}>
+    <section className={`rounded-xl border border-line bg-surface shadow-soft ${className}`}>
       {title && (
         <header className="flex items-center justify-between gap-2 border-b border-line px-5 py-3">
-          <h3 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-ink-2">{title}</h3>
+          <h3 className="text-sm font-semibold text-ink">{title}</h3>
           {actions}
         </header>
       )}

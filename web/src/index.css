@@ -1,84 +1,82 @@
 @import "tailwindcss";
 
 /*
- * SentinelDesk design tokens: "Harbour glass".
- * Deep navy ink on a cool blue wash, with frosted panels for the app chrome.
+ * SentinelDesk design system.
  *
- * Rules that keep it usable:
- * - Glass sits on the chrome (sidebar, top bar, cards, dialogs). Text always
- *   sits on a panel that is at least 78% opaque, so contrast stays >= 4.5:1
- *   on a projector.
- * - Route colours (auto / review / on-call) are separate from the blue accent
- *   and always come with an icon and a text label (WCAG 1.4.1).
- * - "Reduce transparency" and browsers without backdrop-filter get solid
- *   panels (see the bottom of the token block).
+ * Direction: an operations room at night. Layered navy surfaces, cool white
+ * type, and colour reserved for meaning.
+ *
+ * Semantic colour (one meaning each, used everywhere):
+ *   coral   critical incident / on-call      --oncall
+ *   amber   human review / uncertainty       --review
+ *   teal    ready, safe, resolved            --auto
+ *   blue    primary action, selection, links --accent
+ *   violet  AI-generated content             --ai
+ * Status colour always comes with an icon and a text label (WCAG 1.4.1).
+ *
+ * Depth: three surface steps plus a hairline border. Blur is kept for the
+ * app chrome (sidebar, top bar, dialogs), never on content.
+ *
+ * Spacing uses Tailwind's 4px scale. Radius by element type:
+ *   chips 4px, controls 8px, panels 12px, avatars and dots round.
+ * Control heights: 32px (sm), 36px (md), 44px (lg).
  */
 :root {
   color-scheme: light;
 
-  /* Backdrop the glass floats on */
-  --page: #e8eef7;
-  --wash-1: rgb(118 160 232 / 0.30);
-  --wash-2: rgb(84 132 214 / 0.18);
-  --wash-top: #eef3fa;
-  --wash-bottom: #e1e9f5;
+  --page: #f2f4f8;
+  --wash-1: rgb(120 155 225 / 0.16);
+  --wash-2: rgb(120 155 225 / 0.08);
 
-  /* Surfaces (translucent: they pick up the wash behind them) */
-  --surface: rgb(255 255 255 / 0.80);
-  --surface-2: rgb(247 250 254 / 0.72);
-  --surface-3: rgb(222 231 245 / 0.78);
-  --surface-solid: #f8fafd;
-  --chrome: rgb(250 252 255 / 0.66);
-  --dialog: rgb(252 253 255 / 0.92);
-  --scrim: rgb(9 20 40 / 0.38);
-  --glass-edge: rgb(255 255 255 / 0.70);
+  --surface: rgb(255 255 255 / 0.96);
+  --surface-2: rgb(246 248 252 / 0.96);
+  --surface-3: #e8edf5;
+  --surface-solid: #ffffff;
+  --chrome: rgb(247 249 252 / 0.82);
+  --dialog: rgb(255 255 255 / 0.97);
+  --scrim: rgb(8 16 32 / 0.42);
 
-  --border: rgb(24 52 102 / 0.12);
-  --border-strong: rgb(24 52 102 / 0.22);
+  --border: rgb(15 35 75 / 0.10);
+  --border-strong: rgb(15 35 75 / 0.18);
 
-  /* Text */
-  --ink: #0c1a33;
-  --ink-2: #2f3f5c;
-  --muted: #52617f; /* >= 4.9:1 on every light glass surface (checked) */
+  --ink: #0b1526;
+  --ink-2: #2c3a52;
+  --muted: #56637a; /* >= 5.1:1 on every light surface (checked) */
 
-  /* Blue accent, used for selection, focus and the brand mark */
-  --brand: #0f2a57;
-  --accent: #2350b4;
-  --accent-strong: #1a3f94;
-  --accent-soft: rgb(35 80 180 / 0.10);
+  --brand: #0e2650;
+  --accent: #2756c7;
+  --accent-strong: #1c4399;
+  --accent-soft: rgb(39 86 199 / 0.09);
   --focus: #2f63d6;
   --on-accent: #ffffff;
-  --on-route: #ffffff; /* text on solid route colours */
+  --on-route: #ffffff;
 
-  /* Escalation routes, muted to sit next to the blues */
-  --auto: #0b6a4c;
-  --auto-soft: #e1f2eb;
-  --review: #865100;
-  --review-soft: #fcf0d6;
-  --oncall: #b0261c;
-  --oncall-soft: #fce7e4;
+  --auto: #0b7660;
+  --auto-soft: #e3f3ee;
+  --review: #8d5500;
+  --review-soft: #fbf0db;
+  --oncall: #c0382a;
+  --oncall-soft: #fceae7;
+  --ai: #6448c4;
+  --ai-soft: #f0ecfb;
 
-  /* Priority (dataset labels: high / medium / low) */
-  --p-high: #b8302a;
-  --p-high-soft: #fce7e4;
-  --p-medium: #a65513;
-  --p-medium-soft: #fbeddc;
-  --p-low: #2b5296;
-  --p-low-soft: #e3ebf8;
+  --p-high: var(--oncall);
+  --p-high-soft: var(--oncall-soft);
+  --p-medium: #a5570e;
+  --p-medium-soft: #fbeedd;
+  --p-low: #3e5a86;
+  --p-low-soft: #e6ecf5;
 
-  /* Chart marks */
   --chart-high: #d03b3b;
   --chart-medium: #ec835a;
   --chart-low: #5598e7;
   --chart-bar: #2a6fd6;
-  --grid: rgb(24 52 102 / 0.10);
-  --axis: rgb(24 52 102 / 0.24);
+  --grid: rgb(15 35 75 / 0.08);
+  --axis: rgb(15 35 75 / 0.20);
 
-  /* Depth: a light top edge plus one soft drop, like a pane of glass */
-  --shadow: inset 0 1px 0 var(--glass-edge), 0 1px 2px rgb(12 26 51 / 0.04), 0 10px 30px -14px rgb(12 26 51 / 0.18);
-  --shadow-pop: inset 0 1px 0 var(--glass-edge), 0 24px 60px -20px rgb(12 26 51 / 0.35);
+  --shadow: 0 1px 2px rgb(11 21 38 / 0.05), 0 1px 0 rgb(11 21 38 / 0.02);
+  --shadow-pop: 0 24px 56px -20px rgb(11 21 38 / 0.32), 0 2px 6px rgb(11 21 38 / 0.06);
 
-  /* Internal notes (kept warm on purpose: they must never look like a reply) */
   --note: #fdf6dc;
   --note-border: #e6cf78;
 }
@@ -86,66 +84,64 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --page: #07101f;
-    --wash-1: rgb(48 96 190 / 0.30);
-    --wash-2: rgb(30 70 150 / 0.24);
-    --wash-top: #0a1528;
-    --wash-bottom: #060d1a;
 
-    --surface: rgb(18 32 58 / 0.72);
-    --surface-2: rgb(14 26 48 / 0.62);
-    --surface-3: rgb(44 66 104 / 0.50);
-    --surface-solid: #111e35;
-    --chrome: rgb(12 23 43 / 0.62);
-    --dialog: rgb(15 28 52 / 0.94);
-    --scrim: rgb(2 6 14 / 0.60);
-    --glass-edge: rgb(160 190 240 / 0.10);
+    --page: #0a101d;
+    --wash-1: rgb(60 100 190 / 0.14);
+    --wash-2: rgb(60 100 190 / 0.07);
 
-    --border: rgb(150 180 232 / 0.14);
-    --border-strong: rgb(150 180 232 / 0.26);
+    --surface: rgb(17 26 44 / 0.96);
+    --surface-2: rgb(14 22 38 / 0.96);
+    --surface-3: #1b2641;
+    --surface-solid: #111a2c;
+    --chrome: rgb(13 20 35 / 0.86);
+    --dialog: rgb(18 28 47 / 0.98);
+    --scrim: rgb(2 6 14 / 0.62);
 
-    --ink: #e9effb;
-    --ink-2: #bfcce3;
-    --muted: #9aaac6;
+    --border: rgb(140 165 210 / 0.12);
+    --border-strong: rgb(140 165 210 / 0.22);
 
-    --brand: #b7cdf3;
-    --accent: #86abff;
-    --accent-strong: #a8c3ff;
-    --accent-soft: rgb(134 171 255 / 0.14);
-    --focus: #86abff;
-    --on-accent: #07101f;
-    --on-route: #07101f;
+    --ink: #e8edf6;
+    --ink-2: #b6c2d6;
+    --muted: #8e9bb2; /* >= 5.3:1 on every dark surface (checked) */
 
-    --auto: #52c99a;
-    --auto-soft: #0e2b24;
-    --review: #efb64d;
-    --review-soft: #31250c;
-    --oncall: #ff8177;
-    --oncall-soft: #3a1614;
+    --brand: #c6d6f5;
+    --accent: #7aa2ff;
+    --accent-strong: #9bb9ff;
+    --accent-soft: rgb(122 162 255 / 0.13);
+    --focus: #7aa2ff;
+    --on-accent: #0a101d;
+    --on-route: #0a101d;
 
-    --p-high: #ff8177;
-    --p-high-soft: #3a1614;
+    --auto: #43cfa8;
+    --auto-soft: #0d2a27;
+    --review: #efb44e;
+    --review-soft: #2d2411;
+    --oncall: #ff8070;
+    --oncall-soft: #331716;
+    --ai: #ad98ff;
+    --ai-soft: rgb(173 152 255 / 0.13);
+
     --p-medium: #f2a061;
-    --p-medium-soft: #35210f;
-    --p-low: #a6c2f2;
-    --p-low-soft: #16243c;
+    --p-medium-soft: #33210f;
+    --p-low: #a3b9e0;
+    --p-low-soft: #172238;
 
     --chart-high: #d03b3b;
     --chart-medium: #c98500;
     --chart-low: #3987e5;
     --chart-bar: #4b8bef;
-    --grid: rgb(150 180 232 / 0.10);
-    --axis: rgb(150 180 232 / 0.22);
+    --grid: rgb(140 165 210 / 0.09);
+    --axis: rgb(140 165 210 / 0.20);
 
-    --shadow: inset 0 1px 0 var(--glass-edge), 0 1px 2px rgb(0 0 0 / 0.30), 0 12px 32px -16px rgb(0 0 0 / 0.55);
-    --shadow-pop: inset 0 1px 0 var(--glass-edge), 0 28px 70px -20px rgb(0 0 0 / 0.70);
+    --shadow: 0 1px 0 rgb(255 255 255 / 0.02) inset, 0 1px 2px rgb(0 0 0 / 0.28);
+    --shadow-pop: 0 28px 64px -20px rgb(0 0 0 / 0.70), 0 0 0 1px rgb(140 165 210 / 0.10);
 
     --note: #2b2611;
     --note-border: #6b5a1c;
   }
 }
 
-/* Users who ask for less transparency (and old browsers) get solid panels. */
+/* "Reduce transparency" gets fully solid surfaces. */
 @media (prefers-reduced-transparency: reduce) {
   :root {
     --surface: var(--surface-solid);
@@ -180,6 +176,8 @@
   --color-review-soft: var(--review-soft);
   --color-oncall: var(--oncall);
   --color-oncall-soft: var(--oncall-soft);
+  --color-ai: var(--ai);
+  --color-ai-soft: var(--ai-soft);
   --color-p-high: var(--p-high);
   --color-p-high-soft: var(--p-high-soft);
   --color-p-medium: var(--p-medium);
@@ -190,9 +188,12 @@
   --shadow-pop: var(--shadow-pop);
   --color-note: var(--note);
   --color-note-line: var(--note-border);
-  --font-sans: "Atkinson Hyperlegible Next Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Source Serif 4 Variable", Georgia, "Times New Roman", serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Plex Sans for the interface, Plex Mono for IDs and numbers,
+     Source Serif for page titles only. */
+  --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Source Serif 4 Variable", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 html {
@@ -202,38 +203,41 @@ body {
   min-height: 100dvh;
   color: var(--ink);
   font-family: var(--font-sans);
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-color: var(--page);
   background-image:
-    radial-gradient(64rem 40rem at 8% -12%, var(--wash-1), transparent 62%),
-    radial-gradient(56rem 38rem at 100% 4%, var(--wash-2), transparent 60%),
-    linear-gradient(180deg, var(--wash-top), var(--wash-bottom));
+    radial-gradient(70rem 36rem at 0% -10%, var(--wash-1), transparent 60%),
+    radial-gradient(60rem 30rem at 100% 0%, var(--wash-2), transparent 60%);
   background-attachment: fixed;
 }
 
+/* Page titles: the one editorial voice in the product. */
 h1 {
   font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 .font-display {
   font-family: var(--font-display);
 }
 
-/* Frosted chrome. Blur only where it helps: shell, cards, dialogs. */
-.glass {
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  backdrop-filter: blur(18px) saturate(150%);
+/* Numbers that change or get compared: metrics, IDs, waiting times. */
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
+
+/* Frosted app chrome only. */
+.glass,
 .glass-strong {
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root {
-    --surface: var(--surface-solid);
     --chrome: var(--surface-solid);
     --dialog: var(--surface-solid);
   }
@@ -258,8 +262,9 @@ h1 {
   color: var(--ink);
 }
 
-.tabular {
-  font-variant-numeric: tabular-nums;
+::placeholder {
+  color: var(--muted);
+  opacity: 1;
 }
 
 /* Skeleton shimmer, disabled for users who prefer reduced motion. */
@@ -290,7 +295,6 @@ h1 {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
 }
 
-/* Thin, quiet scrollbars that match the glass. */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;

@@ -118,7 +118,7 @@ export function Histogram({ rows, markerAfter, markerLabel }: { rows: { bucket: 
       <div className="relative flex h-44 items-end gap-2 border-b border-[var(--axis)] px-1" role="img" aria-label={rows.map((r) => `${r.bucket}: ${r.count}`).join(', ')}>
         {rows.map((r, i) => (
           <div key={r.bucket} className="relative flex h-full flex-1 flex-col justify-end" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
-            <span className="tabular mb-1 text-center text-[11px] text-muted">{Math.round((r.count / total) * 100)}%</span>
+            <span className="tabular mb-1 text-center text-xs text-muted">{Math.round((r.count / total) * 100)}%</span>
             <div className="rounded-t-[4px] transition-[filter] hover:brightness-110" style={{ height: `${(r.count / max) * 78}%`, background: `color-mix(in oklab, var(--chart-bar) ${45 + i * 13}%, var(--surface))` }} />
             {hover === i && (
               <div className="pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg border border-line bg-dialog px-2 py-1 text-xs shadow-pop">
@@ -130,7 +130,7 @@ export function Histogram({ rows, markerAfter, markerLabel }: { rows: { bucket: 
         ))}
       </div>
       <div className="mt-1.5 flex gap-2 px-1">
-        {rows.map((r) => <span key={r.bucket} className="flex-1 text-center text-[11px] text-muted">{r.bucket}</span>)}
+        {rows.map((r) => <span key={r.bucket} className="flex-1 text-center text-xs text-muted">{r.bucket}</span>)}
       </div>
       {markerLabel && <p className="mt-2 flex items-center gap-1.5 text-xs text-muted"><span className="inline-block h-3 w-0 border-l border-dashed border-review" />{markerLabel}</p>}
     </div>
