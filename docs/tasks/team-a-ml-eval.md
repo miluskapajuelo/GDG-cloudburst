@@ -76,7 +76,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 Agent: work only on the tasks in this section, in order. Tick each box in the same commit as the work.
 
 ### A2.0 Register yourself (first commit)
-- [ ] Replace `GUSTAVO_LOGIN` with your GitHub login everywhere it appears: `CLAUDE.md` (roster and Step 0 question), `docs/plan.md`, `README.md` (team table) and the table at the top of this file. Run `git grep GUSTAVO_LOGIN` to confirm none are left. This is an allowed edit for you.
+- [x] Replace `GUSTAVO_LOGIN` with your GitHub login everywhere it appears: `CLAUDE.md` (roster and Step 0 question), `docs/plan.md`, `README.md` (team table) and the table at the top of this file. Run `git grep GUSTAVO_LOGIN` to confirm none are left. This is an allowed edit for you.
 
 ### A2.1 API skeleton with mock mode (by T+0:30). Unblocks Team C.
 - [ ] `api/schemas.py`: Pydantic v2 models that mirror the contract response exactly (`TriageRequest`, `TriageResponse` and the nested models).
