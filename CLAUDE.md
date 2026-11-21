@@ -36,6 +36,14 @@ done
 - If **another person's** branch is behind `origin/main`, or has had no new commit for more than 45 minutes, tell your human in one line: `Stale: <branch> is <N> commits behind main.` Do not edit, rebase or push to that branch.
 - If an open PR has merge conflicts with `main`, tell your human. The branch owner fixes it.
 
+### Deleting stale branches
+
+- When you merge a PR, delete its branch in the same step: `gh pr merge <N> --merge --delete-branch`.
+- During the freshness check, list the merged branches with `git branch --merged origin/main` and `git branch -r --merged origin/main`.
+  - **Your own** merged branches: delete them (`git branch -d <branch>` and `git push origin --delete <branch>`).
+  - **Another person's** merged branch: tell your human. Delete it only if the human tells you to.
+- Never delete `main`, the branch you are on, or any branch that is **not** fully merged into `origin/main` (use `git branch -d`, never `-D`). If an unmerged branch looks abandoned, tell your human and leave it.
+
 ### Roster
 
 | GitHub login | Team | Role | Task file (section) | Folders you own | Branch prefix |
