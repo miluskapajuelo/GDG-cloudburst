@@ -31,7 +31,7 @@ from shared.text import build_text
 DATA = Path("data")
 ARTIFACTS = Path("artifacts")
 HEADS = ("type", "queue", "priority")
-VERSION = "tfidf-lr-v1"
+VERSION = "tfidf-lr-v2-C10"
 
 
 def make_vectorizer() -> FeatureUnion:
@@ -53,7 +53,8 @@ def make_vectorizer() -> FeatureUnion:
     )
 
 
-def make_head(C: float = 4.0) -> OneVsRestClassifier:
+# C=10 chosen in A1.6 on KB val (best macro-F1 on all heads; see ml/EDA.md).
+def make_head(C: float = 10.0) -> OneVsRestClassifier:
     # sklearn >= 1.8 dropped implicit OvR for liblinear, so wrap it explicitly.
     # (saga multinomial took > 10 min on ~140k sparse features; liblinear OvR takes seconds.)
     return OneVsRestClassifier(

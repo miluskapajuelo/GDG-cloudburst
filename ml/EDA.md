@@ -82,3 +82,26 @@ p5=113 p25=261 p50=427 p75=589 p95=743 p99=845 max=1387
 | `<tool_name>` | 1 |
 | `<platform_name>` | 1 |
 | `<n_tel_num>` | 1 |
+
+## A1.6: calibration and C sweep (KB val only, n=2,287)
+
+Run with `python -m ml.calibrate`. ECE is top-label with 10 equal-width bins. Test metrics were never looked at.
+
+| head | model | macro-F1 | ECE |
+|---|---|---|---|
+| type | LR C=1 | 0.8628 | 0.1319 |
+| type | LR C=4 | 0.8796 | 0.0736 |
+| type | **LR C=10** | **0.8838** | **0.0357** |
+| type | LR C=4 + sigmoid cv=3 | 0.8672 | 0.0372 |
+| queue | LR C=1 | 0.5271 | 0.2282 |
+| queue | LR C=4 | 0.5762 | 0.1516 |
+| queue | **LR C=10** | **0.6056** | **0.0951** |
+| queue | LR C=4 + sigmoid cv=3 | 0.5331 | 0.0940 |
+| priority | LR C=1 | 0.5710 | 0.0986 |
+| priority | LR C=4 | 0.6132 | 0.0577 |
+| priority | **LR C=10** | **0.6239** | **0.0117** |
+| priority | LR C=4 + sigmoid cv=3 | 0.5583 | 0.0555 |
+
+**Decision:** use C=10 for all heads (model version `tfidf-lr-v2-C10`). It has the best macro-F1 and the lowest ECE on every head. Sigmoid calibration lowers macro-F1 on every head, so it is rejected (the rule is to keep it only if macro-F1 does not drop). Queue ECE stays a little above 0.08 (0.095). The gate thresholds should treat queue confidence as only roughly calibrated.
+
+After retraining: val macro-F1 type 0.8838, queue 0.6056, priority 0.6239. Val HPI recall (argmax) is 0.6580, up from 0.6501.
