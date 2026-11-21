@@ -24,9 +24,9 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 **Done when:** a fresh clone gives you `python -c "import ml, api, eval, agent, shared"` without errors.
 
 ### A1.2 Split (by T+0:30)
-- [ ] Write `ml/make_split.py` exactly as specified in [data-and-leakage.md](../data-and-leakage.md) §2–3: download, shuffle (seed 42), assign `TKT-xxxxx` IDs, split 80/20, flag the 10% val slice (seed 7), clean up, and write the 3 parquet files.
-- [ ] Print the row counts and the **split fingerprint**. Ask the human to post the fingerprint in the team chat. All five machines must match.
-- [ ] Commit through a PR. Share the command with the team: `python -m ml.make_split`.
+- [x] Write `ml/make_split.py` exactly as specified in [data-and-leakage.md](../data-and-leakage.md) §2–3: download, shuffle (seed 42), assign `TKT-xxxxx` IDs, split 80/20, flag the 10% val slice (seed 7), clean up, and write the 3 parquet files.
+- [x] Print the row counts and the **split fingerprint**. Ask the human to post the fingerprint in the team chat. All five machines must match.
+- [x] Commit through a PR. Share the command with the team: `python -m ml.make_split`.
 
 **Done when:** the 3 files exist, the asserts pass, and the fingerprint is posted.
 
