@@ -34,7 +34,7 @@ T_CONF_PRIORITY = _probability("T_CONF_PRIORITY", 0.45)
 T_CONF_QUEUE = _probability("T_CONF_QUEUE", 0.25)
 T_SIM = _probability("T_SIM", 0.55)
 TOP_K = _positive_int("TOP_K", 5)
-BURST_SIM = _probability("BURST_SIM", 0.75)
+BURST_SIM = _probability("BURST_SIM", 0.65)
 BURST_MIN = _positive_int("BURST_MIN", 3)
 BURST_WINDOW_MIN = _positive_int("BURST_WINDOW_MIN", 15)
 
