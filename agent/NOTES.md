@@ -47,7 +47,19 @@ Order: IBAN → EMAIL → CARD (Luhn-checked, so long phone numbers aren't eaten
   - demo-02 (en password reset): 0.63–0.65, English login-problem tickets.
   - **demo-08 (out of scope): top-1 0.24**, far below `T_SIM` 0.55 → `NO_PRECEDENT`, as expected (input for B1.7).
   - **demo-15 (de printer): top-1 0.53, an English "Printer Not Printing" ticket**, so cross-lingual works. But it's **just below `T_SIM` 0.55**, so it gets `NO_PRECEDENT`, and the rest of the top 5 is off-topic (~0.46). The KB has only ~6–7 printer tickets ("drucker" 0.026%, "printer" 0.031%). → **B2:** don't rely on demo-15 as the cross-lingual showcase; use demo-01.
-- TODO B1.5: full 5+5 cross-lingual table.
+### B1.5 Cross-lingual check (real index, split `5a2ede85f9fb`)
+Same 5 topics, asked once in German and once in English. "Other lang" = how many of the top 5 are in the other language.
+
+| Topic | DE query: top-1 sim | DE: other lang in top 5 | relevant? | EN query: top-1 sim | EN: other lang in top 5 | relevant? |
+|---|---|---|---|---|---|---|
+| VPN keeps disconnecting | 0.77 | 4/5 en | ✅ all VPN | 0.71 | 1/5 de | ✅ all VPN |
+| Charged twice for subscription | **0.45** | 0/5 | ⚠️ weak (billing, but "Double Billing" only #3 at 0.38) | 0.74 | 0/5 | ✅ all double charge |
+| Password reset email missing | 0.64 | 5/5 en | ~ login errors, not reset email | 0.62 | 0/5 | ~ same login tickets |
+| Outlook crashes after update | 0.67 | 2/5 en | ✅ Outlook problems | 0.61 | 1/5 de | ✅ Outlook problems |
+| Database server timeout | 0.76 | 2/5 en | ✅ timeouts | 0.70 | 2/5 de | ✅ timeouts / DB |
+
+- **Cross-lingual retrieval works:** 13 of 25 German-query hits are English tickets (52%), and 4 of 25 English-query hits are German (16%). They're on-topic in 4 of 5 topics. This is the evidence for the bonus feature: demo-01 and the VPN row show it best.
+- **Weak spot:** some German phrasings embed poorly ("doppelt belastet" = charged twice). Top-1 is 0.45, below `T_SIM` 0.55, so a German double-billing ticket would get `NO_PRECEDENT`, while the English one scores 0.74. Possible fixes (not done; optional, need team OK): hybrid BM25 + dense retrieval (B1.5 optional), or a stronger embedding model (`multilingual-e5-base`: better German, ~3–4× slower index build). Also relevant for B2/A2 tuning: German tickets will hit `NO_PRECEDENT` more often than English ones.
 
 ## B2
 
