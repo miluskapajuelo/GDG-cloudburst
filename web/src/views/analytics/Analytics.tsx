@@ -1,6 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Icon, Segmented } from '../../components/ui'
+import { buildAnalytics as demoAnalytics } from '../../data/mockBackend'
 import { buildAnalytics } from '../../lib/analytics'
+import { DEMO_MODE } from '../../lib/demoMode'
 import { useMetrics } from '../../lib/useApi'
 import { useStore } from '../../store'
 import { pct } from '../../lib/format'
@@ -16,7 +18,7 @@ export default function Analytics() {
   const [days, setDays] = useState<7 | 14 | 30>(14)
   const { tickets } = useStore()
   const m = useMetrics()
-  const a = useMemo(() => buildAnalytics(tickets, days, m.state === 'ok' ? m.metrics : null), [tickets, days, m])
+  const a = useMemo(() => (DEMO_MODE ? demoAnalytics(days) : buildAnalytics(tickets, days, m.state === 'ok' ? m.metrics : null)), [tickets, days, m])
   const [table, setTable] = useState(false)
 
   const fmtDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -99,7 +101,7 @@ export default function Analytics() {
           </Panel>
         </div>
 
-        <p className="pb-4 text-xs text-muted">Computed from tickets triaged by the live API in this session. Holdout recall comes from the evaluation run (GET /metrics).</p>
+        <p className="pb-4 text-xs text-muted">{DEMO_MODE ? 'Demo data, not live. Switch off "Demo data" in the top bar to see real numbers.' : 'Computed from tickets triaged by the live API in this session. Holdout recall comes from the evaluation run (GET /metrics).'}</p>
       </div>
     </div>
   )

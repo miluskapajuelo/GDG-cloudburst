@@ -1,3 +1,5 @@
+import { DEMO_MODE } from './lib/demoMode'
+import { localTriage } from './lib/localTriage'
 import type { Draft, GateConfig, Health, HoldoutMetrics, Pred, Precedent, TriageResponse } from './types'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || 'http://localhost:8000'
@@ -86,12 +88,13 @@ export function normalizeTriage(raw: Partial<TriageResponse> & Record<string, un
 
 export interface TriageResult {
   data: TriageResponse
-  /** Always false: the console only shows results from the real API. */
-  fallback: false
+  /** true only in demo mode: the result is the in-browser heuristic (flagged `mock: true`). */
+  fallback: boolean
 }
 
 /** POST /triage. Network, timeout and validation errors are surfaced to the caller. */
 export async function triage(subject: string | null, body: string): Promise<TriageResult> {
+  if (DEMO_MODE) return { data: await localTriage(subject, body), fallback: true }
   const raw = await request<TriageResponse>('/triage', {
     method: 'POST',
     body: JSON.stringify({ subject: subject || null, body }),
