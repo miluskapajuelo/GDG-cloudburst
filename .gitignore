@@ -6,7 +6,10 @@ artifacts/
 *.joblib
 *.npy
 *.pkl
-eval/results/test_predictions.parquet
+eval/results/*
+!eval/results/.gitkeep
+!eval/results/threshold_sweep.*
+!eval/results/metrics.*
 
 # --- secrets ---
 .env
