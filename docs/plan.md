@@ -58,7 +58,7 @@ The source of truth for who does what is the roster in [CLAUDE.md](../CLAUDE.md)
 
 | Concern | Decision | Why |
 |---|---|---|
-| Language | Python 3.11 backend, TypeScript frontend | Team familiarity, speed |
+| Language | Python 3.14 backend, TypeScript frontend | Team familiarity, speed |
 | Classifier | TF-IDF (word 1–2 grams + char 3–5 grams) → 3 logistic regression heads | Trains in seconds, strong baseline, good probabilities |
 | Embeddings | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (384-dim, normalised) | Fast on CPU, en↔de cross-lingual retrieval included |
 | Vector store | FAISS `IndexFlatIP` (exact cosine) | About 50k vectors: exact search takes milliseconds, no tuning |

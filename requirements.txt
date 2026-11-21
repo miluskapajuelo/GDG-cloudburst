@@ -1,4 +1,4 @@
-# Python 3.11. Add lines ONLY under your own section to avoid merge conflicts.
+# Python 3.14. Add lines ONLY under your own section to avoid merge conflicts.
 
 # ---- shared ----
 numpy>=1.26

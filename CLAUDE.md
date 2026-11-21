@@ -91,7 +91,7 @@ Before you write or change any file:
 - When a task is done, tick its checkbox in **your own section** of the task file in the same commit. Do not tick boxes in someone else's section.
 
 ### 7. Code conventions
-- Python 3.11. Make the code run on Windows, macOS and Linux:
+- Python 3.14. Make the code run on Windows, macOS and Linux:
   - Use `pathlib` for paths.
   - Run modules with `python -m package.module`.
   - Do not use shell-only tricks.

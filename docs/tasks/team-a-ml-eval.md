@@ -16,10 +16,10 @@ Read first: [contract.md](../contract.md), [data-and-leakage.md](../data-and-lea
 Agent: work only on the tasks in this section, in order. Tick each box in the same commit as the work.
 
 ### A1.1 Kickoff scaffold on `main` (by T+0:20)
-- [ ] Create these packages, each with an empty `__init__.py`: `ml/`, `api/`, `eval/`, `agent/`, `shared/`. Create `eval/results/` with a `.gitkeep`.
-- [ ] Create `shared/text.py` with `build_text(subject, body)` exactly as in the contract. Include a `__main__` check for `None`, NaN, empty subject and whitespace.
-- [ ] Check that `requirements.txt`, `.gitignore` and `.env.example` exist (they come from the docs commit). Run `pip install -r requirements.txt` on your machine.
-- [ ] Push to `main` (the one allowed direct push). Ask the human to tell everyone to `git pull`.
+- [x] Create these packages, each with an empty `__init__.py`: `ml/`, `api/`, `eval/`, `agent/`, `shared/`. Create `eval/results/` with a `.gitkeep`.
+- [x] Create `shared/text.py` with `build_text(subject, body)` exactly as in the contract. Include a `__main__` check for `None`, NaN, empty subject and whitespace.
+- [x] Check that `requirements.txt`, `.gitignore` and `.env.example` exist (they come from the docs commit). Run `pip install -r requirements.txt` on your machine.
+- [x] Push to `main` (the one allowed direct push). Ask the human to tell everyone to `git pull`.
 
 **Done when:** a fresh clone gives you `python -c "import ml, api, eval, agent, shared"` without errors.
 
