@@ -185,7 +185,7 @@ return {"precedents", "escalation", "draft", "burst", "latency_ms": {"retrieve",
 - [x] Keep `shared/fixtures/demo_tickets.json` `expected_status` / `expected_reason_codes` in sync with the agreed behaviour.
 
 ### B2.7 Apply tuned thresholds (T+3:30–3:50)
-- [ ] Take A2's recommended row from `eval/results/threshold_sweep.md`, update the defaults in `agent/config.py`, and log the change in the decision log in `docs/plan.md`.
+- [x] Take A2's recommended row from `eval/results/threshold_sweep.md`, update the defaults in `agent/config.py`, and log the change in the decision log in `docs/plan.md`.
 
 ### B2.8 Judge Q&A notes (by T+4:30)
 - [x] Write 5 bullet points in `agent/NOTES.md`: how grounding is enforced (prompt + structured output + citation validator + figure check), how injection is handled, what each reason code means, what the cross-lingual evidence shows (from B1), and the known limitations.
