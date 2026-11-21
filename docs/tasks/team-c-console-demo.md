@@ -71,8 +71,8 @@ Layout, wide screen (projector-friendly, base font 16px or larger):
 
 ### C.5 Burst demo (by T+2:45)
 - [x] Show the burst banner when `burst.active`: red, full width, with `cluster_size`, `window_minutes` and `label`.
-- [ ] Add a **Run burst scenario** button: it calls `POST /burst/reset`, then sends the presets tagged `"burst": true` one after another (with a 1 s gap), and shows each result as it arrives.
-- [ ] Add a **Reset burst** button.
+- [x] Add a **Run burst scenario** button: it calls `POST /burst/reset`, then sends the presets tagged `"burst": true` one after another (with a 1 s gap), and shows each result as it arrives.
+- [x] Add a **Reset burst** button.
 
 ### C.6 Context widgets (by T+3:15)
 - [x] Holdout metrics strip from `GET /metrics`: macro-F1 for type, queue and priority, HPI escalation recall, and p50 latency. On 404, show "Eval not run yet".
