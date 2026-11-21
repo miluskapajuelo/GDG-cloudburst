@@ -9,7 +9,7 @@ from . import config
 from .citations import validate_citations
 from .draft import DraftError, generate_draft
 from .gate import finalize_escalation, pre_draft_gate
-from .prompts import MAX_RESOLUTION_CHARS, holding_reply
+from .prompts import MAX_RESOLUTION_CHARS
 
 if TYPE_CHECKING:
     from .burst import BurstDetector
@@ -44,13 +44,10 @@ class AgentPipeline:
         started = perf_counter()
         pre = pre_draft_gate(predictions, precedents, text)
         should_draft = not skip_llm and pre["allow_draft"]
-        use_holding_reply = should_draft and any(
-            reason["code"] == "UNSUPPORTED_REQUEST" for reason in pre["reasons"]
-        )
         latency_ms["gate"] = _elapsed_ms(started)
 
         draft, llm_error = None, None
-        if should_draft and not use_holding_reply:
+        if should_draft:
             started = perf_counter()
             try:
                 draft = generate_draft(
@@ -72,17 +69,6 @@ class AgentPipeline:
                 precedent_answers=(item["answer"][:MAX_RESOLUTION_CHARS] for item in precedents),
             )
         escalation = finalize_escalation(pre, draft, problems, llm_error)
-        if use_holding_reply:
-            # Rule 5 already escalated this ticket. No LLM outcome to report.
-            reply_language = language["reply_language"]
-            draft = {
-                "status": "INSUFFICIENT_EVIDENCE",
-                "text": holding_reply(reply_language),
-                "cited_ids": [],
-                "language": reply_language,
-                "for_human_review": True,
-                "model": "template",
-            }
         if draft is not None:
             draft["for_human_review"] = escalation["status"] == "ESCALATE"
         latency_ms["gate"] += _elapsed_ms(started)

@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -103,3 +104,29 @@ def test_figure_beyond_the_visible_resolution_escalates_a_previously_eligible_dr
     assert result["draft"]["for_human_review"] is True
     assert result["escalation"]["route"] == "HUMAN_REVIEW"
     assert [reason["code"] for reason in result["escalation"]["reasons"]] == ["CITATION_CHECK_FAILED"]
+
+
+def test_unsupported_request_still_gets_a_gemini_holding_reply(monkeypatch, case):
+    _, mock = case
+    mock["predictions"]["priority"].update(
+        label="low", confidence=0.8, probs={"high": 0.1, "medium": 0.1, "low": 0.8},
+    )
+    retriever = SimpleNamespace(embed=lambda text: (1.0, 0.0), search=lambda vector, k: mock["precedents"])
+    burst = SimpleNamespace(observe=lambda request_id, vector, summary: mock["burst"])
+    holding = "Vielen Dank für Ihre Nachricht. Eine Fachkraft prüft Ihr Anliegen und meldet sich bei Ihnen."
+
+    def generate(text, reply_language, precedents, for_human_review):
+        assert for_human_review is True
+        return {**mock["draft"], "status": "INSUFFICIENT_EVIDENCE", "text": holding, "cited_ids": []}
+
+    monkeypatch.setattr(pipeline, "generate_draft", generate)
+    agent = pipeline.AgentPipeline(retriever, burst)
+    result = agent.run("request-id", "Ich möchte eine Rückerstattung.", mock["language"], mock["predictions"])
+
+    assert [reason["code"] for reason in result["escalation"]["reasons"]] == [
+        "UNSUPPORTED_REQUEST", "LLM_INSUFFICIENT_EVIDENCE",
+    ]
+    assert result["escalation"]["route"] == "HUMAN_REVIEW"
+    assert result["draft"]["text"] == holding
+    assert result["draft"]["model"] == mock["draft"]["model"]
+    assert result["draft"]["for_human_review"] is True

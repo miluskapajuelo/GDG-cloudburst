@@ -9,7 +9,7 @@ import pytest
 from google.genai import errors
 
 from agent import config, draft
-from agent.prompts import build_user_message, holding_reply
+from agent.prompts import build_user_message
 
 
 @pytest.fixture(autouse=True)
@@ -117,17 +117,21 @@ def test_generate_draft_uses_citations_found_in_the_reply(sdk_call, precedent, l
     assert request["config"].response_schema == draft.DraftOut
 
 
-@pytest.mark.parametrize("language", ["en", "de"])
-def test_insufficient_evidence_uses_localized_holding_reply(sdk_call, precedent, language):
-    sdk_call.return_value = _response(
-        "I promise a 50% refund. [TKT-00412]", status="INSUFFICIENT_EVIDENCE"
-    )
+@pytest.mark.parametrize(("language", "reply"), [
+    ("en", "Thank you for reporting the duplicate charge. A billing specialist will follow up. "
+           "Please send us the invoice number."),
+    ("de", "Vielen Dank für Ihre Nachricht zur doppelten Abbuchung. Eine Fachkraft meldet sich "
+           "bei Ihnen. Bitte senden Sie uns die Rechnungsnummer."),
+])
+def test_insufficient_evidence_keeps_the_tailored_holding_reply(sdk_call, precedent, language, reply):
+    sdk_call.return_value = _response(reply, status="INSUFFICIENT_EVIDENCE")
 
-    result = draft.generate_draft("Please refund me", language, [precedent], for_human_review=False)
+    result = draft.generate_draft("Please refund me", language, [precedent], for_human_review=True)
 
     assert result["status"] == "INSUFFICIENT_EVIDENCE"
-    assert result["text"] == holding_reply(language)
+    assert result["text"] == reply
     assert result["cited_ids"] == []
+    assert sdk_call.call_count == 1  # Holding replies are never length-rewritten.
 
 
 @pytest.mark.parametrize("status", [429, 500, 503])
@@ -207,6 +211,11 @@ def test_missing_key_does_not_create_client(monkeypatch, precedent):
     with pytest.raises(draft.DraftError, match="API key is missing"):
         draft.generate_draft("VPN error", "en", [precedent], False)
     client.assert_not_called()
+
+
+@pytest.mark.parametrize(("language", "name"), [("en", "English"), ("de", "German")])
+def test_prompt_ends_by_naming_the_reply_language(precedent, language, name):
+    assert build_user_message("VPN error", language, [precedent]).endswith(f"Write the draft reply in {name}.")
 
 
 def _reply(words: int) -> str:

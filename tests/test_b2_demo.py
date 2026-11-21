@@ -102,10 +102,26 @@ def test_handwritten_demo_tickets_through_b2_pipeline(monkeypatch):
 
     blocked_ids = {"demo-07", "demo-08"}
     holding_ids = {"demo-03", "demo-04", "demo-14"}
+    holding_texts = {text_by_id[ticket_id] for ticket_id in holding_ids}
     generator_calls = []
 
     def fake_generate_draft(text, reply_language, precedents, for_human_review):
         generator_calls.append(text)
+        if text in holding_texts:
+            # Gemini abstains on money, pricing and legal requests that no precedent supports.
+            reply = (
+                "Vielen Dank für Ihre Nachricht. Eine Fachkraft prüft Ihr Anliegen und meldet sich bei Ihnen."
+                if reply_language == "de"
+                else "Thank you for your message. A specialist will review your request and follow up."
+            )
+            return {
+                "status": "INSUFFICIENT_EVIDENCE",
+                "text": reply,
+                "cited_ids": [],
+                "language": reply_language,
+                "for_human_review": for_human_review,
+                "model": "offline-stub",
+            }
         citation = precedents[0]["ticket_id"]
         if citation == "TKT-00412":
             reply = "Bitte prüfen Sie das Zertifikat des VPN-Gateways."
@@ -146,8 +162,9 @@ def test_handwritten_demo_tickets_through_b2_pipeline(monkeypatch):
             assert draft is None, ticket_id
             assert result["latency_ms"]["generate"] == 0, ticket_id
         elif ticket_id in holding_ids:
-            assert text not in generator_calls, ticket_id
+            assert text in generator_calls, ticket_id
             assert draft["status"] == "INSUFFICIENT_EVIDENCE", ticket_id
+            assert {"UNSUPPORTED_REQUEST", "LLM_INSUFFICIENT_EVIDENCE"} <= reason_codes, (ticket_id, reason_codes)
             assert draft["cited_ids"] == [], ticket_id
             assert all(claim not in draft["text"] for claim in ("20%", "$", "€", "SAP S/4HANA")), ticket_id
         else:

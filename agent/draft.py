@@ -11,7 +11,7 @@ from pydantic import BaseModel, ValidationError
 
 from agent import config
 from agent.citations import extract_citation_ids
-from agent.prompts import MAX_RESOLUTION_CHARS, SYSTEM_PROMPT, build_user_message, holding_reply
+from agent.prompts import MAX_RESOLUTION_CHARS, SYSTEM_PROMPT, build_user_message
 
 
 class DraftOut(BaseModel):
@@ -152,8 +152,6 @@ def generate_draft(
         raise DraftError("Gemini returned an empty draft.")
     result = _fit_length(result, user_message)
     reply = result.reply.strip()
-    if result.status == "INSUFFICIENT_EVIDENCE":
-        reply = holding_reply(reply_language)
 
     return {
         "status": result.status,
