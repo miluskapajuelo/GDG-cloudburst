@@ -79,8 +79,18 @@ The demo-07 fixture expects `ON_CALL` when the incident thresholds fire. Prompt 
 
 ### Judge Q&A
 
-- **Grounding.** Gemini returns a structured draft. The pipeline checks bracketed ticket IDs against the retrieved cases and compares currency amounts and percentages with the answers shown to Gemini. It flags drafts that fail validation for human review.
-- **Prompt injection.** The gate blocks drafting when it detects common English or German override attempts. The prompt treats both tickets and precedent excerpts as quoted data, with escaped field delimiters.
-- **Escalation reasons.** `HIGH_PRIORITY_INCIDENT` takes the on-call route when both model probabilities reach their thresholds. `LOW_CLASSIFIER_CONFIDENCE` flags a prediction head below its floor. `NO_PRECEDENT` means retrieval was empty or its top result was below the similarity floor. `PROMPT_INJECTION_SUSPECTED` flags an instruction override. `UNSUPPORTED_REQUEST` flags a sensitive action category missing from the retrieved answers. `LLM_INSUFFICIENT_EVIDENCE` records the model's abstention, `CITATION_CHECK_FAILED` reports invalid references or figures, and `LLM_UNAVAILABLE` covers generation failures.
-- **Cross-language evidence.** The offline German VPN case passes English precedent fixtures to drafting in German. B1's live retrieval results are needed to measure whether the index finds relevant cases across languages.
-- **Limitations.** Citation and figure checks verify IDs and amounts. Assessing whether every claim is supported still requires review. The lexicon can overmatch or miss rephrased requests. The 15 demo fixtures exercise B2 decisions with simulated upstream components. Live bilingual output, latency, and A2's threshold recommendations are pending.
+- **Grounding.** The prompt allows facts only from cited resolutions. Gemini returns structured JSON with 3 fields (`status`, `reply`, `cited_ids`). The validator rejects unknown ticket IDs and requires at least one 5-digit `[TKT-xxxxx]` citation on `OK` drafts. The figure check flags money and percentages absent from the precedent answer excerpts. An operator reviews every draft before sending.
+- **Prompt injection.** The gate uses 7 English and German regexes to detect override attempts. The prompt treats tickets and precedent excerpts as quoted data and escapes reserved tags. Shaad ran all 15 demo tickets through the HTTP API with `skip_llm=true` and 0 errors. Demo-07 was flagged `PROMPT_INJECTION_SUSPECTED`, which blocks drafting.
+- **Escalation reasons.** These are the routes for the 8 individual reason codes. `ON_CALL` takes precedence when reasons overlap.
+
+  - `HIGH_PRIORITY_INCIDENT` → `ON_CALL` when high-priority probability is ≥ 0.35 and incident probability is ≥ 0.40.
+  - `PROMPT_INJECTION_SUSPECTED` → `HUMAN_REVIEW` when an override attempt blocks drafting.
+  - `LOW_CLASSIFIER_CONFIDENCE` → `HUMAN_REVIEW` when type or priority confidence falls below 0.45, or queue confidence falls below 0.25.
+  - `NO_PRECEDENT` → `HUMAN_REVIEW` when retrieval is empty or the top score is below 0.55. Drafting is blocked.
+  - `UNSUPPORTED_REQUEST` → `HUMAN_REVIEW` when the ticket asks for a sensitive category (refund, pricing, legal, SLA or security) that no retrieved precedent answer covers.
+  - `LLM_INSUFFICIENT_EVIDENCE` → `HUMAN_REVIEW` when Gemini returns a holding reply because the evidence is insufficient.
+  - `CITATION_CHECK_FAILED` → `HUMAN_REVIEW` when a citation or figure fails validation.
+  - `LLM_UNAVAILABLE` → `HUMAN_REVIEW` when generation fails.
+
+- **Cross-language evidence.** Showcase demo-01 is a German VPN outage. It retrieved 2 English VPN tickets at 0.81 and 0.80. In live runs with English precedents, German drafts cited them (for example `TKT-00412` and `TKT-03187`). Replies used the requested language in 7 of 7 live runs. The German printer ticket demo-15 topped out at 0.53, below `T_SIM` (0.55), so it triggered `NO_PRECEDENT`. B1.5's full 5+5 table is pending merge.
+- **Limitations.** Sensitive terms can overmatch or miss rephrased requests. The figure check covers money and percentages. Other claims still need human review. Thresholds await A2's validation-based recommendations. Live drafts ran 81–97 words, with about 1–3.5 s per Gemini call. With B2.6, an HTTP 504 or timeout ends generation on that attempt and becomes `LLM_UNAVAILABLE`.
