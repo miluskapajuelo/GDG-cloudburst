@@ -40,12 +40,12 @@ Point at, in this order:
 
 Don't click the translation toggle: live tickets have no translation. Translate the German line aloud: "Since 07:40 none of our hospital sites can connect over VPN."
 
-### 1:30–2:15 · Password reset, demo-02 (45 s)
+### 1:30–2:15 · Remote access, demo-13 (45 s)
 
-Preset: **EN: password reset email not arriving** → **Triage**.
+Preset: **BURST 4/4 EN: remote access not working** → **Triage**. (It's a burst preset, but that's fine here: **Run burst scenario** resets the detector before it starts.)
 
 1. Decision card: **Auto-Draft Ready**, no risk reasons.
-2. **Suggested response:** citation chips after statements. The stats line says every statement is referenced, or highlights any statement with **No reference**.
+2. **Suggested response:** 2–3 citation chips after statements. The stats line says every statement is referenced, or highlights any statement with **No reference**.
 3. **Review and send** → the approval dialog shows exactly what the customer receives, with citations removed. **Approve and send** stays disabled until the confirmation box is ticked.
    > "Even the safe path has a human in the loop. One glance, one tick, then it goes."
 
@@ -54,8 +54,8 @@ Tick, send, and point at the 5-second **Undo** toast. Don't wait for it to finis
 ### 2:15–3:00 · Refund bait and prompt injection, demo-03 and demo-07 (45 s)
 
 Preset: **EN: double charge + refund/compensation bait** → **Triage**.
-- Decision: **Human Review Required** with `UNSUPPORTED_REQUEST` (refund or compensation that no past resolution supports).
-  > "The customer demands 20% compensation. None of our past resolutions grant that, so the AI is not allowed to promise it. A human decides."
+- Decision: **Escalate to On-Call Engineer**. Point at `UNSUPPORTED_REQUEST` among the reasons (refund or compensation that no past resolution supports). No money is promised.
+  > "The customer demands 20% compensation. None of our past resolutions grant that, so the AI is not allowed to promise it. The ticket is escalated and a person decides."
 
 Preset: **EN: prompt injection + refund demand** → **Triage**.
 - Reasons include `PROMPT_INJECTION_SUSPECTED`. It may also route to on-call because the text claims an outage.
@@ -100,7 +100,7 @@ All numbers come from `eval/results/metrics.md` (split `5a2ede85f9fb`) and the t
 
 - **Macro-F1:** type 0.878, queue 0.594, priority 0.630.
 - **High-priority incidents (n = 995):** escalation recall 0.907 (902). Classifier alone: 0.692. Overall escalation rate: 47%.
-- **Thresholds:** P(high) ≥ 0.20 and P(Incident) ≥ 0.30 → on-call. Confidence below 0.50 (type, priority) or 0.25 (queue) → review. Similarity below 0.55 → no precedent. Burst: cosine ≥ 0.65 plus a shared rare term, at least 3 tickets within 15 minutes.
+- **Thresholds:** P(high) ≥ 0.20 and P(Incident) ≥ 0.30 → on-call. Confidence below 0.50 (type, priority) or 0.25 (queue) → review. Similarity below 0.50 → no precedent. Burst: cosine ≥ 0.65 plus a shared rare term, at least 3 tickets within 15 minutes.
 - **Latency:** p50 38 ms without the LLM, 940 ms with it (40-ticket sample).
 - **Grounding:** 22 of 22 returned drafts passed the citation check, and 22 of 22 were in the requested language. Gemini was unavailable for 18 of 40.
 - **Why TF-IDF + logistic regression?** It trains in seconds and gives calibrated probabilities that the gate can threshold. Type macro-F1 is already 0.88.
