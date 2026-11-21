@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-11-21T18:14:27Z",
+  "n_val": 2287,
+  "n_val_hpi": 383,
+  "selection": "all three targets met",
+  "recommended": {
+    "T_HIGH_PRIORITY_P": 0.2,
+    "T_INCIDENT_P": 0.25,
+    "T_CONF_TYPE": 0.45,
+    "T_CONF_PRIORITY": 0.45,
+    "T_CONF_QUEUE": 0.3,
+    "T_SIM": 0.851
+  },
+  "recommended_metrics": {
+    "hpi_escalation_recall": 0.9243,
+    "escalation_rate": 0.4967,
+    "no_precedent_rate": 0.0988,
+    "hpi_on_call_recall": 0.8695,
+    "on_call_rate": 0.3603,
+    "low_conf_rate": 0.1242
+  },
+  "defaults": {
+    "T_HIGH_PRIORITY_P": 0.35,
+    "T_INCIDENT_P": 0.4,
+    "T_CONF_TYPE": 0.45,
+    "T_CONF_PRIORITY": 0.45,
+    "T_CONF_QUEUE": 0.25,
+    "T_SIM": 0.55
+  },
+  "defaults_metrics": {
+    "hpi_escalation_recall": 0.799,
+    "escalation_rate": 0.3376,
+    "no_precedent_rate": 0.0,
+    "hpi_on_call_recall": 0.7598,
+    "on_call_rate": 0.2589,
+    "low_conf_rate": 0.0914
+  },
+  "demo08_sanity": {
+    "top1_sim": 0.241,
+    "below": true
+  }
+}

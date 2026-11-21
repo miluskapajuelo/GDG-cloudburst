@@ -133,6 +133,21 @@ def test_classifier_features_from_val_preds_columns():
     assert preds["type"] == {"label": "Request", "confidence": 0.9, "probs": {"Incident": 0.1, "Request": 0.9}}
 
 
+def test_val_preds_true_label_columns_are_ignored():
+    """A1's val_preds.parquet also has '<head>__true' string columns (gold labels). They are not probabilities."""
+    probs = pd.DataFrame({
+        "ticket_id": ["A", "B"],
+        "type__Incident": [0.7, 0.1], "type__Request": [0.3, 0.9], "type__true": ["Incident", "Request"],
+        "priority__high": [0.6, 0.2], "priority__low": [0.4, 0.8], "priority__true": ["high", "low"],
+        "queue__IT": [0.5, 0.3], "queue__Billing": [0.5, 0.7], "queue__true": ["IT", "Billing"],
+    })
+    assert tt.prob_columns(probs.columns, "type") == ["type__Incident", "type__Request"]
+    f = tt.classifier_features(probs)
+    assert list(f["conf_type"]) == [0.7, 0.9] and list(f["conf_priority"]) == [0.6, 0.8]
+    preds = tt.predictions_from_row(probs.iloc[0], {h: tt.prob_columns(probs.columns, h) for h in tt.HEADS})
+    assert "true" not in preds["queue"]["probs"]
+
+
 def test_retrieval_features_excludes_self_and_uses_gate():
     val = pd.DataFrame({"ticket_id": ["A", "B"], "subject": ["s", None], "body": ["refund please", "vpn down"],
                         "type": ["Request", "Incident"], "priority": ["low", "high"]})
