@@ -58,7 +58,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [x] Never look at test metrics while making these choices.
 
 ### A1.7 Threshold tuning support (T+3:30)
-- [ ] Make sure `artifacts/val_preds.parquet` is current. Pair with A2 on `eval/tune_thresholds.py` if needed.
+- [x] Make sure `artifacts/val_preds.parquet` is current. Pair with A2 on `eval/tune_thresholds.py` if needed.
 - [ ] **(optional)** After thresholds are locked, retrain on all KB rows (fit + val) for the final model. Log it in the decision log.
 
 ### A1.8 Demo machine ready (by T+4:00)
