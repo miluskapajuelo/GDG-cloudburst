@@ -1,6 +1,7 @@
 """Generate structured, precedent-grounded replies with Gemini."""
 
 import re
+import time
 from functools import cache
 from html import unescape
 from importlib import import_module
@@ -79,15 +80,16 @@ def _call(system: str, contents: str) -> types.GenerateContentResponse:
         response_schema=DraftOut,
     )
 
-    can_retry = True
+    # Back off on rate limits (429) and transient server errors: 2s, 4s, 8s.
+    delays = [2.0, 4.0, 8.0]
     while True:
         try:
             return client.models.generate_content(
                 model=config.LLM_MODEL, contents=contents, config=generation_config
             )
         except errors.APIError as error:
-            if can_retry and error.code in (429, 500, 502, 503):
-                can_retry = False
+            if delays and error.code in (429, 500, 502, 503):
+                time.sleep(delays.pop(0))
                 continue
             raise DraftError(f"Gemini returned HTTP {error.code}.") from None
         except _TIMEOUT_ERRORS:

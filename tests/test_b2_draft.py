@@ -195,8 +195,9 @@ def test_retries_once_on_rate_limit_or_service_error(sdk_call, precedent, status
     assert sdk_call.call_count == 2
 
 
-@pytest.mark.parametrize(("status", "attempts"), [(403, 1), (501, 1), (503, 2), (504, 1)])
-def test_permanent_api_failure_is_sanitized(sdk_call, precedent, status, attempts):
+@pytest.mark.parametrize(("status", "attempts"), [(403, 1), (501, 1), (429, 4), (503, 4), (504, 1)])
+def test_permanent_api_failure_is_sanitized(sdk_call, precedent, status, attempts, monkeypatch):
+    monkeypatch.setattr(draft.time, "sleep", lambda _s: None)
     sdk_call.side_effect = errors.APIError(status, {"error": {"message": "private API error"}})
 
     with pytest.raises(draft.DraftError, match=rf"^Gemini returned HTTP {status}\.$"):
