@@ -70,13 +70,13 @@ Layout, wide screen (projector-friendly, base font 16px or larger):
 - [x] **States**: a skeleton while loading. For an error, show a toast with the message and keep the last result visible. If the API is down, the health dot turns red with "API offline". The UI must not crash on missing optional fields.
 
 ### C.5 Burst demo (by T+2:45)
-- [ ] Show the burst banner when `burst.active`: red, full width, with `cluster_size`, `window_minutes` and `label`.
+- [x] Show the burst banner when `burst.active`: red, full width, with `cluster_size`, `window_minutes` and `label`.
 - [ ] Add a **Run burst scenario** button: it calls `POST /burst/reset`, then sends the presets tagged `"burst": true` one after another (with a 1 s gap), and shows each result as it arrives.
 - [ ] Add a **Reset burst** button.
 
 ### C.6 Context widgets (by T+3:15)
 - [ ] Holdout metrics strip from `GET /metrics`: macro-F1 for type, queue and priority, HPI escalation recall, and p50 latency. On 404, show "Eval not run yet".
-- [ ] A thresholds popover from `GET /config`, so a judge asking "what is your threshold?" can be answered in one click.
+- [x] A thresholds popover from `GET /config`, so a judge asking "what is your threshold?" can be answered in one click.
 - [ ] A history sidebar: the last 10 results in memory, each showing the badge colour, subject or the first 40 chars, and the time. Clicking one shows that result again.
 
 ### C.7 Polish and robustness (T+3:15–4:00)
