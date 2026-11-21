@@ -10,6 +10,12 @@ Read first: [contract.md](../contract.md) §1 (every field you render), [escalat
 
 Agent: work only on the tasks below, in order. Tick each box in the same commit as the work. Until A2 says the real API is up, build against mock mode: `SENTINEL_MOCK=1 uvicorn api.main:app --port 8000`. If that is not ready yet, import `shared/fixtures/mock_triage_response.json` directly.
 
+> **Mock mode is ready (A2.1 merged in PR #8).** Run `git pull origin main` first. Start the API in mock mode:
+> - macOS/Linux/Git Bash: `SENTINEL_MOCK=1 uvicorn api.main:app --port 8000`
+> - Windows PowerShell: `$env:SENTINEL_MOCK="1"; uvicorn api.main:app --port 8000`
+>
+> In mock mode, `GET /health` returns `"mock": true`. `POST /triage` returns the contract-shaped fixture with a fresh `request_id` and `input` filled from your request. An empty `body` returns 422 (show a validation message, do not crash). CORS allows `http://localhost:5173`. Point `VITE_API_URL` at `http://localhost:8000` and build every panel against this response. Switch to the real API only when A2 says it is up. The response shape does not change.
+
 If the `frontend-design` skill is available, load it before building the UI.
 
 **Design rules:** read [design-rules.md](../design-rules.md) before writing any UI code. It covers drafts, palette, type, layout and copy, and how they override the layout sketch below.
