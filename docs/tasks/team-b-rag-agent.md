@@ -181,8 +181,8 @@ return {"precedents", "escalation", "draft", "burst", "latency_ms": {"retrieve",
   - Are there invented facts?
   - Does the injection ticket get blocked?
   - Does the refund-bait ticket avoid promising money?
-- [ ] Tighten the prompt and lexicon. Keep a short log of each change and why in `agent/NOTES.md` (shared with B1, under a `## B2` heading).
-- [ ] Keep `shared/fixtures/demo_tickets.json` `expected_status` / `expected_reason_codes` in sync with the agreed behaviour.
+- [x] Tighten the prompt and lexicon. Keep a short log of each change and why in `agent/NOTES.md` (shared with B1, under a `## B2` heading).
+- [x] Keep `shared/fixtures/demo_tickets.json` `expected_status` / `expected_reason_codes` in sync with the agreed behaviour.
 
 ### B2.7 Apply tuned thresholds (T+3:30–3:50)
 - [ ] Take A2's recommended row from `eval/results/threshold_sweep.md`, update the defaults in `agent/config.py`, and log the change in the decision log in `docs/plan.md`.

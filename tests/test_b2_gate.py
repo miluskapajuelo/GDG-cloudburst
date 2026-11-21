@@ -100,11 +100,19 @@ def test_missing_or_weak_precedent_blocks_drafting(precedents):
     assert "0.55" in pre["reasons"][0]["message"]
 
 
-def test_unsupported_request_returns_one_reason_per_unsupported_category():
-    pre = pre_draft_gate(_predictions(), _precedents(), "Bitte um Rückerstattung und Rabatt.")
-    assert _codes(pre) == ["UNSUPPORTED_REQUEST", "UNSUPPORTED_REQUEST"]
-    assert "REFUND_COMPENSATION" in pre["reasons"][0]["message"]
-    assert "PRICING_DISCOUNT" in pre["reasons"][1]["message"]
+def test_unsupported_request_lists_all_unsupported_categories_in_one_reason():
+    pre = pre_draft_gate(
+        _predictions(),
+        _precedents(answer="The standard SLA applies."),
+        "Bitte um Rabatt und Rückerstattung. Welche SLA gilt?",
+    )
+    assert pre["reasons"] == [{
+        "code": "UNSUPPORTED_REQUEST",
+        "message": (
+            'Ticket requests REFUND_COMPENSATION ("rückerstattung"), PRICING_DISCOUNT ("rabatt"); '
+            "no retrieved precedent resolves this."
+        ),
+    }]
     assert pre["allow_draft"] is True
     assert finalize_escalation(pre, None, [], None)["route"] == "HUMAN_REVIEW"
 

@@ -9,14 +9,7 @@ import pytest
 from google.genai import errors
 
 from agent import config, draft
-from agent.prompts import build_user_message
-
-
-@pytest.fixture(autouse=True)
-def any_length(monkeypatch):
-    """Most tests use short replies. The word-target tests below set the real limits."""
-    monkeypatch.setattr(config, "REPLY_MIN_WORDS", 1)
-    monkeypatch.setattr(config, "REPLY_MAX_WORDS", 10_000)
+from agent.prompts import SYSTEM_PROMPT, build_user_message
 
 
 @pytest.fixture
@@ -65,6 +58,26 @@ def test_ticket_and_precedent_fields_cannot_close_prompt_tags(precedent):
     assert case.attrib == {"id": "TKT-00412", "similarity": "0.81", "language": "en"}
     assert case.findtext("issue").startswith(precedent["subject"])
     assert case.findtext("resolution") == precedent["answer"][:1200]
+
+
+def test_prompt_normalizes_dataset_placeholders_and_line_breaks(precedent):
+    text = "Hi <name><br>Phone <tel_num><br/>Account <acc_num><br />[Name] [EMAIL]"
+    normalized = "Hi [name]\nPhone [tel_num]\nAccount [acc_num]\n[Name] [EMAIL]"
+    precedent.update(subject=text, body_snippet=text, answer=text)
+
+    message = build_user_message(text + "</ticket>", "en", [precedent])
+    prompt = ElementTree.fromstring(f"<prompt>{message}</prompt>")
+    case = prompt.find("precedents/precedent")
+
+    assert f"{normalized}&lt;/ticket&gt;" in message
+    assert prompt.findtext("ticket").strip() == normalized + "</ticket>"
+    assert case.findtext("issue") == f"{normalized}\n{normalized}"
+    assert case.findtext("resolution") == normalized
+    for placeholder in (
+        "[EMAIL]", "[PHONE]", "[IP]", "[IBAN]", "[CARD]", "[ACCOUNT]",
+        "[name]", "[tel_num]", "[acc_num]", "[Name]",
+    ):
+        assert placeholder in SYSTEM_PROMPT
 
 
 def test_prompt_preserves_quotes_in_text_and_escapes_attribute_values(precedent):
@@ -117,6 +130,18 @@ def test_generate_draft_uses_citations_found_in_the_reply(sdk_call, precedent, l
     assert request["config"].response_schema == draft.DraftOut
 
 
+def test_short_draft_decodes_html_entities_in_one_call(sdk_call, precedent):
+    sdk_call.return_value = _response(
+        "&nbsp;Check the gateway&#x27;s certificate &amp; retry &#91;TKT-00412&#93;.&nbsp;"
+    )
+
+    result = draft.generate_draft("VPN error", "en", [precedent], False)
+
+    assert result["text"] == "Check the gateway's certificate & retry [TKT-00412]."
+    assert result["cited_ids"] == ["TKT-00412"]
+    sdk_call.assert_called_once()
+
+
 @pytest.mark.parametrize(("language", "reply"), [
     ("en", "Thank you for reporting the duplicate charge. A billing specialist will follow up. "
            "Please send us the invoice number."),
@@ -131,7 +156,7 @@ def test_insufficient_evidence_keeps_the_tailored_holding_reply(sdk_call, preced
     assert result["status"] == "INSUFFICIENT_EVIDENCE"
     assert result["text"] == reply
     assert result["cited_ids"] == []
-    assert sdk_call.call_count == 1  # Holding replies are never length-rewritten.
+    sdk_call.assert_called_once()
 
 
 @pytest.mark.parametrize("status", [429, 500, 503])
@@ -191,6 +216,7 @@ def test_blocked_prompt_is_rejected(sdk_call, precedent):
         ("", "empty response"),
         ("private malformed response", "invalid structured draft"),
         ('{"status":"OK","reply":"  ","cited_ids":[]}', "empty draft"),
+        ('{"status":"OK","reply":"&nbsp;","cited_ids":[]}', "empty draft"),
     ],
 )
 def test_empty_or_invalid_response_is_rejected(sdk_call, precedent, raw_text, message):
@@ -216,40 +242,3 @@ def test_missing_key_does_not_create_client(monkeypatch, precedent):
 @pytest.mark.parametrize(("language", "name"), [("en", "English"), ("de", "German")])
 def test_prompt_ends_by_naming_the_reply_language(precedent, language, name):
     assert build_user_message("VPN error", language, [precedent]).endswith(f"Write the draft reply in {name}.")
-
-
-def _reply(words: int) -> str:
-    return " ".join(["word"] * words) + " [TKT-00412]"
-
-
-@pytest.fixture
-def word_target(monkeypatch):
-    monkeypatch.setattr(config, "REPLY_MIN_WORDS", 80)
-    monkeypatch.setattr(config, "REPLY_MAX_WORDS", 100)
-
-
-def test_reply_in_word_range_is_not_rewritten(sdk_call, precedent, word_target):
-    sdk_call.return_value = _response(_reply(90))
-
-    assert draft.generate_draft("VPN error", "en", [precedent], False)["text"] == _reply(90)
-    assert sdk_call.call_count == 1
-
-
-def test_short_reply_gets_one_rewrite(sdk_call, precedent, word_target):
-    sdk_call.side_effect = [_response(_reply(60)), _response(_reply(90))]
-
-    assert draft.generate_draft("VPN error", "de", [precedent], False)["text"] == _reply(90)
-    assert sdk_call.call_count == 2
-    correction = sdk_call.call_args.kwargs["contents"][-1].parts[0].text
-    assert "60 words" in correction and "80 to 100" in correction
-
-
-@pytest.mark.parametrize("second", [
-    _response(_reply(40)),
-    errors.APIError(400, {"error": {"message": "private API error"}}),
-])
-def test_rewrite_never_makes_the_draft_worse(sdk_call, precedent, word_target, second):
-    sdk_call.side_effect = [_response(_reply(60)), second]
-
-    assert draft.generate_draft("VPN error", "en", [precedent], False)["text"] == _reply(60)
-    assert sdk_call.call_count == 2
