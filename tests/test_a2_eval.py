@@ -62,7 +62,7 @@ def _pred(label: str, labels: list[str]) -> dict:
 def fake_triage(subject: str | None, body: str, *, skip_llm: bool = False) -> dict:
     """Contract-shaped response. 'outage' -> high Incident escalated ON_CALL; 'login' -> HUMAN_REVIEW
     with two reasons; anything else -> AUTO_DRAFT. German if 'Drucker' or 'wie' appears."""
-    assert skip_llm is True
+    assert skip_llm is True  # the full holdout pass never calls the LLM; A2.5 tests use llm_triage
     text = f"{subject or ''} {body}".lower()
     if "outage" in text:
         t, q, p = "Incident", "Technical Support", "high"
@@ -382,10 +382,175 @@ def test_main_with_fake_service(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("SENTINEL_DATA_DIR", str(ddir))
 
     out_dir = tmp_path / "res"
-    assert ev.main(["--out", str(out_dir), "--llm-sample", "5", "--limit", "3"]) == 0
+    assert ev.main(["--out", str(out_dir), "--limit", "3"]) == 0
     assert fake.started
     metrics = json.loads((out_dir / "metrics.json").read_text(encoding="utf-8"))
     assert metrics["thresholds"] == {"T_SIM": 0.6} and metrics["n_test"] == 3
+    assert metrics["grounding"]["n"] == 0 and not (out_dir / "llm_samples.jsonl").exists()
     out = capsys.readouterr().out
-    assert "A2.5" in out and "not implemented" in out
     assert out.isascii()
+
+
+# ---------------------------------------------------------------- A2.5: LLM sample
+
+def _sample_preds(n_hpi: int, n_rest: int, *, de_every: int = 2) -> pd.DataFrame:
+    rows = []
+    for i in range(n_hpi + n_rest):
+        hpi = i < n_hpi
+        rows.append({"ticket_id": f"TKT-{i:05d}", "type_label": "Incident" if hpi else "Request",
+                     "priority_label": "high" if hpi else "low", "status": "ESCALATE" if hpi else "AUTO_DRAFT",
+                     "lang_code": "de" if i % de_every == 0 else "en"})
+    return pd.DataFrame(rows)
+
+
+def test_llm_sample_selection_is_stratified():
+    preds = _sample_preds(30, 100)
+    ids = ev.select_llm_sample(preds, 40)
+    assert len(ids) == len(set(ids)) == 40
+    chosen = preds.set_index("ticket_id").loc[ids]
+    n_hpi = int(((chosen["priority_label"] == "high") & (chosen["type_label"] == "Incident")).sum())
+    assert n_hpi >= 10
+    assert 15 <= int((chosen["lang_code"] == "de").sum()) <= 25  # mixed en/de
+    assert ids == ev.select_llm_sample(preds, 40)  # deterministic (fixed seed)
+    assert ids == [t for t in preds["ticket_id"] if t in set(ids)]  # test-file order
+
+
+def test_llm_sample_selection_small_pools():
+    assert len(ev.select_llm_sample(_sample_preds(3, 100), 40)) == 40  # all 3 HPI + 37 others
+    chosen = ev.select_llm_sample(_sample_preds(3, 100), 40)
+    assert {"TKT-00000", "TKT-00001", "TKT-00002"} <= set(chosen)
+    assert len(ev.select_llm_sample(_sample_preds(50, 2), 40)) == 40  # top up from HPI
+    assert len(ev.select_llm_sample(_sample_preds(2, 3), 40)) == 5
+    errs = _sample_preds(5, 5)
+    errs.loc[0, "status"] = ev.ERROR_STATUS
+    assert "TKT-00000" not in ev.select_llm_sample(errs, 40)
+
+
+def _llm_resp(*, draft, reasons, reply="en", generate=1500):
+    return {
+        "predictions": {"type": {"label": "Incident", "confidence": 0.8}, "queue": {"label": "IT", "confidence": 0.5},
+                        "priority": {"label": "high", "confidence": 0.7}},
+        "language": {"code": reply, "confidence": 0.9, "reply_language": reply},
+        "escalation": {"status": "ESCALATE" if reasons else "AUTO_DRAFT", "route": None, "badge": "b",
+                       "reasons": [{"code": c, "message": "m"} for c in reasons]},
+        "precedents": [{"ticket_id": "TKT-00001"}],
+        "draft": draft,
+        "latency_ms": {"generate": generate, "total": generate + 50},
+    }
+
+
+def _rec(resp):
+    return ev._sample_record("TKT-x", resp, 1)
+
+
+def test_score_llm_sample_hand_computed():
+    det = lambda text: {"code": "de" if "Hallo" in text else "en"}  # noqa: E731
+    ok_cited = {"status": "OK", "text": "Hello [TKT-00001]", "cited_ids": ["TKT-00001"], "language": "en"}
+    ok_uncited = {"status": "OK", "text": "Hello there", "cited_ids": [], "language": "en"}
+    bad_cite = {"status": "OK", "text": "Hello [TKT-99999]", "cited_ids": ["TKT-99999"], "language": "en"}
+    insuff = {"status": "INSUFFICIENT_EVIDENCE", "text": "Hallo", "cited_ids": [], "language": "de"}
+    records = [
+        _rec(_llm_resp(draft=ok_cited, reasons=[], generate=1000)),
+        _rec(_llm_resp(draft=ok_uncited, reasons=[], generate=2000)),
+        _rec(_llm_resp(draft=bad_cite, reasons=["CITATION_CHECK_FAILED"], generate=3000)),
+        _rec(_llm_resp(draft=insuff, reasons=["LLM_INSUFFICIENT_EVIDENCE"], reply="de", generate=4000)),
+        _rec(_llm_resp(draft=None, reasons=["LLM_UNAVAILABLE"], generate=5000)),
+        _rec(_llm_resp(draft=None, reasons=["NO_PRECEDENT"], generate=0)),  # no LLM call
+        {"ticket_id": "TKT-err", "error": "RuntimeError: x", "draft": None},
+    ]
+    s = ev.score_llm_sample(records, det)
+    g = s["grounding"]
+    assert g["n"] == 6
+    assert g["citation_valid_rate"] == 0.75        # 3 of 4 drafts
+    assert g["draft_with_citation_rate"] == round(2 / 3, 4)  # 2 of 3 OK drafts cite something
+    assert g["insufficient_evidence_rate"] == round(1 / 6, 4)
+    assert g["llm_unavailable_rate"] == round(1 / 6, 4)
+    assert g["reply_language_match_rate"] == 1.0   # 4 of 4 drafts with text
+    w = s["with_llm"]
+    assert w["n"] == 6 and w["generate_p50"] == 3000 and s["detail"]["n_llm_calls"] == 5
+    assert s["detail"]["n_errors"] == 1 and s["detail"]["reason_counts"]["NO_PRECEDENT"] == 1
+
+
+def llm_triage(subject, body, *, skip_llm=False):
+    resp = fake_triage(subject, body, skip_llm=True)
+    if not skip_llm:
+        ids = ["TKT-00001"]
+        resp["precedents"] = [{"ticket_id": "TKT-00001"}]
+        de = resp["language"]["reply_language"] == "de"
+        resp["draft"] = {"status": "OK", "text": ("Hallo, bitte pruefen Sie das [TKT-00001]" if de
+                                                  else "Hello, please check the [TKT-00001]"),
+                         "cited_ids": ids, "language": resp["language"]["reply_language"],
+                         "for_human_review": False, "model": "m"}
+        resp["latency_ms"] = dict(resp["latency_ms"], generate=900, total=950)
+    return resp
+
+
+def test_run_eval_with_llm_sample(tmp_path, monkeypatch):
+    calls = []
+    real_loader = ev.load_labels
+
+    def spy(ddir):
+        assert (tmp_path / "out" / "llm_samples.jsonl").exists(), "labels were read before the LLM sample ran"
+        calls.append(1)
+        return real_loader(ddir)
+
+    def guard(subject, body, *, skip_llm=False):
+        assert not calls, "labels were read before the LLM sample finished"
+        return llm_triage(subject, body, skip_llm=skip_llm)
+
+    monkeypatch.setattr(ev, "load_labels", spy)
+    resets = []
+    metrics = run_synthetic(tmp_path, triage=guard, llm_sample=4, detect_fn=ev.fallback_detect_language,
+                            reset_fn=lambda: resets.append(1))
+    assert resets == [1]
+    assert_shape(metrics, A26_SHAPE)
+    assert_plain(metrics)
+    g = metrics["grounding"]
+    assert g["n"] == 4 and g["citation_valid_rate"] == 1.0 and g["draft_with_citation_rate"] == 1.0
+    assert g["llm_unavailable_rate"] == 0.0 and g["reply_language_match_rate"] == 1.0
+    assert metrics["latency_ms"]["with_llm"] == {"p50": 950, "p95": 950, "generate_p50": 900,
+                                                 "generate_p95": 900, "n": 4}
+
+    lines = (tmp_path / "out" / "llm_samples.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 4
+    rec = json.loads(lines[0])
+    assert set(rec) == {"ticket_id", "predictions", "language", "escalation", "precedent_ids", "draft",
+                        "latency_ms", "wall_ms", "error"}
+    # no labels, no answers, no ticket text in the sample file
+    raw = "\n".join(lines)
+    for leak in ('"answer"', '"queue": "Technical Support"', "outage everywhere", "Billing and Payments"):
+        assert leak not in raw
+    md = (tmp_path / "out" / "metrics.md").read_text(encoding="utf-8")
+    assert "LLM sample (grounding" in md and "Run 1 of at most 3" in md
+    assert md.isascii()
+
+
+def test_llm_sample_run_limit(tmp_path):
+    for _ in range(3):
+        run_synthetic(tmp_path, triage=llm_triage, llm_sample=2, detect_fn=ev.fallback_detect_language)
+    with pytest.raises(RuntimeError, match="already ran 3 times"):
+        run_synthetic(tmp_path, triage=llm_triage, llm_sample=2, detect_fn=ev.fallback_detect_language)
+    m = run_synthetic(tmp_path, triage=llm_triage, llm_sample=2, detect_fn=ev.fallback_detect_language,
+                      force_llm_sample=True)
+    assert m["grounding"]["n"] == 2
+    runs = json.loads((tmp_path / "out" / ev.LLM_RUNS_FILE).read_text(encoding="utf-8"))["runs"]
+    assert len(runs) == 4
+
+
+def test_main_with_llm_sample(tmp_path, monkeypatch, capsys):
+    ddir = tmp_path / "data"
+    write_dataset(ddir)
+    fake = types.ModuleType("api.service")
+    fake.startup = lambda: None
+    fake.get_config = lambda: {"T_SIM": 0.6}
+    fake.triage = llm_triage
+    fake.reset_burst = lambda: None
+    monkeypatch.setitem(sys.modules, "api.service", fake)
+    monkeypatch.setenv("SENTINEL_DATA_DIR", str(ddir))
+    monkeypatch.setattr(ev, "load_detector", lambda: ev.fallback_detect_language)
+    out_dir = tmp_path / "res"
+    assert ev.main(["--out", str(out_dir), "--llm-sample", "3"]) == 0
+    metrics = json.loads((out_dir / "metrics.json").read_text(encoding="utf-8"))
+    assert metrics["grounding"]["n"] == 3 and metrics["latency_ms"]["with_llm"]["n"] == 3
+    out = capsys.readouterr().out
+    assert "LLM sample n=3" in out and out.isascii()

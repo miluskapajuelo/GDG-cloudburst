@@ -24,20 +24,20 @@ export default function Analytics() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-8">
+      <div className="mx-auto max-w-[1400px] space-y-8 px-4 pb-12 pt-8 sm:px-8">
         <div className="flex flex-wrap items-end gap-4">
           <div>
-            <h1 className="text-[30px] leading-tight font-semibold text-ink">Analytics</h1>
-            <p className="mt-1 text-sm text-muted">How fast the team responds, how often the safety check escalates, and how much agents trust the suggestions.</p>
+            <h1 className="text-[32px] leading-[1.15] text-ink">Analytics</h1>
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">How fast the team responds, how often the safety check escalates, and how much agents trust the suggestions.</p>
           </div>
-          <div role="group" aria-label="Time range" className="ml-auto flex rounded-md border border-line-strong bg-surface p-0.5 text-sm">
+          <div role="group" aria-label="Time range" className="ml-auto flex h-9 items-center rounded-lg border border-line-strong bg-surface p-0.5 text-sm">
             {([7, 14, 30] as const).map((d) => (
-              <button key={d} aria-pressed={days === d} onClick={() => setDays(d)} className={`rounded px-3 py-1 ${days === d ? 'bg-surface-3 font-medium text-ink' : 'text-muted hover:text-ink'}`}>{d} days</button>
+              <button key={d} aria-pressed={days === d} onClick={() => setDays(d)} className={`tabular h-full rounded-md px-3 transition-colors ${days === d ? 'bg-accent-soft font-medium text-accent' : 'text-muted hover:text-ink'}`}>{d} days</button>
             ))}
           </div>
         </div>
 
-        <section className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-auto/30 bg-auto-soft px-5 py-4">
+        <section className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-auto/25 bg-auto-soft px-5 py-4">
           <Icon name="shieldCheck" className="h-6 w-6 text-auto" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-ink">{a.hpi_recall !== null ? `${pct(a.hpi_recall)} of high-priority incidents were escalated` : 'High-priority incident recall: evaluation not run yet'}</p>
@@ -46,7 +46,7 @@ export default function Analytics() {
           <span className="text-xs text-muted">{pct(a.on_call_rate, 1)} of tickets go to on-call</span>
         </section>
 
-        <div className="glass grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface shadow-soft md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-line bg-surface shadow-soft md:grid-cols-3 xl:grid-cols-6">
           <Kpi label="Total tickets" value={a.total_tickets.toLocaleString()} cur={a.total_tickets} prev={a.previous.total_tickets} neutral />
           <Kpi label="Escalation rate" value={pct(a.escalation_rate)} cur={a.escalation_rate} prev={a.previous.escalation_rate} goodWhenDown />
           <Kpi label="Avg triage time" value={`${(a.avg_triage_ms / 1000).toFixed(1)} s`} cur={a.avg_triage_ms} prev={a.previous.avg_triage_ms} goodWhenDown />
@@ -111,9 +111,9 @@ function Kpi({ label, value, cur, prev, goodWhenDown, neutral }: { label: string
   const good = neutral ? null : up !== !!goodWhenDown
   return (
     <div className="border-b border-r border-line px-4 py-4 xl:border-b-0 xl:last:border-r-0">
-      <p className="text-xs text-muted">{label}</p>
-      <p className="tabular mt-1 text-2xl font-semibold tracking-tight text-ink">{value}</p>
-      <p className={`mt-1 inline-flex items-center gap-0.5 text-xs ${good === null ? 'text-muted' : good ? 'text-auto' : 'text-oncall'}`}>
+      <p className="text-[13px] text-muted">{label}</p>
+      <p className="tabular mt-1.5 font-mono text-[24px] font-medium leading-none tracking-[-0.02em] text-ink">{value}</p>
+      <p className={`mt-2 inline-flex items-center gap-0.5 text-xs ${good === null ? 'text-muted' : good ? 'text-auto' : 'text-oncall'}`}>
         <Icon name="chevronDown" className={`h-3.5 w-3.5 ${up ? 'rotate-180' : ''}`} />
         {Math.abs(delta * 100).toFixed(0)}%{good !== null && <span className="ml-1">{good ? 'better' : 'worse'}</span>}
         <span className="ml-1 text-muted">vs previous</span>
@@ -124,7 +124,7 @@ function Kpi({ label, value, cur, prev, goodWhenDown, neutral }: { label: string
 
 function Panel({ title, takeaway, action, children, className = '' }: { title: string; takeaway: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-line bg-surface ${className}`}>
+    <section className={`rounded-xl border border-line bg-surface shadow-soft ${className}`}>
       <header className="flex items-start gap-3 px-5 pt-4">
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold text-ink">{title}</h2>

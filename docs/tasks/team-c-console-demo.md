@@ -35,9 +35,9 @@ If the `frontend-design` skill is available, load it before building the UI.
 **Done when:** the page renders the mock fixture with no API running.
 
 ### C.3 Input panel (by T+1:15)
-- [ ] Inputs: Subject (optional, single line), Body (required, multi-line, at least 8 rows), and a **Triage** button. Ctrl+Enter submits. Disable the button while the body is empty or a request is in flight.
-- [ ] A **Presets** dropdown loaded from `shared/fixtures/demo_tickets.json`. Selecting one fills Subject and Body without submitting. Show the `title` and the `purpose`.
-- [ ] Show a character count, and a "subject empty: fine" hint when the subject is blank. This shows judges that null subjects are handled.
+- [x] Inputs: Subject (optional, single line), Body (required, multi-line, at least 8 rows), and a **Triage** button. Ctrl+Enter submits. Disable the button while the body is empty or a request is in flight.
+- [x] A **Presets** dropdown loaded from `shared/fixtures/demo_tickets.json`. Selecting one fills Subject and Body without submitting. Show the `title` and the `purpose`.
+- [x] Show a character count, and a "subject empty: fine" hint when the subject is blank. This shows judges that null subjects are handled.
 
 ### C.4 Results view (by T+2:00, then connect to the real API at Integration 1)
 Layout, wide screen (projector-friendly, base font 16px or larger):
@@ -57,17 +57,17 @@ Layout, wide screen (projector-friendly, base font 16px or larger):
 │ Holdout metrics strip (GET /metrics) · API health dot · model name        │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
-- [ ] **Escalation badge** (the most prominent element on the page). Use `escalation.badge` text and colour it by route: `null`/AUTO_DRAFT is green, `HUMAN_REVIEW` is amber, `ON_CALL` is red. Below it, list each reason as `CODE: message`.
-- [ ] **Prediction cards**: one card each for type, queue and priority, showing the label, a confidence bar with its percentage, and a hover or expander with the top 3 `probs`.
-- [ ] **Chips**: detected language (`DE`/`EN` and the confidence), and PII (for example "PII masked: 1 email, 1 IP"; hidden when there are no counts).
-- [ ] **Latency**: a stacked horizontal bar of `pii`, `language`, `classify`, `retrieve`, `gate` and `generate`, with `total` in ms. Label the bar "end-to-end latency".
-- [ ] **Draft panel**:
+- [x] **Escalation badge** (the most prominent element on the page). Use `escalation.badge` text and colour it by route: `null`/AUTO_DRAFT is green, `HUMAN_REVIEW` is amber, `ON_CALL` is red. Below it, list each reason as `CODE: message`.
+- [x] **Prediction cards**: one card each for type, queue and priority, showing the label, a confidence bar with its percentage, and a hover or expander with the top 3 `probs`.
+- [x] **Chips**: detected language (`DE`/`EN` and the confidence), and PII (for example "PII masked: 1 email, 1 IP"; hidden when there are no counts).
+- [x] **Latency**: a stacked horizontal bar of `pii`, `language`, `classify`, `retrieve`, `gate` and `generate`, with `total` in ms. Label the bar "end-to-end latency".
+- [x] **Draft panel**:
   - Render `draft.text` with every `[TKT-xxxxx]` turned into a clickable chip. Clicking a chip scrolls to the matching precedent row and highlights it.
   - Show a "For human review: do not send" ribbon when `for_human_review` is true. Show an "Insufficient evidence: holding reply" tag when `status == INSUFFICIENT_EVIDENCE`.
   - Add a Copy button and show the model name in small text.
   - When `draft` is `null`, show "No draft generated" with the reason (from the reason codes).
-- [ ] **Precedents table**: `ticket_id`, a similarity bar with its number, language, queue/type/priority (small), and `answer_snippet` with an expander for the full `answer`. Show "Cross-lingual" when the precedent's language differs from the ticket's.
-- [ ] **States**: a skeleton while loading. For an error, show a toast with the message and keep the last result visible. If the API is down, the health dot turns red with "API offline". The UI must not crash on missing optional fields.
+- [x] **Precedents table**: `ticket_id`, a similarity bar with its number, language, queue/type/priority (small), and `answer_snippet` with an expander for the full `answer`. Show "Cross-lingual" when the precedent's language differs from the ticket's.
+- [x] **States**: a skeleton while loading. For an error, show a toast with the message and keep the last result visible. If the API is down, the health dot turns red with "API offline". The UI must not crash on missing optional fields.
 
 ### C.5 Burst demo (by T+2:45)
 - [ ] Show the burst banner when `burst.active`: red, full width, with `cluster_size`, `window_minutes` and `label`.

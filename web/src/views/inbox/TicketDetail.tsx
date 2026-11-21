@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Avatar, Button, EmptyState, Icon, Kbd, LangChip, PriorityBadge, type IconName } from '../../components/ui'
+import { LatencyBar, SignalChips } from '../../components/results'
+import { Avatar, Button, EmptyState, Icon, Kbd, LangChip, PriorityBadge, RouteBadge, type IconName } from '../../components/ui'
 import { precedentDate } from '../../data/mockBackend'
 import { AGENT } from '../../lib/session'
 import { ago, band, dateTime, duration, LANG_LABEL, pct, PRIORITY_LABEL, REASON_COPY, STATUS_LABEL } from '../../lib/format'
@@ -71,29 +72,28 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <header className="shrink-0 border-b border-line bg-surface px-4 py-3 sm:px-6">
+      <header className="shrink-0 border-b border-line bg-surface px-4 pb-4 pt-3 sm:px-6">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <a href={`#/${section}`} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
             <Icon name="arrowLeft" /> <span className="capitalize">{section}</span>
           </a>
           <span className="text-line-strong">/</span>
-          <span className="font-mono text-xs text-muted">{t.id}</span>
+          <span className="tabular font-mono text-xs text-muted">{t.id}</span>
           <div className="ml-auto flex items-center gap-1">
-            <span className="mr-1 hidden text-xs text-muted md:inline">{idx + 1} of {siblings.length}</span>
-            <button aria-label="Previous ticket (K)" disabled={!prev} onClick={() => prev && navigate(`/${section}/${prev}`)} className="rounded-md p-1.5 text-ink-2 hover:bg-surface-3 disabled:opacity-30"><Icon name="chevronDown" className="h-4 w-4 rotate-180" /></button>
-            <button aria-label="Next ticket (J)" disabled={!next} onClick={() => next && navigate(`/${section}/${next}`)} className="rounded-md p-1.5 text-ink-2 hover:bg-surface-3 disabled:opacity-30"><Icon name="chevronDown" className="h-4 w-4" /></button>
+            <span className="tabular mr-1 hidden text-xs text-muted md:inline">{idx + 1} of {siblings.length}</span>
+            <button aria-label="Previous ticket (K)" disabled={!prev} onClick={() => prev && navigate(`/${section}/${prev}`)} className="rounded-lg p-1.5 text-ink-2 hover:bg-surface-3 disabled:opacity-30"><Icon name="chevronDown" className="h-4 w-4 rotate-180" /></button>
+            <button aria-label="Next ticket (J)" disabled={!next} onClick={() => next && navigate(`/${section}/${next}`)} className="rounded-lg p-1.5 text-ink-2 hover:bg-surface-3 disabled:opacity-30"><Icon name="chevronDown" className="h-4 w-4" /></button>
           </div>
         </div>
-        <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-3">
+        <div className="mt-3 flex flex-wrap items-start gap-x-6 gap-y-3">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-semibold leading-snug text-ink sm:text-2xl">{t.subject || <span className="italic text-muted">(no subject)</span>}</h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+            <h1 className="font-sans text-[20px] font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-[22px]">{t.subject || <span className="text-muted">(no subject)</span>}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-muted">
               <PriorityBadge priority={t.priority} />
               <DecisionPill t={t} />
               <span>{STATUS_LABEL[t.status]}</span>
-              <span>·</span>
               <span>{t.assignee ? <>Assigned to <span className="text-ink-2">{t.assignee === AGENT.name ? 'you' : t.assignee}</span></> : <span className={d === 'critical' ? 'font-medium text-oncall' : ''}>Unassigned</span>}</span>
-              {isOpen(t) && waitingMs(t, now) > 0 && <><span>·</span><span>Waiting {duration(waitingMs(t, now))}</span></>}
+              {isOpen(t) && waitingMs(t, now) > 0 && <span className="tabular">Waiting {duration(waitingMs(t, now))}</span>}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -107,18 +107,19 @@ export default function TicketDetail({ id, section }: { id: string; section: Sec
 
       {/* 3-column workspace */}
       <div className="min-h-0 flex-1 overflow-y-auto xl:grid xl:grid-cols-[minmax(320px,30fr)_minmax(420px,42fr)_minmax(300px,28fr)] xl:overflow-hidden">
-        <section aria-label="Customer ticket" className="glass border-b border-line bg-surface-2 xl:overflow-y-auto xl:border-b-0 xl:border-r">
+        <section aria-label="Customer ticket" className="border-b border-line bg-surface-2 xl:overflow-y-auto xl:border-b-0 xl:border-r">
           <CustomerColumn t={t} now={now} />
         </section>
-        <section aria-label="Decision and response" className="space-y-4 p-4 sm:p-6 xl:overflow-y-auto">
+        <section aria-label="Decision and response" className="space-y-5 p-4 sm:p-6 xl:overflow-y-auto">
           <DecisionCard t={t} now={now} />
           <Classification t={t} />
+          {t.triage && <LatencyBar latency={t.triage.latency_ms} />}
           <ResponseWorkspace key={`${t.id}-${t.triage?.request_id}`} t={t} onCite={cite} />
           <p className="flex items-center justify-center gap-3 pb-2 text-xs text-muted">
             <span><Kbd>J</Kbd><Kbd>K</Kbd> next / previous</span><span><Kbd>Esc</Kbd> back</span><span><Kbd>⌘</Kbd><Kbd>↵</Kbd> send</span>
           </p>
         </section>
-        <section aria-label="Supporting history" className="glass border-t border-line bg-surface-2 xl:overflow-y-auto xl:border-l xl:border-t-0">
+        <section aria-label="Supporting history" className="border-t border-line bg-surface-2 xl:overflow-y-auto xl:border-l xl:border-t-0">
           <HistoryColumn t={t} highlight={highlight} />
         </section>
       </div>
@@ -159,7 +160,7 @@ function CustomerColumn({ t, now }: { t: Ticket; now: number }) {
       <dl className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border border-line p-3 text-xs">
         <dt className="text-muted">Received</dt><dd className="text-right text-ink-2" title={dateTime(t.created_at)}>{ago(t.created_at, now)}</dd>
         <dt className="text-muted">Channel</dt><dd className="text-right capitalize text-ink-2">{t.channel}</dd>
-        <dt className="text-muted">Original language</dt><dd className="text-right text-ink-2">{LANG_LABEL[lang] ?? lang.toUpperCase()}{t.triage && <span className="text-muted"> · {pct(t.triage.language.confidence)}</span>}</dd>
+        <dt className="text-muted">Original language</dt><dd className="text-right text-ink-2">{LANG_LABEL[lang] ?? lang.toUpperCase()}{t.triage && <span className="text-muted"> ({pct(t.triage.language.confidence)})</span>}</dd>
         {t.linked_incidents.length > 0 && <><dt className="text-muted">Linked incident</dt><dd className="text-right font-mono text-ink-2">{t.linked_incidents.join(', ')}</dd></>}
       </dl>
 
@@ -185,7 +186,7 @@ function CustomerColumn({ t, now }: { t: Ticket; now: number }) {
                 <div className="border-t border-dashed border-line bg-surface-2 px-3 py-3">
                   <p className="mb-2 text-sm font-medium text-ink-2">{t.translation.subject}</p>
                   <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-ink-2">{t.translation.body}</p>
-                  <p className="mt-2 text-[11px] text-muted">Machine translation for reference. Reply in {LANG_LABEL[lang]}.</p>
+                  <p className="mt-2 text-xs text-muted">Machine translation for reference. Reply in {LANG_LABEL[lang]}.</p>
                 </div>
               ) : (
                 <p className="border-t border-dashed border-line px-3 py-3 text-xs text-muted">Translation is not available for this ticket yet.</p>
@@ -197,13 +198,13 @@ function CustomerColumn({ t, now }: { t: Ticket; now: number }) {
 
       {rest.length > 0 && (
         <section aria-label="Conversation">
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Conversation</h3>
+          <h3 className="mb-2 text-[13px] font-semibold text-ink-2">Conversation</h3>
           <ol className="space-y-2.5">
             {rest.map((m) => (
               <li key={m.id} className={`rounded-lg border px-3 py-2.5 ${m.internal ? 'border-note-line bg-note' : m.role === 'customer' ? 'border-line' : 'border-line bg-surface-2'}`}>
                 <p className="mb-1 flex items-center gap-1.5 text-xs">
                   <span className="font-medium text-ink">{m.author}</span>
-                  <span className="text-muted">{m.internal ? '· Internal note' : m.role === 'agent' ? '· Sent to customer' : '· Customer'}</span>
+                  <span className="text-muted">{m.internal ? 'Internal note' : m.role === 'agent' ? 'Sent to customer' : 'Customer'}</span>
                   {m.internal && <Icon name="lock" className="h-3 w-3 text-review" />}
                   <time className="ml-auto text-muted" dateTime={m.at} title={dateTime(m.at)}>{ago(m.at, now)}</time>
                 </p>
@@ -215,9 +216,9 @@ function CustomerColumn({ t, now }: { t: Ticket; now: number }) {
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); if (note.trim()) { store.message(t.id, { author: AGENT.name, role: 'agent', internal: true, body: note.trim() }); setNote('') } }}>
-        <label htmlFor="note" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted"><Icon name="lock" className="h-3 w-3" />Internal note</label>
+        <label htmlFor="note" className="mb-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-ink-2"><Icon name="lock" className="h-3 w-3" />Internal note</label>
         <div className="flex gap-2">
-          <input id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Visible to your team only" className="h-9 min-w-0 flex-1 rounded-md border border-line-strong bg-surface px-3 text-sm placeholder:text-muted" />
+          <input id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Visible to your team only" className="h-9 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-sm placeholder:text-muted" />
           <Button type="submit" disabled={!note.trim()}>Add</Button>
         </div>
       </form>
@@ -226,7 +227,7 @@ function CustomerColumn({ t, now }: { t: Ticket; now: number }) {
 
       {others.length > 0 && (
         <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Other tickets from {t.requester.name.split(' ')[0]}</h3>
+          <h3 className="mb-2 text-[13px] font-semibold text-ink-2">Other tickets from {t.requester.name.split(' ')[0]}</h3>
           <ul className="space-y-1">{others.map((o) => <li key={o.id}><a href={`#/inbox/${o.id}`} className="block truncate rounded px-2 py-1 text-sm text-ink-2 hover:bg-surface-3">{o.subject}</a></li>)}</ul>
         </section>
       )}
@@ -240,13 +241,13 @@ function TicketHistory({ t }: { t: Ticket }) {
   const shown = open ? events : events.slice(0, 3)
   return (
     <section>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Ticket history</h3>
+      <h3 className="mb-2 text-[13px] font-semibold text-ink-2">Ticket history</h3>
       <ol className="relative space-y-3 border-l border-line pl-4">
         {shown.map((e) => (
           <li key={e.id} className="relative text-xs">
             <span className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 border-surface ${e.kind === 'escalation' ? 'bg-oncall' : e.kind === 'ai' ? 'bg-accent' : e.kind === 'reply' ? 'bg-auto' : 'bg-line-strong'}`} aria-hidden />
             <p className="text-ink-2">{e.text}</p>
-            <p className="text-muted">{e.actor} · {dateTime(e.at)}</p>
+            <p className="text-muted">{e.actor}, {dateTime(e.at)}</p>
           </li>
         ))}
       </ol>
@@ -274,24 +275,25 @@ function DecisionCard({ t, now }: { t: Ticket; now: number }) {
   }[d]
 
   return (
-    <section aria-label="Safety decision" className={`glass overflow-hidden rounded-2xl border bg-surface shadow-soft ${cfg.cls}`}>
-      <div className={`flex items-start gap-3 px-4 py-3 ${cfg.head}`}>
-        <Icon name={cfg.icon} className="mt-0.5 h-5 w-5" />
-        <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold">{cfg.title}</h2>
-          <p className="mt-0.5 text-sm text-ink-2">{cfg.sub}</p>
-        </div>
+    <section aria-label="Safety decision" className={`overflow-hidden rounded-xl border bg-surface shadow-soft ${cfg.cls}`}>
+      <div className={`space-y-3 px-5 py-4 ${cfg.head}`}>
+        <h2 className="sr-only">Escalation decision</h2>
+        <RouteBadge route={tri.escalation.route} label={tri.escalation.badge} size="lg" />
+        <p className="text-sm text-ink-2">{cfg.sub}</p>
+        <SignalChips tri={tri} />
       </div>
       {tri.escalation.reasons.length > 0 && (
-        <ul className="divide-y divide-line">
-          {tri.escalation.reasons.map((r, i) => (
-            <li key={i} className="px-4 py-3 text-sm">
-              <p className="font-medium text-ink">{REASON_COPY[r.code]?.title ?? 'Escalated manually'}</p>
-              <p className="text-ink-2">{r.message}</p>
-              {REASON_COPY[r.code] && <p className="mt-1 text-xs text-muted">What to do: {REASON_COPY[r.code].hint}</p>}
-            </li>
-          ))}
-        </ul>
+        <div className="border-t border-line">
+          <h3 className="px-5 pt-3 text-sm font-semibold text-ink">Why this decision</h3>
+          <ul className="divide-y divide-line">
+            {tri.escalation.reasons.map((r, i) => (
+              <li key={i} className="px-5 py-3 text-sm">
+                <p className="text-ink"><code className="font-mono text-[13px] font-semibold">{r.code}</code>: {r.message}</p>
+                {REASON_COPY[r.code] && <p className="mt-1 text-xs text-muted">What to do: {REASON_COPY[r.code].hint}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {d === 'critical' && (
         <div className="grid gap-3 border-t border-line px-4 py-3 text-sm sm:grid-cols-2">
@@ -307,14 +309,14 @@ function DecisionCard({ t, now }: { t: Ticket; now: number }) {
       )}
       {related.length > 0 && (
         <div className="border-t border-line px-4 py-3">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-ink"><Icon name="zap" className="h-3.5 w-3.5 text-review" />{tri.burst.cluster_size} similar reports in {tri.burst.window_minutes} min · “{tri.burst.label}”</p>
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-ink"><Icon name="zap" className="h-3.5 w-3.5 text-review" />{tri.burst.cluster_size} similar reports in {tri.burst.window_minutes} min: “{tri.burst.label}”</p>
           <ul className="mt-2 space-y-1">
             {related.map((r) => (
               <li key={r.id}>
                 <a href={`#/inbox/${r.id}`} className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-surface-3">
                   <PriorityBadge priority={r.priority} compact />
                   <span className="min-w-0 flex-1 truncate text-ink-2">{r.subject}</span>
-                  <span className="shrink-0 text-xs text-muted">{r.requester.org} · {ago(r.created_at, now)}</span>
+                  <span className="shrink-0 text-xs text-muted">{r.requester.org}, {ago(r.created_at, now)}</span>
                 </a>
               </li>
             ))}
@@ -332,12 +334,12 @@ function Classification({ t }: { t: Ticket }) {
   const store = useStore()
   const p = t.triage?.predictions
   return (
-    <section aria-label="Classification" className="rounded-lg border border-line bg-surface">
-      <header className="flex items-center justify-between border-b border-line px-4 py-2.5">
-        <h3 className="text-sm font-semibold text-ink">Classification</h3>
-        <span className="text-xs text-muted">Suggested · edit if wrong</span>
+    <section aria-label="Classification" className="rounded-xl border border-line bg-surface shadow-soft">
+      <header className="flex items-center justify-between border-b border-line px-5 py-3">
+        <h3 className="text-sm font-semibold text-ink">Predictions</h3>
+        <span className="inline-flex items-center gap-2 text-xs text-muted"><span className="rounded border border-ai/30 bg-ai-soft px-1.5 py-px font-medium text-ai">AI</span>Suggested by the classifier, edit if wrong</span>
       </header>
-      <div className="grid divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <div className="divide-y divide-line">
         <Field label="Type" value={t.type} options={TYPES} pred={p?.type}
           onChange={(v) => store.patch(t.id, { type: v as TicketType }, { kind: 'reclassify', text: `Type corrected: ${t.type} → ${v}` }, AGENT.name)} />
         <Field label="Queue" value={t.queue} options={QUEUES} pred={p?.queue}
@@ -354,27 +356,44 @@ function Field({ label, value, options, pred, onChange, format = (v) => v }: { l
   const corrected = pred && pred.label !== value
   const b = pred ? band(pred.confidence) : null
   const bar = b === 'High' ? 'bg-auto' : b === 'Medium' ? 'bg-review' : 'bg-oncall'
-  const alts = pred ? Object.entries(pred.probs).sort((a, z) => z[1] - a[1]).slice(1, 3) : []
+  const ranked = pred ? Object.entries(pred.probs).sort((a, z) => z[1] - a[1]) : []
+  const alts = ranked.slice(1, 3)
+  const top3 = ranked.slice(0, 3)
   return (
-    <div className="px-4 py-3">
-      <label htmlFor={id} className="text-xs text-muted">{label}</label>
-      <div className="relative mt-0.5">
+    <div className="grid gap-x-4 gap-y-1 px-5 py-3 sm:grid-cols-[88px_minmax(0,1fr)_minmax(0,1.1fr)] sm:items-start">
+      <label htmlFor={id} className="pt-1.5 text-[13px] font-medium text-muted">{label}</label>
+      <div className="relative">
         <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className="w-full cursor-pointer appearance-none truncate rounded-md border border-transparent bg-transparent py-1 pr-6 text-sm font-semibold text-ink hover:border-line-strong focus:border-line-strong">
           {options.map((o) => <option key={o} value={o}>{format(o)}</option>)}
         </select>
         <Icon name="chevronDown" className="pointer-events-none absolute right-1 top-2 h-3.5 w-3.5 text-muted" />
       </div>
       {pred && (corrected ? (
-        <p className="mt-1.5 flex items-center gap-1 text-xs text-accent"><Icon name="pencil" className="h-3 w-3" />Corrected by you · suggested {format(pred.label)}</p>
+        <p className="flex items-center gap-1 pt-1.5 text-xs text-accent"><Icon name="pencil" className="h-3 w-3" />Corrected by you (suggested {format(pred.label)})</p>
       ) : (
-        <div className="mt-1.5" title={`Alternatives: ${alts.map(([k, v]) => `${k} ${pct(v)}`).join(', ')}`}>
+        <div className="pt-1">
           <div className="flex items-center justify-between text-xs">
-            <span className={b === 'Low' ? 'font-medium text-review' : 'text-ink-2'}>Confidence: {b} — {pct(pred.confidence)}</span>
+            <span className={b === 'Low' ? 'font-medium text-review' : 'text-ink-2'}>Confidence: {b}</span>
+            <span className="tabular font-mono font-semibold text-ink">{pct(pred.confidence)}</span>
           </div>
           <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-3" role="meter" aria-label={`${label} confidence`} aria-valuenow={Math.round(pred.confidence * 100)} aria-valuemin={0} aria-valuemax={100}>
             <div className={`h-full rounded-full ${bar}`} style={{ width: pct(pred.confidence) }} />
           </div>
           {b === 'Low' && alts[0] && <p className="mt-1 text-xs text-muted">Next most likely: {format(alts[0][0])} ({pct(alts[0][1])})</p>}
+          {top3.length > 1 && (
+            <details className="group mt-1.5 text-xs">
+              <summary className="cursor-pointer list-none font-medium text-accent hover:underline">Top {top3.length} probabilities</summary>
+              <ul className="mt-1.5 space-y-1">
+                {top3.map(([k, v]) => (
+                  <li key={k} className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-ink-2">{format(k)}</span>
+                    <span className="h-1 w-14 overflow-hidden rounded-full bg-surface-3"><span className="block h-full rounded-full bg-accent" style={{ width: pct(v) }} /></span>
+                    <span className="tabular w-10 text-right font-mono text-muted">{pct(v)}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </div>
       ))}
     </div>
@@ -427,28 +446,32 @@ function PrecedentCard({ p, cited, cross, highlight, onHide }: { p: Precedent; c
     ref.current?.classList.add('flash')
   }, [highlight])
   return (
-    <li ref={ref} id={`prec-${p.ticket_id}`} className={`rounded-lg border bg-surface transition-colors ${highlight ? 'border-accent ring-2 ring-accent/20' : 'border-line'}`}>
+    <li ref={ref} id={`prec-${p.ticket_id}`} className={`rounded-xl border bg-surface transition-colors ${highlight ? 'border-accent ring-2 ring-accent/25' : 'border-line'}`}>
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="block w-full px-3.5 py-3 text-left">
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs font-medium text-accent">{p.ticket_id}</span>
-          {cited && <span className="rounded bg-accent-soft px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-accent">Cited</span>}
-          <span className="ml-auto flex items-center gap-1.5" title={`Similarity ${p.similarity.toFixed(3)}`}>
-            <span className="h-1 w-10 overflow-hidden rounded-full bg-surface-3"><span className="block h-full rounded-full bg-accent" style={{ width: pct(p.similarity) }} /></span>
-            <span className="tabular text-xs font-medium text-ink-2">{pct(p.similarity)}</span>
+          {cited && <span className="rounded bg-accent-soft px-1.5 py-px text-[11px] font-semibold text-accent">Cited</span>}
+          <span className="ml-auto flex items-center gap-1.5" title={`Cosine similarity ${p.similarity.toFixed(3)}`}>
+            <span className="h-1.5 w-12 overflow-hidden rounded-full bg-surface-3"><span className="block h-full rounded-full bg-accent" style={{ width: pct(Math.max(0, Math.min(1, p.similarity))) }} /></span>
+            <span className="tabular font-mono text-xs font-semibold text-ink-2">{p.similarity.toFixed(2)}</span>
           </span>
         </div>
         <p className="mt-1.5 text-sm font-medium leading-snug text-ink">{p.subject || '(no subject)'}</p>
-        <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
+        <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+          <LangChip code={p.language} />
+          {cross && <span className="rounded border border-accent/30 bg-accent-soft px-1.5 py-px text-xs font-semibold text-accent" title="Retrieved across languages: this past ticket is in a different language than the new one">Cross-lingual</span>}
           {date && <span>Resolved {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
-          <span>· {LANG_LABEL[p.language] ?? p.language}</span>
-          {cross && <span className="text-accent">· Different language</span>}
         </p>
+        {(p.type || p.queue || p.priority) && (
+          <p className="mt-1 text-xs text-muted">{[p.type, p.queue, p.priority && `${PRIORITY_LABEL[p.priority as Priority] ?? p.priority} priority`].filter(Boolean).join(', ')}</p>
+        )}
         <p className={`mt-2 text-[13px] leading-relaxed text-ink-2 ${open ? '' : 'line-clamp-3'}`}><span className="font-medium text-ink">Resolution: </span>{open ? p.answer : p.answer_snippet}</p>
+        <span className="mt-1.5 inline-block text-xs font-medium text-accent">{open ? 'Show less' : 'Show full answer'}</span>
       </button>
       {open && (
         <div className="space-y-2 border-t border-line px-3.5 py-3 text-xs">
           <p className="text-muted"><span className="font-medium text-ink-2">Original issue: </span>{p.body_snippet}</p>
-          <p className="text-muted">{p.type} · {p.queue} · {PRIORITY_LABEL[p.priority as Priority] ?? p.priority}{p.tags.length ? ` · ${p.tags.join(', ')}` : ''}</p>
+          {p.tags.length > 0 && <p className="text-muted">Tags: {p.tags.join(', ')}</p>}
           <button onClick={onHide} className="font-medium text-muted hover:text-ink hover:underline">Not relevant to this ticket</button>
         </div>
       )}
