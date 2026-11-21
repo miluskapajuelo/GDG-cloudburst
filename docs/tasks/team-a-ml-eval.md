@@ -79,12 +79,12 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [x] Replace `GUSTAVO_LOGIN` with your GitHub login everywhere it appears: `CLAUDE.md` (roster and Step 0 question), `docs/plan.md`, `README.md` (team table) and the table at the top of this file. Run `git grep GUSTAVO_LOGIN` to confirm none are left. This is an allowed edit for you.
 
 ### A2.1 API skeleton with mock mode (by T+0:30). Unblocks Team C.
-- [ ] `api/schemas.py`: Pydantic v2 models that mirror the contract response exactly (`TriageRequest`, `TriageResponse` and the nested models).
-- [ ] `api/main.py` (FastAPI):
+- [x] `api/schemas.py`: Pydantic v2 models that mirror the contract response exactly (`TriageRequest`, `TriageResponse` and the nested models).
+- [x] `api/main.py` (FastAPI):
   - Endpoints: `GET /health`, `GET /config`, `GET /metrics`, `POST /triage`, `POST /burst/reset`.
   - CORS for ports 5173 and 8501.
   - With `SENTINEL_MOCK=1`, `/triage` returns `shared/fixtures/mock_triage_response.json` with a fresh `request_id`, `"mock": true` and `input` filled from the request. No model loading.
-- [ ] Validation: an empty or whitespace `body` returns 422. A body over 8,000 chars is truncated and `input.truncated = true`.
+- [x] Validation: an empty or whitespace `body` returns 422. A body over 8,000 chars is truncated and `input.truncated = true`.
 
 **Done when:** `SENTINEL_MOCK=1 uvicorn api.main:app --port 8000` works, `curl -X POST localhost:8000/triage -H "content-type: application/json" -d '{"body":"test"}'` returns the fixture, and `miluskapajuelo` is told it is ready.
 
