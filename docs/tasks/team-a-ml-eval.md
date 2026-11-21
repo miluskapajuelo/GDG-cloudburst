@@ -111,14 +111,14 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [ ] Wire the real classifier and retriever into `service.py` (replace stubs). Merge after A1.
 
 ### A2.5 LLM sample evaluation (by T+3:15)
-- [ ] `--llm-sample 40`: a stratified sample of test inputs (at least 10 predicted high/Incident; mixed en/de), run with `skip_llm=False`. Measure:
+- [x] `--llm-sample 40`: a stratified sample of test inputs (at least 10 predicted high/Incident; mixed en/de), run with `skip_llm=False`. Measure:
   - `generate` latency p50/p95 and total latency p50/p95
   - citation validity rate (no `CITATION_CHECK_FAILED`)
   - the fraction of OK drafts with at least 1 citation
   - `INSUFFICIENT_EVIDENCE` rate and `LLM_UNAVAILABLE` rate
   - reply-language match rate (detect the language of `draft.text`, compare with `language.reply_language`)
-- [ ] Save the drafts to `eval/results/llm_samples.jsonl`: `ticket_id`, predictions, escalation, draft. **No test labels and no test answers.**
-- [ ] LLM calls cost money and time. Run the sample at most 3 times in total.
+- [x] Save the drafts to `eval/results/llm_samples.jsonl`: `ticket_id`, predictions, escalation, draft. **No test labels and no test answers.**
+- [x] LLM calls cost money and time. Run the sample at most 3 times in total.
 
 ### A2.6 `GET /metrics` and the `metrics.json` shape
 ```json
