@@ -1,0 +1,2 @@
+# Keep dataset files byte-exact (no CRLF conversion on Windows)
+*.csv -text
