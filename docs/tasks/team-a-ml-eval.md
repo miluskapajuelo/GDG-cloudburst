@@ -67,7 +67,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [x] `.env` holds a working key. Test the `SENTINEL_LLM_MODEL` switch once.
 
 ### A1.9 Q&A prep (by T+4:30)
-- [ ] Write 5 bullet points in `ml/EDA.md` under "Judge Q&A": why TF-IDF + LR, how leakage is prevented, why priority F1 is modest, how HPI recall is achieved (gate probabilities), and what we would do with more time.
+- [x] Write 5 bullet points in `ml/EDA.md` under "Judge Q&A": why TF-IDF + LR, how leakage is prevented, why priority F1 is modest, how HPI recall is achieved (gate probabilities), and what we would do with more time.
 
 ---
 
