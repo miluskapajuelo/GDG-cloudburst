@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { LatencyBar, SignalChips } from '../../components/results'
 import { Avatar, Button, EmptyState, Icon, Kbd, LangChip, PanelHeader, PriorityBadge, RouteBadge, type IconName } from '../../components/ui'
-import { precedentDate } from '../../data/mockBackend'
 import { AGENT } from '../../lib/session'
 import { ago, band, dateTime, duration, LANG_LABEL, pct, PRIORITY_LABEL, REASON_COPY, STATUS_LABEL } from '../../lib/format'
 import { usePrefs } from '../../lib/prefs'
@@ -434,7 +433,6 @@ function HistoryColumn({ t, highlight }: { t: Ticket; highlight: { id: string; n
 function PrecedentCard({ p, cited, cross, highlight, onHide }: { p: Precedent; cited: boolean; cross: boolean; highlight: number; onHide: () => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLLIElement>(null)
-  const date = precedentDate(p.ticket_id)
   useEffect(() => {
     if (!highlight) return
     setOpen(true)
@@ -458,7 +456,6 @@ function PrecedentCard({ p, cited, cross, highlight, onHide }: { p: Precedent; c
         <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
           <LangChip code={p.language} />
           {cross && <span className="rounded-full bg-accent-soft px-2 py-px text-xs font-medium text-accent" title="Retrieved across languages: this past ticket is in a different language than the new one">Cross-lingual</span>}
-          {date && <span>Resolved {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
         </p>
         {(p.type || p.queue || p.priority) && (
           <p className="mt-1 text-xs text-muted">{[p.type, p.queue, p.priority && `${PRIORITY_LABEL[p.priority as Priority] ?? p.priority} priority`].filter(Boolean).join(', ')}</p>

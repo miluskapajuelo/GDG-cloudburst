@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Avatar, Icon, Kbd, type IconName } from './components/ui'
-import { buildTickets } from './data/mockBackend'
 import { PrefsProvider } from './lib/prefs'
 import { AGENT } from './lib/session'
 import { isEscalated, isOpen } from './lib/ticket'
@@ -22,7 +21,7 @@ export default function App() {
   return (
     <ToastProvider>
       <PrefsProvider>
-        <StoreProvider seed={buildTickets}>
+        <StoreProvider seed={() => []}>
           <Workspace route={route} />
         </StoreProvider>
       </PrefsProvider>
@@ -167,7 +166,7 @@ export function HealthDot() {
       ? ['bg-auto', h.health.mock ? 'Live (mock)' : 'Live', `Model ${h.health.llm_model}, ${h.health.index_size.toLocaleString()} past tickets indexed`]
       : h.state === 'checking'
         ? ['bg-review', 'Connecting', 'Checking the triage service']
-        : ['bg-oncall', 'API offline', 'The triage API is not reachable. You are viewing demo data, and new tickets use a local fallback marked as mock.']
+        : ['bg-oncall', 'API offline', 'The triage API is not reachable. Start it with: uvicorn api.main:app --port 8000']
   return (
     <span className="hidden items-center gap-2 text-xs font-medium text-muted sm:inline-flex" title={title} role="status">
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />

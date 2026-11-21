@@ -1,8 +1,7 @@
 import type { Draft, GateConfig, Health, HoldoutMetrics, Pred, Precedent, TriageResponse } from './types'
-import { localTriage } from './lib/localTriage'
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || 'http://localhost:8000'
-export const OFFLINE = import.meta.env.VITE_OFFLINE === '1'
+export const OFFLINE = false
 const TIMEOUT_MS = 60_000
 
 export type ApiErrorKind = 'timeout' | 'network' | 'validation' | 'server' | 'not_found'
@@ -87,29 +86,17 @@ export function normalizeTriage(raw: Partial<TriageResponse> & Record<string, un
 
 export interface TriageResult {
   data: TriageResponse
-  /** true when the API was unreachable and the in-browser fallback produced the result. */
-  fallback: boolean
+  /** Always false: the console only shows results from the real API. */
+  fallback: false
 }
 
-/**
- * POST /triage. If the API is offline, falls back to an in-browser heuristic
- * (clearly flagged `mock: true`) so a submitted ticket is never lost.
- * Validation errors (422) are surfaced, never masked by the fallback.
- */
+/** POST /triage. Network, timeout and validation errors are surfaced to the caller. */
 export async function triage(subject: string | null, body: string): Promise<TriageResult> {
-  if (OFFLINE) return { data: await localTriage(subject, body), fallback: true }
-  try {
-    const raw = await request<TriageResponse>('/triage', {
-      method: 'POST',
-      body: JSON.stringify({ subject: subject || null, body }),
-    })
-    return { data: normalizeTriage(raw as TriageResponse & Record<string, unknown>), fallback: false }
-  } catch (e) {
-    if (e instanceof ApiError && (e.kind === 'network' || e.kind === 'timeout')) {
-      return { data: await localTriage(subject, body), fallback: true }
-    }
-    throw e
-  }
+  const raw = await request<TriageResponse>('/triage', {
+    method: 'POST',
+    body: JSON.stringify({ subject: subject || null, body }),
+  })
+  return { data: normalizeTriage(raw as TriageResponse & Record<string, unknown>), fallback: false }
 }
 
 export const health = () => request<Health>('/health')
