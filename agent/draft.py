@@ -41,7 +41,11 @@ def _transport_errors() -> tuple[tuple[type[Exception], ...], tuple[type[Excepti
 
 _TIMEOUT_ERRORS, _CONNECTION_ERRORS = _transport_errors()
 
-_CITATION_TOKEN = re.compile(r"\[TKT-\d{5}\]")
+_TICKET_ID = r"TKT-\d{5}"
+_CITATION_TOKEN = re.compile(rf"\[{_TICKET_ID}\]")
+_GROUPED_CITATION = re.compile(
+    rf"\[\s*{_TICKET_ID}(?:(?:[\s,;/&]+|\s+(?i:and|und)\s+){_TICKET_ID})+\s*\]"
+)
 _WORD = re.compile(r"\w+(?:[-'’]\w+)*")
 
 
@@ -121,6 +125,10 @@ def generate_draft(
     reply = unescape(result.reply).strip()
     if not reply:
         raise DraftError("Gemini returned an empty draft.")
+    reply = _GROUPED_CITATION.sub(
+        lambda match: "".join(f"[{ticket_id}]" for ticket_id in re.findall(_TICKET_ID, match[0])),
+        reply,
+    )
 
     return {
         "status": result.status,
