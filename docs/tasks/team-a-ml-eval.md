@@ -62,7 +62,7 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 - [ ] **(optional)** After thresholds are locked, retrain on all KB rows (fit + val) for the final model. Log it in the decision log.
 
 ### A1.8 Demo machine ready (by T+4:00)
-- [ ] Fresh `git pull`, then: `make_split`, `train`, `build_index`, eval run, API, web. Follow the README word for word and report any README gaps to `miluskapajuelo`.
+- [x] Fresh `git pull`, then: `make_split`, `train`, `build_index`, eval run, API, web. Follow the README word for word and report any README gaps to `miluskapajuelo`.
 - [x] Make the API warm up models at startup (A2 implements it, you verify): the first request after startup must take under 3 s, excluding the LLM.
 - [x] `.env` holds a working key. Test the `SENTINEL_LLM_MODEL` switch once.
 
