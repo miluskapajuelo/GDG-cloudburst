@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { RecentResults } from './components/RecentResults'
+import { ThresholdsPopover } from './components/ThresholdsPopover'
 import { Avatar, Icon, Kbd, type IconName } from './components/ui'
 import { buildTickets } from './data/mockBackend'
 import { DEMO_MODE, setDemoMode } from './lib/demoMode'
@@ -58,7 +60,7 @@ function Workspace({ route }: { route: string[] }) {
     <div className="flex h-dvh">
       <a href="#main" className="sr-only-focusable fixed left-2 top-2 z-50 rounded-full bg-accent px-4 py-2 text-on-accent">Skip to content</a>
       {navOpen && <div className="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] lg:hidden" onClick={() => setNavOpen(false)} aria-hidden />}
-      <Sidebar section={section} open={navOpen} />
+      <Sidebar section={section} open={navOpen} ticketId={ticketId} />
       <div className="flex min-w-0 flex-1 flex-col">
         {DEMO_MODE && (
           <div role="status" className="flex shrink-0 items-center gap-3 bg-review px-4 py-1.5 text-sm font-medium text-on-route">
@@ -84,7 +86,7 @@ function Workspace({ route }: { route: string[] }) {
   )
 }
 
-function Sidebar({ section, open }: { section: Section; open: boolean }) {
+function Sidebar({ section, open, ticketId }: { section: Section; open: boolean; ticketId?: string }) {
   const { tickets } = useStore()
   const openCount = tickets.filter(isOpen).length
   const escalated = tickets.filter((t) => isOpen(t) && isEscalated(t)).length
@@ -105,7 +107,7 @@ function Sidebar({ section, open }: { section: Section; open: boolean }) {
         <img src="/favicon.svg" alt="" className="h-6 w-6" />
         <span className="text-[16px] font-semibold tracking-[-0.015em] text-brand">SentinelDesk</span>
       </a>
-      <nav className="flex-1 space-y-0.5 px-3 pb-3 pt-2">
+      <nav className="shrink-0 space-y-0.5 px-3 pb-3 pt-2">
         {items.map((it) => (
           <a
             key={it.id}
@@ -127,6 +129,7 @@ function Sidebar({ section, open }: { section: Section; open: boolean }) {
           </a>
         ))}
       </nav>
+      <div className="flex min-h-0 flex-1 flex-col"><RecentResults activeId={ticketId} /></div>
       <div className="border-t border-line p-3">
         <a href="#/settings" className="flex items-center gap-3 rounded-full py-1.5 pl-1.5 pr-3 transition-colors hover:bg-surface-3">
           <Avatar name={AGENT.name} size="md" />
@@ -156,6 +159,7 @@ function TopBar({ onMenu, onTest }: { onMenu: () => void; onTest: () => void }) 
       </button>
       <div className="ml-auto flex items-center gap-2 sm:gap-3 lg:ml-0">
         <HealthDot />
+        <ThresholdsPopover />
         <button
           onClick={() => setDemoMode(!DEMO_MODE)}
           aria-pressed={DEMO_MODE}
