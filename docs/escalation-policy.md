@@ -79,10 +79,10 @@ Rule 1 is a cheap first filter. The draft prompt is the second defence, because 
 
 | Name | Default | Meaning |
 |---|---|---|
-| `T_HIGH_PRIORITY_P` | 0.35 | min P(priority=high) for rule 2 |
-| `T_INCIDENT_P` | 0.40 | min P(type=Incident) for rule 2 |
-| `T_CONF_TYPE` | 0.45 | min top-class prob for type |
-| `T_CONF_PRIORITY` | 0.45 | min top-class prob for priority |
+| `T_HIGH_PRIORITY_P` | 0.20 | min P(priority=high) for rule 2 |
+| `T_INCIDENT_P` | 0.30 | min P(type=Incident) for rule 2 |
+| `T_CONF_TYPE` | 0.50 | min top-class prob for type |
+| `T_CONF_PRIORITY` | 0.50 | min top-class prob for priority |
 | `T_CONF_QUEUE` | 0.25 | min top-class prob for queue (many classes, so the floor is lower) |
 | `T_SIM` | 0.55 | min top-1 cosine similarity |
 | `TOP_K` | 5 | precedents retrieved |
