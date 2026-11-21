@@ -126,7 +126,7 @@ The gate collects every reason that applies, so a ticket can have several. `ON_C
 | `HIGH_PRIORITY_INCIDENT` | P(priority = high) ≥ 0.20 **and** P(type = Incident) ≥ 0.30 | On-call engineer |
 | `PROMPT_INJECTION_SUSPECTED` | The ticket matches an English or German override pattern (drafting is blocked) | Human review |
 | `LOW_CLASSIFIER_CONFIDENCE` | Type or priority confidence < 0.50, or queue confidence < 0.25 | Human review |
-| `NO_PRECEDENT` | No retrieved resolution with similarity ≥ 0.55 (drafting is blocked) | Human review |
+| `NO_PRECEDENT` | No retrieved resolution with similarity ≥ 0.50 (drafting is blocked) | Human review |
 | `UNSUPPORTED_REQUEST` | Asks for a refund, pricing, legal, SLA or security action that no retrieved resolution covers | Human review |
 | `LLM_INSUFFICIENT_EVIDENCE` | Gemini returns a holding reply because the evidence is not enough | Human review |
 | `CITATION_CHECK_FAILED` | A citation points to an unknown ticket, or a money or percentage figure is not in the cited answers | Human review |
@@ -157,7 +157,7 @@ Full rules: [docs/data-and-leakage.md](docs/data-and-leakage.md).
 **Limitations**
 - **Queue and priority predictions are modest** (macro-F1 0.59 and 0.63). Priority labels are noisy and depend on business context that the text often doesn't state. The gate compensates with probability thresholds, at the cost of a 47% escalation rate.
 - **German retrieval is weaker than English.** Some German phrasings embed poorly (for example "doppelt belastet"), so German tickets get `NO_PRECEDENT` more often.
-- **`T_SIM` = 0.55 blocks some real tickets.** On 16 hand-written in-domain tickets, it blocked 25% of real IT questions. A value of 0.50 would block 12.5% and still catch 93% of off-topic ones. That change was not adopted.
+- **`T_SIM` = 0.50 still blocks some real tickets.** On 16 hand-written in-domain tickets, it blocks 12.5% of real IT questions and still catches 93% of off-topic ones. The earlier value, 0.55, blocked 25%.
 - **Gemini rate limits (HTTP 429) slow some drafts.** Draft calls back off and retry (2 s, 4 s, 8 s), so only 1 of 40 sampled tickets fell back to human review, but p95 latency with the LLM is about 15 s. Tickets that still fail fall back to human review with triage and precedents only.
 - **The sensitive-request lexicon can over-match or miss rephrased requests.** The figure check covers money and percentages only, and other claims rely on the human reviewer.
 - **The burst detector keeps its window in memory** in a single API process.
