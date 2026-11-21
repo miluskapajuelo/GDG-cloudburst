@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T19:09:10Z",
+  "generated_at": "2026-11-21T19:51:30Z",
   "split_fingerprint": "5a2ede85f9fb",
   "n_test": 5718,
   "classifier": {
@@ -25,27 +25,27 @@
     "escalation_recall": 0.9065
   },
   "escalation": {
-    "rate": 0.4687,
+    "rate": 0.4685,
     "reason_counts": {
       "PROMPT_INJECTION_SUSPECTED": 0,
       "HIGH_PRIORITY_INCIDENT": 1984,
       "LOW_CLASSIFIER_CONFIDENCE": 1078,
-      "NO_PRECEDENT": 1,
+      "NO_PRECEDENT": 0,
       "UNSUPPORTED_REQUEST": 57
     }
   },
   "language_detection_accuracy": 0.8827,
   "latency_ms": {
     "skip_llm": {
-      "p50": 38,
-      "p95": 55,
+      "p50": 40,
+      "p95": 60,
       "n": 5718
     },
     "with_llm": {
-      "p50": 940,
-      "p95": 1416,
-      "generate_p50": 906,
-      "generate_p95": 1391,
+      "p50": 1116,
+      "p95": 14697,
+      "generate_p50": 1080,
+      "generate_p95": 14633,
       "n": 40
     },
     "skip_llm_stages": {
@@ -62,8 +62,8 @@
         "p95": 8
       },
       "retrieve": {
-        "p50": 28,
-        "p95": 43
+        "p50": 29,
+        "p95": 47
       },
       "gate": {
         "p50": 1,
@@ -74,8 +74,8 @@
         "p95": 0
       },
       "eval_wall": {
-        "p50": 38,
-        "p95": 55
+        "p50": 40,
+        "p95": 60
       }
     }
   },
@@ -83,8 +83,8 @@
     "n": 40,
     "citation_valid_rate": 1.0,
     "draft_with_citation_rate": 1.0,
-    "insufficient_evidence_rate": 0.025,
-    "llm_unavailable_rate": 0.45,
+    "insufficient_evidence_rate": 0.05,
+    "llm_unavailable_rate": 0.025,
     "reply_language_match_rate": 1.0
   },
   "thresholds": {
@@ -93,7 +93,7 @@
     "T_CONF_TYPE": 0.5,
     "T_CONF_PRIORITY": 0.5,
     "T_CONF_QUEUE": 0.25,
-    "T_SIM": 0.55,
+    "T_SIM": 0.5,
     "TOP_K": 5,
     "BURST_SIM": 0.65,
     "BURST_MIN": 3,

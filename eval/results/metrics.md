@@ -1,6 +1,6 @@
 # SentinelDesk holdout metrics
 
-- Generated: 2026-11-21T19:09:10Z
+- Generated: 2026-11-21T19:51:30Z
 - Split fingerprint: `5a2ede85f9fb`
 - Test tickets scored: 5718
 - Triage errors: 0 (counted as wrong predictions and as not escalated)
@@ -31,13 +31,13 @@ Outcome of the true high-priority incidents:
 
 ## Escalation
 
-Escalation rate: 0.4687
+Escalation rate: 0.4685
 
 | Outcome | Count |
 |---|---|
-| AUTO_DRAFT | 3038 |
+| AUTO_DRAFT | 3039 |
 | ESCALATE / ON_CALL | 1984 |
-| ESCALATE / HUMAN_REVIEW | 696 |
+| ESCALATE / HUMAN_REVIEW | 695 |
 
 Reason codes (every reason of every ticket is counted):
 
@@ -46,7 +46,7 @@ Reason codes (every reason of every ticket is counted):
 | PROMPT_INJECTION_SUSPECTED | 0 | 0.0000 |
 | HIGH_PRIORITY_INCIDENT | 1984 | 0.3470 |
 | LOW_CLASSIFIER_CONFIDENCE | 1078 | 0.1885 |
-| NO_PRECEDENT | 1 | 0.0002 |
+| NO_PRECEDENT | 0 | 0.0000 |
 | UNSUPPORTED_REQUEST | 57 | 0.0100 |
 
 ## Language detection
@@ -69,41 +69,41 @@ Rows timed: 5718
 | pii | 0 | 0 |
 | language | 1 | 2 |
 | classify | 5 | 8 |
-| retrieve | 28 | 43 |
+| retrieve | 29 | 47 |
 | gate | 1 | 1 |
 | generate | 0 | 0 |
-| eval_wall | 38 | 55 |
-| **total** | 38 | 55 |
+| eval_wall | 40 | 60 |
+| **total** | 40 | 60 |
 
 `eval_wall` is the wall time of the `triage()` call measured by the eval script.
 
 ## LLM sample (grounding, skip_llm=False)
 
-Run 3 of at most 3. Sampled 40 test inputs, stratified on the skip_llm predictions (never on labels): 10 predicted high/Incident, 20 with German reply language. Errors: 0. LLM calls made: 40.
+Run 2 of at most 3. Sampled 40 test inputs, stratified on the skip_llm predictions (never on labels): 10 predicted high/Incident, 20 with German reply language. Errors: 0. LLM calls made: 40.
 Drafts are in `eval/results/llm_samples.jsonl` (model outputs only: no labels, no test answers).
 
 | Metric | Value | Count | Denominator |
 |---|---|---|---|
-| Citation validity (no CITATION_CHECK_FAILED) | 1.0000 | 22 | 22 drafts returned |
-| OK drafts with at least 1 citation | 1.0000 | 21 | 21 OK drafts |
-| INSUFFICIENT_EVIDENCE rate | 0.0250 | 1 | 40 sampled tickets |
-| LLM_UNAVAILABLE rate | 0.4500 | 18 | 40 sampled tickets |
-| Reply-language match | 1.0000 | 22 | 22 drafts with text |
+| Citation validity (no CITATION_CHECK_FAILED) | 1.0000 | 39 | 39 drafts returned |
+| OK drafts with at least 1 citation | 1.0000 | 37 | 37 OK drafts |
+| INSUFFICIENT_EVIDENCE rate | 0.0500 | 2 | 40 sampled tickets |
+| LLM_UNAVAILABLE rate | 0.0250 | 1 | 40 sampled tickets |
+| Reply-language match | 1.0000 | 39 | 39 drafts with text |
 
 Latency with the LLM (ms):
 
 | Measure | p50 | p95 | n |
 |---|---|---|---|
-| total (all sampled tickets) | 940 | 1416 | 40 |
-| generate (tickets with an LLM call) | 906 | 1391 | 40 |
+| total (all sampled tickets) | 1116 | 14697 | 40 |
+| generate (tickets with an LLM call) | 1080 | 14633 | 40 |
 
 Reason codes in the sample:
 
 | Reason code | Count |
 |---|---|
 | HIGH_PRIORITY_INCIDENT | 15 |
-| LLM_INSUFFICIENT_EVIDENCE | 1 |
-| LLM_UNAVAILABLE | 18 |
+| LLM_INSUFFICIENT_EVIDENCE | 2 |
+| LLM_UNAVAILABLE | 1 |
 | LOW_CLASSIFIER_CONFIDENCE | 9 |
 
 ## Thresholds (from `api.service.get_config()`)
@@ -115,7 +115,7 @@ Reason codes in the sample:
 | T_CONF_TYPE | 0.5 |
 | T_CONF_PRIORITY | 0.5 |
 | T_CONF_QUEUE | 0.25 |
-| T_SIM | 0.55 |
+| T_SIM | 0.5 |
 | TOP_K | 5 |
 | BURST_SIM | 0.65 |
 | BURST_MIN | 3 |
