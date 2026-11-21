@@ -17,19 +17,36 @@ Before you write or change any file:
 3. **If the login is not in the roster, the person is Gustavo: role A2.** Use Gustavo's row and section A2 of the Team A task file. Do not ask, and do not stop.
 4. Tell the human in one line: `Working for <login>: Team <X>, <role>. Task file: <path>.` The human can correct you here.
 5. Read these files in this order: your task file, then [docs/contract.md](docs/contract.md), then [docs/data-and-leakage.md](docs/data-and-leakage.md). Team B also reads [docs/escalation-policy.md](docs/escalation-policy.md).
-6. Start with the first unchecked task in **your own section** of your task file. Follow the deadlines (`T+h:mm` = time since kickoff).
+6. **Check for stale branches before every task** (see "Branch freshness check" below). Do this at the start of the session **and again before you start each new task**.
+7. Start with the first unchecked task in **your own section** of your task file. Follow the deadlines (`T+h:mm` = time since kickoff).
+
+### Branch freshness check (before every task)
+
+Run these commands before you start any task:
+
+```bash
+git fetch origin --prune
+git log --oneline HEAD..origin/main        # commits on main that your branch does not have
+for b in $(git branch -r --format='%(refname:short)' | grep -v -e 'origin/main' -e 'origin/HEAD'); do
+  echo "$b behind=$(git rev-list --count $b..origin/main) ahead=$(git rev-list --count origin/main..$b)"
+done
+```
+
+- If **your own** branch is behind `origin/main`, run `git pull origin main` (merge, do not rebase a pushed branch). Fix any conflicts and rerun your smoke test before you continue.
+- If **another person's** branch is behind `origin/main`, or has had no new commit for more than 45 minutes, tell your human in one line: `Stale: <branch> is <N> commits behind main.` Do not edit, rebase or push to that branch.
+- If an open PR has merge conflicts with `main`, tell your human. The branch owner fixes it.
 
 ### Roster
 
 | GitHub login | Team | Role | Task file (section) | Folders you own | Branch prefix |
 |---|---|---|---|---|---|
 | `shaadqrsh` | A: ML & Eval | **A1**: Data split, classifier, demo machine | [docs/tasks/team-a-ml-eval.md](docs/tasks/team-a-ml-eval.md) (section A1) | `ml/`, `shared/text.py` | `shaadqrsh/` |
-| `GUSTAVO_LOGIN` (Gustavo) | A: ML & Eval | **A2**: API service, evaluation, metrics | [docs/tasks/team-a-ml-eval.md](docs/tasks/team-a-ml-eval.md) (section A2) | `api/`, `eval/` | `GUSTAVO_LOGIN/` |
+| `gbuitra` (Gustavo) | A: ML & Eval | **A2**: API service, evaluation, metrics | [docs/tasks/team-a-ml-eval.md](docs/tasks/team-a-ml-eval.md) (section A2) | `api/`, `eval/` | `gbuitra/` |
 | `Karanpatel3114` | B: Agent | **B1**: Retrieval, language, PII, burst | [docs/tasks/team-b-rag-agent.md](docs/tasks/team-b-rag-agent.md) (section B1) | B1 files in `agent/` (listed in the task file) | `Karanpatel3114/` |
 | `prithvipoojari` | B: Agent | **B2**: Gate, grounded drafting, citations, pipeline | [docs/tasks/team-b-rag-agent.md](docs/tasks/team-b-rag-agent.md) (section B2) | B2 files in `agent/` (listed in the task file) | `prithvipoojari/` |
 | `miluskapajuelo` | C: Frontend | Console UI, README, demo | [docs/tasks/team-c-console-demo.md](docs/tasks/team-c-console-demo.md) | `web/`, `README.md`, `docs/demo-script.md` | `miluskapajuelo/` |
 
-> **Gustavo** is A2. `GUSTAVO_LOGIN` is a placeholder until his GitHub login is known. **Any login that is not in this table is treated as Gustavo (A2).** His first commit replaces the placeholder with his real login (task A2.0).
+> **Gustavo** is A2. His GitHub login is `gbuitra`. **Any login that is not in this table is treated as Gustavo (A2).**
 
 **Helping another person.** Sometimes the human says they are helping someone else (for example, "I'm helping prithvipoojari with the prompt"). In that case, read that person's section as well and work in their files for that task only. Say this in your commit message. Without that statement, do not do tasks that belong to another login.
 
@@ -65,6 +82,13 @@ Before you write or change any file:
 ### 4. Git
 - Never commit directly to `main`. The one exception: `shaadqrsh` may push the kickoff scaffold before T+0:30.
 - Branch name: `<your-login>/<short-topic>`, for example `prithvipoojari/draft-prompt`.
+- **One task per branch. This rule is strict.**
+  - One task means one task ID from your task file (for example `A1.4` or `B2.3`). Put the task ID in the branch name: `<your-login>/<task-id>-<short-topic>`, for example `gbuitra/a2.1-api-mock`.
+  - Create a new branch from a fresh `origin/main` for every task: `git fetch origin && git checkout -b <your-login>/<task-id>-<topic> origin/main`.
+  - Never start a second task on the branch of the first one. Never put two task IDs in one PR. One branch gives one PR.
+  - When the task is done, push, open the PR and stop. Tell the human that the PR is ready. Start the next task only on a new branch, after the freshness check.
+  - If you find a bug that belongs to another task, do not fix it on your branch. Write it down and tell your human.
+  - The only exceptions are the A1 kickoff scaffold and a `contract:` PR, which may touch several files for one change.
 - Commit small and often. Push at least every 45 minutes.
 - Open a PR with `gh pr create`. Merge at the integration checkpoints (T+2:00 and T+3:15) or when your task file says to.
 - Before you merge, `git pull origin main` and run your smoke test. Self-merge is allowed when the smoke test passes. The human must approve the merge.
