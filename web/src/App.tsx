@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Avatar, Icon, Kbd, type IconName } from './components/ui'
 import { buildTickets } from './data/mockBackend'
+import { DEMO_MODE, setDemoMode } from './lib/demoMode'
 import { PrefsProvider } from './lib/prefs'
 import { AGENT } from './lib/session'
 import { isEscalated, isOpen } from './lib/ticket'
@@ -22,7 +23,7 @@ export default function App() {
   return (
     <ToastProvider>
       <PrefsProvider>
-        <StoreProvider seed={buildTickets}>
+        <StoreProvider seed={DEMO_MODE ? buildTickets : () => []}>
           <Workspace route={route} />
         </StoreProvider>
       </PrefsProvider>
@@ -59,6 +60,12 @@ function Workspace({ route }: { route: string[] }) {
       {navOpen && <div className="fixed inset-0 z-30 bg-scrim backdrop-blur-[2px] lg:hidden" onClick={() => setNavOpen(false)} aria-hidden />}
       <Sidebar section={section} open={navOpen} />
       <div className="flex min-w-0 flex-1 flex-col">
+        {DEMO_MODE && (
+          <div role="status" className="flex shrink-0 items-center gap-3 bg-review px-4 py-1.5 text-sm font-medium text-on-route">
+            <span className="flex-1">Demo data: built-in sample tickets and a local heuristic, not the trained model.</span>
+            <button onClick={() => setDemoMode(false)} className="rounded-full border border-current px-3 py-0.5 text-xs hover:bg-black/10">Back to live API</button>
+          </div>
+        )}
         <TopBar onMenu={() => setNavOpen(true)} onTest={() => setTestOpen(true)} />
         <main id="main" className="min-h-0 flex-1 overflow-hidden">
           {listSection && ticketId ? (
@@ -149,6 +156,14 @@ function TopBar({ onMenu, onTest }: { onMenu: () => void; onTest: () => void }) 
       </button>
       <div className="ml-auto flex items-center gap-2 sm:gap-3 lg:ml-0">
         <HealthDot />
+        <button
+          onClick={() => setDemoMode(!DEMO_MODE)}
+          aria-pressed={DEMO_MODE}
+          title={DEMO_MODE ? 'Switch back to the live triage API' : 'Fallback for the presentation: load built-in demo data instead of the API'}
+          className={`inline-flex h-10 items-center rounded-full border px-3 text-xs font-medium transition-colors ${DEMO_MODE ? 'border-review bg-review-soft text-review' : 'border-line bg-surface-2 text-muted hover:text-ink'}`}
+        >
+          {DEMO_MODE ? 'Demo data on' : 'Demo data'}
+        </button>
         <Bell />
         <button onClick={onTest} className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover">
           <Icon name="plus" className="h-4 w-4" />
@@ -166,7 +181,7 @@ export function HealthDot() {
       ? ['bg-auto', h.health.mock ? 'Live (mock)' : 'Live', `Model ${h.health.llm_model}, ${h.health.index_size.toLocaleString()} past tickets indexed`]
       : h.state === 'checking'
         ? ['bg-review', 'Connecting', 'Checking the triage service']
-        : ['bg-oncall', 'API offline', 'The triage API is not reachable. You are viewing demo data, and new tickets use a local fallback marked as mock.']
+        : ['bg-oncall', 'API offline', 'The triage API is not reachable. Start it with: uvicorn api.main:app --port 8000']
   return (
     <span className="hidden items-center gap-2 text-xs font-medium text-muted sm:inline-flex" title={title} role="status">
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />

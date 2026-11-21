@@ -1,6 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Icon, Segmented } from '../../components/ui'
-import { buildAnalytics } from '../../data/mockBackend'
+import { buildAnalytics as demoAnalytics } from '../../data/mockBackend'
+import { buildAnalytics } from '../../lib/analytics'
+import { DEMO_MODE } from '../../lib/demoMode'
+import { useMetrics } from '../../lib/useApi'
+import { useStore } from '../../store'
 import { pct } from '../../lib/format'
 import { HBars, Histogram, Legend, StackedBars, type Series } from './charts'
 
@@ -12,7 +16,9 @@ const PRIO_SERIES: Series[] = [
 
 export default function Analytics() {
   const [days, setDays] = useState<7 | 14 | 30>(14)
-  const a = useMemo(() => buildAnalytics(days), [days])
+  const { tickets } = useStore()
+  const m = useMetrics()
+  const a = useMemo(() => (DEMO_MODE ? demoAnalytics(days) : buildAnalytics(tickets, days, m.state === 'ok' ? m.metrics : null)), [tickets, days, m])
   const [table, setTable] = useState(false)
 
   const fmtDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -20,7 +26,7 @@ export default function Analytics() {
   const totalConf = a.confidence_histogram.reduce((s, r) => s + r.count, 0)
   const topReason = a.feedback_reasons[0]
   const totalFeedback = a.feedback_reasons.reduce((s, r) => s + r.count, 0)
-  const highShare = a.by_priority.high / a.total_tickets
+  const highShare = a.total_tickets ? a.by_priority.high / a.total_tickets : 0
 
   return (
     <div className="h-full overflow-y-auto">
@@ -52,7 +58,7 @@ export default function Analytics() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <Panel className="xl:col-span-2" title="Ticket volume" takeaway={`${pct(highShare)} of tickets are high priority. The latest day shows a spike from the VPN incident.`}
+          <Panel className="xl:col-span-2" title="Ticket volume" takeaway={`${pct(highShare)} of tickets are high priority.`}
             action={<button onClick={() => setTable((t) => !t)} aria-pressed={table} className="text-xs font-medium text-accent hover:underline">{table ? 'Show chart' : 'Show table'}</button>}>
             <div className="mb-3"><Legend series={[...PRIO_SERIES].reverse()} /></div>
             {table ? (
@@ -75,9 +81,9 @@ export default function Analytics() {
                   <li key={p}>
                     <div className="mb-1.5 flex items-baseline justify-between text-sm">
                       <span className="flex items-center gap-2 font-medium capitalize text-ink"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: `var(--chart-${p})` }} />{p}</span>
-                      <span className="tabular text-ink">{n.toLocaleString()} <span className="text-muted">· {pct(n / a.total_tickets)}</span></span>
+                      <span className="tabular text-ink">{n.toLocaleString()} <span className="text-muted">· {pct(a.total_tickets ? n / a.total_tickets : 0)}</span></span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-surface-3"><div className="h-full rounded-full" style={{ width: pct(n / a.total_tickets), background: `var(--chart-${p})` }} /></div>
+                    <div className="h-2 overflow-hidden rounded-full bg-surface-3"><div className="h-full rounded-full" style={{ width: pct(a.total_tickets ? n / a.total_tickets : 0), background: `var(--chart-${p})` }} /></div>
                   </li>
                 )
               })}
@@ -86,7 +92,7 @@ export default function Analytics() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <Panel title="Confidence distribution" takeaway={`${pct(lowConf / totalConf)} of tickets fall below 40% confidence and always go to a person. Most predictions are confident.`}>
+          <Panel title="Confidence distribution" takeaway={`${pct(totalConf ? lowConf / totalConf : 0)} of tickets fall below 40% confidence and always go to a person. Most predictions are confident.`}>
             <Histogram rows={a.confidence_histogram} markerAfter={1} markerLabel="Left of the line: classifier unsure → human review" />
           </Panel>
           <Panel title="Why agents rejected suggestions" takeaway={topReason ? `“${topReason.reason}” is the most common reason (${pct(topReason.count / totalFeedback)} of negative feedback). Use it to improve the knowledge base.` : 'No negative feedback in this period.'}>
@@ -95,7 +101,7 @@ export default function Analytics() {
           </Panel>
         </div>
 
-        <p className="pb-4 text-xs text-muted">Demo data in the shape the analytics endpoint will return. Holdout recall comes from the evaluation run.</p>
+        <p className="pb-4 text-xs text-muted">{DEMO_MODE ? 'Demo data, not live. Switch off "Demo data" in the top bar to see real numbers.' : 'Computed from tickets triaged by the live API in this session. Holdout recall comes from the evaluation run (GET /metrics).'}</p>
       </div>
     </div>
   )
