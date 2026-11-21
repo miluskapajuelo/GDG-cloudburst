@@ -84,7 +84,7 @@ Rule 1 is a cheap first filter. The draft prompt is the second defence, because 
 | `T_CONF_TYPE` | 0.50 | min top-class prob for type |
 | `T_CONF_PRIORITY` | 0.50 | min top-class prob for priority |
 | `T_CONF_QUEUE` | 0.25 | min top-class prob for queue (many classes, so the floor is lower) |
-| `T_SIM` | 0.55 | min top-1 cosine similarity |
+| `T_SIM` | 0.50 | min top-1 cosine similarity |
 | `TOP_K` | 5 | precedents retrieved |
 | `BURST_SIM` | 0.65 | cosine to count two incoming tickets as the same failure |
 | `BURST_MIN` | 3 | tickets in the window to raise the banner |
