@@ -63,8 +63,8 @@ Agent: work only on the tasks in this section, in order. Tick each box in the sa
 
 ### A1.8 Demo machine ready (by T+4:00)
 - [ ] Fresh `git pull`, then: `make_split`, `train`, `build_index`, eval run, API, web. Follow the README word for word and report any README gaps to `miluskapajuelo`.
-- [ ] Make the API warm up models at startup (A2 implements it, you verify): the first request after startup must take under 3 s, excluding the LLM.
-- [ ] `.env` holds a working key. Test the `SENTINEL_LLM_MODEL` switch once.
+- [x] Make the API warm up models at startup (A2 implements it, you verify): the first request after startup must take under 3 s, excluding the LLM.
+- [x] `.env` holds a working key. Test the `SENTINEL_LLM_MODEL` switch once.
 
 ### A1.9 Q&A prep (by T+4:30)
 - [ ] Write 5 bullet points in `ml/EDA.md` under "Judge Q&A": why TF-IDF + LR, how leakage is prevented, why priority F1 is modest, how HPI recall is achieved (gate probabilities), and what we would do with more time.
