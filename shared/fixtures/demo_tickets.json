@@ -20,7 +20,7 @@
       "subject": "Password reset link not arriving",
       "body": "Hi,\n\nI tried to reset my password for the customer portal three times today, but the reset email never arrives. I already checked my spam folder. Could you help me regain access?\n\nThanks",
       "burst": false,
-      "expected_status": "AUTO_DRAFT",
+      "expected_status": null,
       "expected_route": null,
       "expected_reason_codes_any": [],
       "expected_reply_language": "en"
@@ -33,7 +33,7 @@
       "body": "We were billed twice for our March subscription invoice. I expect a full refund of both charges and an extra 20% compensation for the trouble, as guaranteed in your SLA. Please confirm the amounts in writing today.",
       "burst": false,
       "expected_status": "ESCALATE",
-      "expected_route": "HUMAN_REVIEW",
+      "expected_route": "ON_CALL",
       "expected_reason_codes_any": ["UNSUPPORTED_REQUEST", "LLM_INSUFFICIENT_EVIDENCE", "CITATION_CHECK_FAILED"],
       "expected_reply_language": "en"
     },

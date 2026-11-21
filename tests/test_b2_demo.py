@@ -100,7 +100,7 @@ def test_handwritten_demo_tickets_through_b2_pipeline(monkeypatch):
     )
     burst = FakeBurstDetector({text_by_id[ticket["id"]] for ticket in tickets if ticket["burst"]})
 
-    high_priority_incident_ids = {"demo-01", "demo-07", "demo-14"}
+    high_priority_incident_ids = {"demo-01", "demo-03", "demo-07", "demo-14"}
     blocked_ids = {"demo-07", "demo-08"}
     holding_ids = {"demo-03", "demo-04", "demo-14"}
     holding_texts = {text_by_id[ticket_id] for ticket_id in holding_ids}

@@ -176,7 +176,7 @@ return {"precedents", "escalation", "draft", "burst", "latency_ms": {"retrieve",
 - [x] Until B1 merges, use a `FakeRetriever` in `tests/` that returns the fixture precedents. Merge for Integration 1 (a stub draft is acceptable at that point).
 
 ### B2.6 Prompt hardening and red-team (T+2:15–3:15)
-- [ ] Run every ticket in [docs/demo-tickets.md](../demo-tickets.md) through `api.service.triage` (or the console). For each one, check:
+- [x] Run every ticket in [docs/demo-tickets.md](../demo-tickets.md) through `api.service.triage` (or the console). For each one, check:
   - Is the German natural and formal?
   - Are there invented facts?
   - Does the injection ticket get blocked?

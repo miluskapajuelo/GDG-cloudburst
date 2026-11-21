@@ -9,6 +9,7 @@ import pytest
 from google.genai import errors
 
 from agent import config, draft
+from agent.citations import validate_citations
 from agent.prompts import SYSTEM_PROMPT, build_user_message
 
 
@@ -146,6 +147,24 @@ def test_short_draft_decodes_html_entities_in_one_call(sdk_call, precedent):
     assert result["text"] == "Check the gateway's certificate & retry [TKT-00412]."
     assert result["cited_ids"] == ["TKT-00412"]
     sdk_call.assert_called_once()
+
+
+@pytest.mark.parametrize(("grouped_citations", "allowed_ids", "problems"), [
+    ("[TKT-00412, TKT-01606]", {"TKT-00412", "TKT-01606"}, []),
+    ("[TKT-00412 und TKT-01606]", {"TKT-00412", "TKT-01606"}, []),
+    ("&#91; TKT-00412;\nTKT-01606 &#93;", {"TKT-00412"}, ["Unknown ticket IDs: TKT-01606."]),
+])
+def test_grouped_citations_are_split_before_validation(
+    sdk_call, precedent, grouped_citations, allowed_ids, problems,
+):
+    precedents = [{**precedent, "ticket_id": ticket_id} for ticket_id in sorted(allowed_ids)]
+    sdk_call.return_value = _response(f"Check the certificate [if present] {grouped_citations}.")
+
+    result = draft.generate_draft("VPN error", "en", precedents, False)
+
+    assert result["text"] == "Check the certificate [if present] [TKT-00412][TKT-01606]."
+    assert result["cited_ids"] == ["TKT-00412", "TKT-01606"]
+    assert validate_citations(result["text"], result["cited_ids"], allowed_ids) == problems
 
 
 @pytest.mark.parametrize(("language", "reply"), [
