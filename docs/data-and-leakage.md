@@ -82,10 +82,10 @@ The test split's `answer` and `tags` columns are **never written to disk**.
 
 A1 writes these into `ml/EDA.md` and pastes the headline numbers here:
 
-- Rows total / KB / val / test: _TBD_
-- Language mix: _TBD_
-- Null or empty subjects: _TBD_ %
-- Class balance (`type`, `priority`, `queue` top 10): _TBD_
-- High-priority Incidents in KB / val: _TBD_ (the test support is reported by `eval/run_eval.py`, not by EDA)
-- Exact-duplicate bodies shared between KB and test: _TBD_. These are allowed by the rules, but report the count for transparency.
-- Placeholder tokens already present in the data (for example `<name>`, `<tel_num>`): _TBD_
+- Rows total / KB / val / test: 28,587 / 22,869 / 2,287 / 5,718 (fit = 20,582; 0 empty-body rows dropped). Split fingerprint `5a2ede85f9fb`
+- Language mix (KB): en 57.1%, de 42.9% (no other languages)
+- Null or empty subjects: 13.6% (KB), 12.9% (test inputs)
+- Class balance (KB): type Incident 40.3 / Request 28.6 / Problem 21.0 / Change 10.1%; priority medium 40.2 / high 39.1 / low 20.6%; queue (10 total) Technical Support 29.3, Product Support 18.4, Customer Service 14.9, IT Support 12.0, Billing and Payments 9.7, Returns and Exchanges 5.1, Service Outages and Maintenance 4.0, Sales and Pre-Sales 3.2, Human Resources 2.0, General Inquiry 1.4%
+- High-priority Incidents in KB / val: 3,936 (17.2%) / 383 (the test support is reported by `eval/run_eval.py`, not by EDA)
+- Exact-duplicate bodies shared between KB and test: 1 (0.02%). These are allowed by the rules, but report the count for transparency.
+- Placeholder tokens already present in the data (for example `<name>`, `<tel_num>`): `<tel_num>` 8,658, `<name>` 4,924, `<br>` 2,108, `<acc_num>` 2,070, plus rare ones (`<email>`, `<website_url>`, `<amount>`, …). Full list in `ml/EDA.md`
