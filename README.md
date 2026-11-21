@@ -1,6 +1,99 @@
+<div align="center">
+
 # SentinelDesk
 
-> Multilingual incident triage, escalation gate and grounded reply drafting for IT support (English and German).
+**Multilingual incident triage, escalation gate and grounded reply drafting for IT support (English and German).**
+
+[![Python](https://img.shields.io/badge/Python-3.14-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
+[![Sentence Transformers](https://img.shields.io/badge/Sentence--Transformers-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://www.sbert.net/)
+[![FAISS](https://img.shields.io/badge/FAISS-0467DF?style=for-the-badge&logo=meta&logoColor=white)](https://github.com/facebookresearch/faiss)
+[![Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev/)
+<br>
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![pandas](https://img.shields.io/badge/pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
+[![pytest](https://img.shields.io/badge/pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)](https://pytest.org/)
+
+![Escalation recall](https://img.shields.io/badge/high--priority_escalation_recall-90.7%25-2ea44f)
+![Citation validity](https://img.shields.io/badge/citation_validity-100%25-2ea44f)
+![Type macro-F1](https://img.shields.io/badge/type_macro--F1-0.878-2ea44f)
+![Latency](https://img.shields.io/badge/triage_p50-40_ms-blue)
+![Languages](https://img.shields.io/badge/languages-EN_%7C_DE-blue)
+![Test tickets](https://img.shields.io/badge/holdout-5,718_tickets-lightgrey)
+
+[What it does](#what-it-does) · [Architecture](#architecture) · [Setup](#setup) · [Evaluation](#evaluation-20-holdout) · [Escalation policy](#escalation-policy) · [Team](#contributors)
+
+</div>
+
+## Contributors
+
+Built in a 5-hour hackathon by five engineers in three parallel teams.
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center" width="200">
+      <a href="https://github.com/shaadqrsh"><img src="https://github.com/shaadqrsh.png?size=120" width="96" alt="Shaad Abid Qureshi"/></a><br>
+      <b>Shaad Abid Qureshi</b><br>
+      <sub><b>Team Lead</b></sub><br>
+      <sub>ML &amp; Eval: data split, classifier</sub><br>
+      <a href="https://www.linkedin.com/in/shaadrqrsh/"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn"/></a>
+      <a href="https://github.com/shaadqrsh"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" alt="GitHub"/></a>
+    </td>
+    <td align="center" width="200">
+      <a href="https://github.com/prithvipoojari"><img src="https://github.com/prithvipoojari.png?size=120" width="96" alt="Prithvi Poojari"/></a><br>
+      <b>Prithvi Poojari</b><br>
+      <sub>Agent: escalation gate, grounded drafting, citations</sub><br>
+      <a href="https://www.linkedin.com/in/prithvipoojari"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn"/></a>
+      <a href="https://github.com/prithvipoojari"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" alt="GitHub"/></a>
+    </td>
+    <td align="center" width="200">
+      <a href="https://github.com/miluskapajuelo"><img src="https://github.com/miluskapajuelo.png?size=120" width="96" alt="Miluska Pajuelo"/></a><br>
+      <b>Miluska Pajuelo</b><br>
+      <sub>Frontend: console UI, README, demo</sub><br>
+      <a href="https://www.linkedin.com/in/miluskapajuelo"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn"/></a>
+      <a href="https://github.com/miluskapajuelo"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" alt="GitHub"/></a>
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center" width="200">
+      <a href="https://github.com/gbuitra"><img src="https://github.com/gbuitra.png?size=120" width="96" alt="Gustavo Buitrago"/></a><br>
+      <b>Gustavo Buitrago</b><br>
+      <sub>ML &amp; Eval: API service, evaluation, metrics</sub><br>
+      <a href="https://www.linkedin.com/in/gustavo-buitrago-690226182"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn"/></a>
+      <a href="https://github.com/gbuitra"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" alt="GitHub"/></a>
+    </td>
+    <td align="center" width="200">
+      <a href="https://github.com/Karanpatel3114"><img src="https://github.com/Karanpatel3114.png?size=120" width="96" alt="Karan Patel"/></a><br>
+      <b>Karan Patel</b><br>
+      <sub>Agent: retrieval, language, PII, burst detection</sub><br>
+      <a href="https://www.linkedin.com/in/karan-patel-727769217"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn"/></a>
+      <a href="https://github.com/Karanpatel3114"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" alt="GitHub"/></a>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+## Highlights
+
+| | |
+|---|---|
+| **Catches outages** | 90.7% of high-priority incidents in the 5,718-ticket holdout go to a human, even though the classifier alone finds only 69.2%. |
+| **Grounded drafts** | Every AI reply cites past resolved tickets. 100% of sampled citations pass validation, and invented money or percentage figures are blocked. |
+| **Cross-lingual** | A German ticket can be answered from English precedents through one shared embedding space. |
+| **Privacy first** | Emails, IBANs, card numbers, IPs and phone numbers are masked before any text reaches the LLM. |
+| **Major-incident radar** | A burst of similar tickets in 15 minutes raises a banner in the console. |
+| **Human in the loop** | Nothing is sent without an explicit approval, and every routing decision shows its reason code and numbers. |
+| **No data leakage** | A fixed, fingerprinted 80/20 split. Test labels are opened by one script, only after predictions are saved. |
 
 ## What it does
 
@@ -173,14 +266,10 @@ Full rules: [docs/data-and-leakage.md](docs/data-and-leakage.md).
 - Calibrate the queue head per class, clean the noisy language and priority labels, and retrain on fit + validation once thresholds are locked.
 - Track the cost of false escalations with a real support team.
 
-## Team
+## Dataset
 
-| Member | Team | Role |
-|---|---|---|
-| shaadqrsh | A: ML & Eval | A1: data split, classifier |
-| gbuitra (Gustavo) | A: ML & Eval | A2: API service, evaluation, metrics |
-| Karanpatel3114 | B: Agent | B1: retrieval, language detection, PII masking, burst detection |
-| prithvipoojari | B: Agent | B2: escalation gate, grounded drafting, citations, pipeline |
-| miluskapajuelo | C: Frontend | Console UI, README, demo |
+[Tobi-Bueck/customer-support-tickets](https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets) (CC-BY-NC-4.0).
 
-Dataset: [Tobi-Bueck/customer-support-tickets](https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets) (CC-BY-NC-4.0).
+<div align="center">
+<sub>Built by <a href="#contributors">five engineers in five hours</a>.</sub>
+</div>
