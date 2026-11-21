@@ -27,10 +27,10 @@ def _positive_int(name: str, default: int) -> int:
     return value
 
 
-T_HIGH_PRIORITY_P = _probability("T_HIGH_PRIORITY_P", 0.35)
-T_INCIDENT_P = _probability("T_INCIDENT_P", 0.40)
-T_CONF_TYPE = _probability("T_CONF_TYPE", 0.45)
-T_CONF_PRIORITY = _probability("T_CONF_PRIORITY", 0.45)
+T_HIGH_PRIORITY_P = _probability("T_HIGH_PRIORITY_P", 0.20)
+T_INCIDENT_P = _probability("T_INCIDENT_P", 0.30)
+T_CONF_TYPE = _probability("T_CONF_TYPE", 0.50)
+T_CONF_PRIORITY = _probability("T_CONF_PRIORITY", 0.50)
 T_CONF_QUEUE = _probability("T_CONF_QUEUE", 0.25)
 T_SIM = _probability("T_SIM", 0.55)
 TOP_K = _positive_int("TOP_K", 5)

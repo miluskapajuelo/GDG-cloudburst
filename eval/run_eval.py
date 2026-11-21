@@ -1,9 +1,10 @@
-"""Holdout evaluation (A2.3).
+"""Holdout evaluation (A2.3) and LLM sample evaluation (A2.5).
 
 Run from the repo root:
     python -m eval.run_eval                      # full holdout run (skip_llm)
     python -m eval.run_eval --limit 200          # quick partial run
     python -m eval.run_eval --check-only         # leakage asserts + split fingerprint, then exit
+    python -m eval.run_eval --llm-sample 40      # + 40 stratified tickets with the LLM on (max 3 runs)
 
 Leakage order (docs/data-and-leakage.md):
   1. Read kb_train.parquet (ticket_id, is_val only) and test_inputs.parquet. Re-check the asserts,
@@ -11,6 +12,8 @@ Leakage order (docs/data-and-leakage.md):
   2. Run every test input through the triage function (api.service.triage, skip_llm=True, in-process:
      the same code path as the demo). Only subject and body are passed in.
   3. Write test_predictions.parquet.
+  3b. (--llm-sample N) Pick N tickets from those PREDICTIONS (>= 10 predicted high/Incident, en/de mix), run
+     them with skip_llm=False, write llm_samples.jsonl. Still no labels involved.
   4. Only then read test_labels.parquet (load_labels is the only reader in the repo) and score.
   5. Write metrics.json (shape: docs/tasks/team-a-ml-eval.md, A2.6) and metrics.md.
 
@@ -164,6 +167,239 @@ def save_predictions(preds: pd.DataFrame, out_dir: Path) -> Path:
     return path
 
 
+# ---------------------------------------------------------------- LLM sample (A2.5)
+#
+# The sample is drawn from the skip_llm PREDICTIONS (predicted high/Incident, detected language), never
+# from test labels, and it runs before test_labels.parquet is read. Each sampled ticket goes through
+# triage(subject, body, skip_llm=False): the same code path as the live demo, LLM included.
+
+LLM_SAMPLE_MIN_HPI = 10
+LLM_SAMPLE_MAX_RUNS = 3  # A2.5: LLM calls cost money and time
+LLM_RUNS_FILE = "llm_sample_runs.json"
+LLM_SEED = 42
+DetectFn = Callable[[str], dict]
+
+
+def select_llm_sample(preds: pd.DataFrame, n: int, *, seed: int = LLM_SEED,
+                      min_hpi: int = LLM_SAMPLE_MIN_HPI) -> list[str]:
+    """Pick n ticket IDs from the skip_llm predictions: at least min_hpi predicted high and Incident
+    (or all of them, if fewer exist), the rest from the other tickets. Inside each stratum, half come
+    from tickets detected as German and half from the others, so the sample mixes en and de."""
+    ok = preds[preds["status"] != ERROR_STATUS]
+    n = min(n, len(ok))
+    if n <= 0:
+        return []
+    rng = np.random.default_rng(seed)
+    is_hpi = (ok["priority_label"] == "high") & (ok["type_label"] == "Incident")
+    hpi, rest = ok[is_hpi], ok[~is_hpi]
+    k_hpi = min(len(hpi), max(min_hpi, n // 4), n)
+    k_rest = min(n - k_hpi, len(rest))
+    k_hpi = min(len(hpi), n - k_rest)  # top up from HPI if the other stratum is small
+
+    def take(pool: pd.DataFrame, k: int) -> list[str]:
+        if k <= 0:
+            return []
+        de = pool[pool["lang_code"] == "de"]["ticket_id"].tolist()
+        other = pool[pool["lang_code"] != "de"]["ticket_id"].tolist()
+        rng.shuffle(de)
+        rng.shuffle(other)
+        k_de = min(len(de), k // 2)
+        k_other = min(len(other), k - k_de)
+        k_de = min(len(de), k - k_other)
+        return de[:k_de] + other[:k_other]
+
+    picked = set(take(hpi, k_hpi) + take(rest, k_rest))
+    return [tid for tid in ok["ticket_id"] if tid in picked]  # keep test-file order
+
+
+def _codes(resp: dict) -> list[str]:
+    return [r.get("code", "") for r in (resp.get("escalation") or {}).get("reasons") or []]
+
+
+def _sample_record(ticket_id: str, resp: dict, wall_ms: int) -> dict[str, Any]:
+    """One llm_samples.jsonl line. Model outputs only: no test labels, no test answers, no ticket text."""
+    preds = resp.get("predictions") or {}
+    return {
+        "ticket_id": ticket_id,
+        "predictions": {h: {"label": (preds.get(h) or {}).get("label"),
+                            "confidence": (preds.get(h) or {}).get("confidence")} for h in HEADS},
+        "language": resp.get("language"),
+        "escalation": resp.get("escalation"),
+        "precedent_ids": [p.get("ticket_id") for p in resp.get("precedents") or []],
+        "draft": resp.get("draft"),
+        "latency_ms": resp.get("latency_ms"),
+        "wall_ms": wall_ms,
+        "error": None,
+    }
+
+
+def _rate(num: int, den: int) -> float:
+    return _r(num / den) if den else 0.0
+
+
+def score_llm_sample(records: list[dict[str, Any]], detect_fn: DetectFn) -> dict[str, Any]:
+    """Grounding and with-LLM latency over the sampled responses. Needs no labels at all.
+
+    Denominators:
+      citation_valid_rate         drafts returned (draft not null) without CITATION_CHECK_FAILED
+      draft_with_citation_rate    OK drafts with at least one cited ID
+      insufficient_evidence_rate  all sampled tickets
+      llm_unavailable_rate        all sampled tickets
+      reply_language_match_rate   drafts with text whose detected language == language.reply_language
+    """
+    ok = [r for r in records if not r["error"]]
+    n = len(ok)
+    drafts = [r for r in ok if r["draft"]]
+    ok_drafts = [r for r in drafts if r["draft"].get("status") == "OK"]
+    texts = [r for r in drafts if (r["draft"].get("text") or "").strip()]
+    cit_failed = sum("CITATION_CHECK_FAILED" in _codes(r) for r in drafts)
+    insufficient = sum(
+        (r["draft"] or {}).get("status") == "INSUFFICIENT_EVIDENCE" or "LLM_INSUFFICIENT_EVIDENCE" in _codes(r)
+        for r in ok
+    )
+    unavailable = sum("LLM_UNAVAILABLE" in _codes(r) for r in ok)
+    lang_match = sum(
+        str(detect_fn(r["draft"]["text"]).get("code")) == str((r["language"] or {}).get("reply_language"))
+        for r in texts
+    )
+    totals = pd.Series([int((r["latency_ms"] or {}).get("total", 0) or 0) for r in ok], dtype="int64")
+    gens = pd.Series([g for g in (int((r["latency_ms"] or {}).get("generate", 0) or 0) for r in ok) if g > 0],
+                     dtype="int64")
+    escalated = [r for r in ok if (r["escalation"] or {}).get("status") == "ESCALATE"]
+    return {
+        "grounding": {
+            "n": n,
+            "citation_valid_rate": _rate(len(drafts) - cit_failed, len(drafts)),
+            "draft_with_citation_rate": _rate(sum(bool(r["draft"].get("cited_ids")) for r in ok_drafts),
+                                              len(ok_drafts)),
+            "insufficient_evidence_rate": _rate(insufficient, n),
+            "llm_unavailable_rate": _rate(unavailable, n),
+            "reply_language_match_rate": _rate(lang_match, len(texts)),
+        },
+        "with_llm": {
+            "p50": _pct(totals, 50), "p95": _pct(totals, 95),
+            "generate_p50": _pct(gens, 50), "generate_p95": _pct(gens, 95),
+            "n": n,
+        },
+        "detail": {
+            "n_requested": len(records),
+            "n_errors": len(records) - n,
+            "n_llm_calls": int(len(gens)),
+            "n_drafts": len(drafts),
+            "n_ok_drafts": len(ok_drafts),
+            "n_citation_failed": cit_failed,
+            "n_insufficient_evidence": insufficient,
+            "n_llm_unavailable": unavailable,
+            "n_lang_checked": len(texts),
+            "n_lang_match": lang_match,
+            "n_predicted_hpi": sum(
+                (r["predictions"]["priority"]["label"] == "high") and (r["predictions"]["type"]["label"] == "Incident")
+                for r in ok
+            ),
+            "n_reply_de": sum((r["language"] or {}).get("reply_language") == "de" for r in ok),
+            "n_escalated": len(escalated),
+            "reason_counts": dict(Counter(c for r in ok for c in _codes(r) if c)),
+        },
+    }
+
+
+def _bump_run_counter(out_dir: Path, *, force: bool) -> int:
+    """Count LLM sample runs in out_dir/llm_sample_runs.json. Refuse a 4th run unless force is set."""
+    path = out_dir / LLM_RUNS_FILE
+    try:
+        runs = json.loads(path.read_text(encoding="utf-8")).get("runs", [])
+    except (OSError, ValueError):
+        runs = []
+    if len(runs) >= LLM_SAMPLE_MAX_RUNS and not force:
+        raise RuntimeError(
+            f"the LLM sample already ran {len(runs)} times (limit {LLM_SAMPLE_MAX_RUNS}, see {path}). "
+            "Pass --force-llm-sample to run it anyway."
+        )
+    runs.append(datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"runs": runs}, indent=2) + "\n", encoding="utf-8")
+    return len(runs)
+
+
+def run_llm_sample(
+    test_inputs: pd.DataFrame,
+    preds: pd.DataFrame,
+    triage_fn: TriageFn,
+    detect_fn: DetectFn,
+    *,
+    n: int,
+    out_dir: Path,
+    force: bool = False,
+    reset_fn: Callable[[], None] | None = None,
+) -> dict[str, Any] | None:
+    """Run the stratified sample with skip_llm=False, write llm_samples.jsonl, return the scored sample."""
+    ids = select_llm_sample(preds, n)
+    if not ids:
+        print("[eval] LLM sample: no eligible tickets, skipped")
+        return None
+    run_no = _bump_run_counter(out_dir, force=force)
+    print(f"[eval] LLM sample run {run_no}/{LLM_SAMPLE_MAX_RUNS}: {len(ids)} tickets with skip_llm=False ...")
+    if reset_fn is not None:
+        reset_fn()  # the full skip_llm pass filled the burst window; start the sample clean
+    rows = test_inputs.set_index("ticket_id").loc[ids, ["subject", "body"]]
+    records: list[dict[str, Any]] = []
+    t0 = time.perf_counter()
+    for i, (tid, subject, body) in enumerate(zip(rows.index, rows["subject"], rows["body"]), start=1):
+        subject = subject if isinstance(subject, str) else ""
+        body = body if isinstance(body, str) else ""
+        start = time.perf_counter()
+        try:
+            resp = triage_fn(subject, body, skip_llm=False)
+            records.append(_sample_record(str(tid), resp, int(round((time.perf_counter() - start) * 1000))))
+        except Exception as exc:
+            rec = {"ticket_id": str(tid), "predictions": None, "language": None, "escalation": None,
+                   "precedent_ids": [], "draft": None, "latency_ms": None, "wall_ms": 0,
+                   "error": f"{type(exc).__name__}: {str(exc)[:200]}"}
+            records.append(rec)
+            print(f"[eval] LLM sample error on {tid}: {rec['error']}", flush=True)
+        if i % 10 == 0 or i == len(ids):
+            print(f"[eval] LLM sample {i}/{len(ids)}  {time.perf_counter() - t0:.1f}s", flush=True)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / "llm_samples.jsonl"
+    with path.open("w", encoding="utf-8") as fh:
+        for rec in records:
+            fh.write(json.dumps(to_plain(rec), ensure_ascii=False) + "\n")
+    print(f"[eval] wrote {path} ({len(records)} rows)")
+
+    result = score_llm_sample(records, detect_fn)
+    result["detail"]["run"] = run_no
+    if result["detail"]["n_llm_calls"] == 0:
+        print("[eval] WARNING: the LLM sample made no LLM calls. Check /health: PII masking or the pipeline "
+              "may still be a stub, or GEMINI_API_KEY is missing.")
+    return result
+
+
+_DE_HINTS = {"der", "die", "das", "und", "ist", "nicht", "mit", "wir", "ihre", "ihr", "sie", "bitte", "vielen",
+             "dank", "freundlichen", "grüßen", "für", "bei", "auf", "eine", "einen", "wurde", "können"}
+_EN_HINTS = {"the", "and", "is", "not", "with", "we", "your", "you", "please", "thank", "thanks", "regards",
+             "for", "on", "a", "an", "was", "can", "have", "this", "that", "to", "of"}
+
+
+def fallback_detect_language(text: str) -> dict:
+    """Function-word vote, used only when agent.lang (lingua) is not installed."""
+    tokens = [t.strip(".,;:!?()[]\"'").lower() for t in text.split()]
+    de = sum(t in _DE_HINTS for t in tokens)
+    en = sum(t in _EN_HINTS for t in tokens)
+    code = "de" if de > en else "en"
+    return {"code": code, "confidence": 0.0, "reply_language": code}
+
+
+def load_detector() -> DetectFn:
+    """The same detector the API uses (agent.lang), or the fallback if it is not available."""
+    try:
+        from agent.lang import detect_language
+        return detect_language
+    except ImportError as exc:
+        print(f"[eval] agent.lang not available ({exc}); reply-language check uses a function-word fallback")
+        return fallback_detect_language
+
+
 # ---------------------------------------------------------------- scoring
 
 def _r(x: float) -> float:
@@ -286,8 +522,10 @@ def to_plain(obj: Any) -> Any:
     return obj
 
 
-def build_metrics(scores: dict[str, Any], fingerprint: str, thresholds: dict[str, Any]) -> dict[str, Any]:
-    """Assemble metrics.json exactly as in A2.6 (+ latency_ms.skip_llm_stages)."""
+def build_metrics(scores: dict[str, Any], fingerprint: str, thresholds: dict[str, Any],
+                  llm: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Assemble metrics.json exactly as in A2.6 (+ latency_ms.skip_llm_stages).
+    llm is the score_llm_sample result (A2.5); without it the with_llm and grounding blocks stay at n=0."""
     metrics = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "split_fingerprint": fingerprint,
@@ -300,11 +538,11 @@ def build_metrics(scores: dict[str, Any], fingerprint: str, thresholds: dict[str
         "language_detection_accuracy": scores["language_detection_accuracy"],
         "latency_ms": {
             "skip_llm": scores["latency_skip_llm"],
-            # A2.5 (--llm-sample) fills these. Zeros with n=0 until then.
-            "with_llm": {"p50": 0, "p95": 0, "generate_p50": 0, "generate_p95": 0, "n": 0},
+            "with_llm": dict(llm["with_llm"]) if llm else
+            {"p50": 0, "p95": 0, "generate_p50": 0, "generate_p95": 0, "n": 0},
             "skip_llm_stages": scores["latency_skip_llm_stages"],
         },
-        "grounding": {
+        "grounding": dict(llm["grounding"]) if llm else {
             "n": 0,
             "citation_valid_rate": 0.0,
             "draft_with_citation_rate": 0.0,
@@ -323,7 +561,44 @@ def _table(header: list[str], rows: list[list[Any]]) -> list[str]:
     return out + [""]
 
 
-def render_md(metrics: dict[str, Any], scores: dict[str, Any], *, limit: int | None, llm_sample: int) -> str:
+def _llm_md(metrics: dict[str, Any], llm: dict[str, Any]) -> list[str]:
+    g, w, d = metrics["grounding"], metrics["latency_ms"]["with_llm"], llm["detail"]
+    lines = [
+        "## LLM sample (grounding, skip_llm=False)",
+        "",
+        f"Run {d['run']} of at most {LLM_SAMPLE_MAX_RUNS}. Sampled {d['n_requested']} test inputs, stratified on the"
+        f" skip_llm predictions (never on labels): {d['n_predicted_hpi']} predicted high/Incident,"
+        f" {d['n_reply_de']} with German reply language. Errors: {d['n_errors']}. LLM calls made: {d['n_llm_calls']}.",
+        "Drafts are in `eval/results/llm_samples.jsonl` (model outputs only: no labels, no test answers).",
+        "",
+    ]
+    lines += _table(
+        ["Metric", "Value", "Count", "Denominator"],
+        [
+            ["Citation validity (no CITATION_CHECK_FAILED)", f"{g['citation_valid_rate']:.4f}",
+             d["n_drafts"] - d["n_citation_failed"], f"{d['n_drafts']} drafts returned"],
+            ["OK drafts with at least 1 citation", f"{g['draft_with_citation_rate']:.4f}",
+             round(g["draft_with_citation_rate"] * d["n_ok_drafts"]), f"{d['n_ok_drafts']} OK drafts"],
+            ["INSUFFICIENT_EVIDENCE rate", f"{g['insufficient_evidence_rate']:.4f}", d["n_insufficient_evidence"],
+             f"{g['n']} sampled tickets"],
+            ["LLM_UNAVAILABLE rate", f"{g['llm_unavailable_rate']:.4f}", d["n_llm_unavailable"],
+             f"{g['n']} sampled tickets"],
+            ["Reply-language match", f"{g['reply_language_match_rate']:.4f}", d["n_lang_match"],
+             f"{d['n_lang_checked']} drafts with text"],
+        ],
+    )
+    lines += ["Latency with the LLM (ms):", ""]
+    lines += _table(["Measure", "p50", "p95", "n"],
+                    [["total (all sampled tickets)", w["p50"], w["p95"], w["n"]],
+                     ["generate (tickets with an LLM call)", w["generate_p50"], w["generate_p95"], d["n_llm_calls"]]])
+    if d["reason_counts"]:
+        lines += ["Reason codes in the sample:", ""]
+        lines += _table(["Reason code", "Count"], [[k, v] for k, v in sorted(d["reason_counts"].items())])
+    return lines
+
+
+def render_md(metrics: dict[str, Any], scores: dict[str, Any], *, limit: int | None, llm_sample: int,
+              llm: dict[str, Any] | None = None) -> str:
     n = metrics["n_test"]
     lines = [
         "# SentinelDesk holdout metrics",
@@ -334,7 +609,8 @@ def render_md(metrics: dict[str, Any], scores: dict[str, Any], *, limit: int | N
         f"- Triage errors: {scores['n_errors']} (counted as wrong predictions and as not escalated)",
         "- Mode: `api.service.triage(subject, body, skip_llm=True)`, in-process, one ticket at a time",
         "- LLM sample: "
-        + ("not run (task A2.5)" if llm_sample <= 0 else f"requested {llm_sample}, not implemented yet (task A2.5)"),
+        + ("not run (use --llm-sample N)" if llm_sample <= 0 or not llm
+           else f"{llm['grounding']['n']} tickets with skip_llm=False (section below)"),
         "",
         "## Classifier",
         "",
@@ -383,6 +659,9 @@ def render_md(metrics: dict[str, Any], scores: dict[str, Any], *, limit: int | N
     lines += _table(["Stage", "p50", "p95"], stage_rows)
     lines += ["`eval_wall` is the wall time of the `triage()` call measured by the eval script.", ""]
 
+    if llm:
+        lines += _llm_md(metrics, llm)
+
     lines += ["## Thresholds (from `api.service.get_config()`)", ""]
     lines += _table(["Name", "Value"], [[k, v] for k, v in metrics["thresholds"].items()])
 
@@ -423,9 +702,13 @@ def run_eval(
     thresholds: dict[str, Any],
     limit: int | None = None,
     llm_sample: int = 0,
+    detect_fn: DetectFn | None = None,
+    force_llm_sample: bool = False,
+    reset_fn: Callable[[], None] | None = None,
     progress_every: int = PROGRESS_EVERY,
 ) -> dict[str, Any]:
-    """Predict, save predictions, THEN load labels and score. Returns the metrics.json dict."""
+    """Predict, save predictions, run the LLM sample (if asked), THEN load labels and score.
+    Returns the metrics.json dict."""
     if limit:
         test_inputs = test_inputs.head(limit)
         print(f"[eval] --limit {limit}: scoring the first {len(test_inputs)} test inputs (partial run)")
@@ -433,13 +716,19 @@ def run_eval(
     preds = predict(test_inputs, triage_fn, progress_every=progress_every)
     pred_path = save_predictions(preds, out_dir)
 
+    # A2.5: the LLM sample is chosen from the predictions and runs before any label is read.
+    llm = None
+    if llm_sample > 0:
+        llm = run_llm_sample(test_inputs, preds, triage_fn, detect_fn or fallback_detect_language, n=llm_sample,
+                             out_dir=out_dir, force=force_llm_sample, reset_fn=reset_fn)
+
     # Scoring step. test_labels.parquet is read here for the first time, after predictions are on disk.
     labels = load_labels(ddir)
     scores = score(pd.read_parquet(pred_path), labels)
     del labels
 
-    metrics = build_metrics(scores, fingerprint, thresholds)
-    write_outputs(metrics, render_md(metrics, scores, limit=limit, llm_sample=llm_sample), out_dir)
+    metrics = build_metrics(scores, fingerprint, thresholds, llm)
+    write_outputs(metrics, render_md(metrics, scores, limit=limit, llm_sample=llm_sample, llm=llm), out_dir)
     c = metrics["classifier"]
     hpi = metrics["high_priority_incident"]
     print(
@@ -449,13 +738,25 @@ def run_eval(
             hpi["classifier_recall"], hpi["escalation_recall"], metrics["escalation"]["rate"], scores["n_errors"],
         )
     )
+    if llm:
+        g, w = metrics["grounding"], metrics["latency_ms"]["with_llm"]
+        print(
+            "[eval] LLM sample n={} | citation_valid={:.4f} with_citation={:.4f} insufficient={:.4f} "
+            "unavailable={:.4f} lang_match={:.4f} | total p50/p95={}/{} ms generate p50/p95={}/{} ms".format(
+                g["n"], g["citation_valid_rate"], g["draft_with_citation_rate"], g["insufficient_evidence_rate"],
+                g["llm_unavailable_rate"], g["reply_language_match_rate"], w["p50"], w["p95"],
+                w["generate_p50"], w["generate_p95"],
+            )
+        )
     return metrics
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    ap = argparse.ArgumentParser(description="SentinelDesk holdout evaluation (A2.3)")
+    ap = argparse.ArgumentParser(description="SentinelDesk holdout evaluation (A2.3, A2.5)")
     ap.add_argument("--limit", type=int, default=None, help="score only the first N test inputs")
-    ap.add_argument("--llm-sample", type=int, default=0, help="LLM sample size (task A2.5, not implemented yet)")
+    ap.add_argument("--llm-sample", type=int, default=0,
+                    help="also run N stratified test inputs with the LLM on (A2.5; at most 3 runs per --out)")
+    ap.add_argument("--force-llm-sample", action="store_true", help="ignore the 3-run limit of the LLM sample")
     ap.add_argument("--out", type=Path, default=Path("eval/results"), help="output folder")
     ap.add_argument("--check-only", action="store_true", help="run the leakage asserts and fingerprint, then exit")
     return ap.parse_args(argv)
@@ -469,9 +770,6 @@ def main(argv: list[str] | None = None) -> int:
     del kb
     if args.check_only:
         return 0
-    if args.llm_sample > 0:
-        print(f"[eval] NOTE: --llm-sample {args.llm_sample} is task A2.5 and is not implemented yet. "
-              "Continuing with the skip_llm run only.")
 
     try:  # lazy import: tests and --check-only work without the service
         service = importlib.import_module("api.service")
@@ -490,6 +788,9 @@ def main(argv: list[str] | None = None) -> int:
         thresholds=service.get_config(),
         limit=args.limit,
         llm_sample=args.llm_sample,
+        detect_fn=load_detector() if args.llm_sample > 0 else None,
+        force_llm_sample=args.force_llm_sample,
+        reset_fn=getattr(service, "reset_burst", None),
     )
     return 0
 

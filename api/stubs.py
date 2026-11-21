@@ -15,16 +15,16 @@ import zlib
 from pathlib import Path
 from typing import Any, Callable
 
-# Defaults from docs/escalation-policy.md section 4. agent/config.py (B2) overrides them once it exists.
+# Fallback defaults, kept in sync with agent/config.py (B2.7 tuned values). The real config overrides them.
 DEFAULT_CONFIG: dict[str, float | int] = {
-    "T_HIGH_PRIORITY_P": 0.35,
-    "T_INCIDENT_P": 0.40,
-    "T_CONF_TYPE": 0.45,
-    "T_CONF_PRIORITY": 0.45,
+    "T_HIGH_PRIORITY_P": 0.20,
+    "T_INCIDENT_P": 0.30,
+    "T_CONF_TYPE": 0.50,
+    "T_CONF_PRIORITY": 0.50,
     "T_CONF_QUEUE": 0.25,
     "T_SIM": 0.55,
     "TOP_K": 5,
-    "BURST_SIM": 0.75,
+    "BURST_SIM": 0.65,
     "BURST_MIN": 3,
     "BURST_WINDOW_MIN": 15,
 }
@@ -102,7 +102,7 @@ class StubRetriever:
 class StubBurstDetector:
     """Stands in for agent.burst.BurstDetector: never active."""
 
-    def __init__(self, sim_threshold: float = 0.75, min_cluster: int = 3, window_minutes: int = 15):
+    def __init__(self, sim_threshold: float = 0.65, min_cluster: int = 3, window_minutes: int = 15):
         self.window_minutes = int(window_minutes)
 
     def observe(self, request_id: str, vector: Any, summary: str, ts: float | None = None) -> dict:

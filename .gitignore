@@ -1,5 +1,5 @@
 # --- data & build artifacts (never commit: leakage + size) ---
-data/
+/data/
 artifacts/
 *.parquet
 *.faiss

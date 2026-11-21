@@ -37,10 +37,10 @@ CORS_ORIGINS = [
     "http://127.0.0.1:8501",
 ]
 
-# Contract example values; /config returns these in mock mode (nothing is loaded there).
+# agent/config.py defaults (tuned, B2.7); /config returns these in mock mode (nothing is loaded there).
 MOCK_CONFIG: dict[str, Any] = {
-    "T_HIGH_PRIORITY_P": 0.35, "T_INCIDENT_P": 0.40, "T_CONF_TYPE": 0.45, "T_CONF_PRIORITY": 0.45,
-    "T_CONF_QUEUE": 0.25, "T_SIM": 0.55, "TOP_K": 5, "BURST_SIM": 0.75, "BURST_MIN": 3, "BURST_WINDOW_MIN": 15,
+    "T_HIGH_PRIORITY_P": 0.20, "T_INCIDENT_P": 0.30, "T_CONF_TYPE": 0.50, "T_CONF_PRIORITY": 0.50,
+    "T_CONF_QUEUE": 0.25, "T_SIM": 0.55, "TOP_K": 5, "BURST_SIM": 0.65, "BURST_MIN": 3, "BURST_WINDOW_MIN": 15,
 }
 
 HEALTH_DEFAULTS: dict[str, Any] = {
@@ -149,7 +149,7 @@ def get_metrics() -> dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"could not read metrics.json: {exc}") from exc
 
 
-def _mock_triage(req: TriageRequest) -> TriageResponse:
+def _mock_triage(req: TriageRequest, *, skip_llm: bool = False) -> TriageResponse:
     data = json.loads(MOCK_FIXTURE_PATH.read_text(encoding="utf-8"))
     data["request_id"] = str(uuid.uuid4())
     data["mock"] = True
@@ -158,6 +158,11 @@ def _mock_triage(req: TriageRequest) -> TriageResponse:
         "body_chars": len(req.body),  # length as received, before truncation
         "truncated": len(req.body) > MAX_BODY_CHARS,
     }
+    if skip_llm:  # contract: no LLM call -> draft is null and generate is 0
+        lat = data["latency_ms"]
+        lat["total"] = max(0, lat["total"] - lat["generate"])
+        lat["generate"] = 0
+        data["draft"] = None
     return TriageResponse.model_validate(data)
 
 
@@ -168,7 +173,7 @@ def triage(
 ) -> TriageResponse:
     if is_mock_mode():
         try:
-            return _mock_triage(req)
+            return _mock_triage(req, skip_llm=skip_llm)
         except Exception as exc:
             log.exception("mock triage failed")
             raise HTTPException(status_code=500, detail=str(exc)) from exc

@@ -2,6 +2,7 @@
 
 import re
 from functools import cache
+from html import unescape
 from importlib import import_module
 from typing import Literal
 
@@ -49,10 +50,6 @@ def _word_count(text: str) -> int:
     return len(_WORD.findall(_CITATION_TOKEN.sub(" ", text)))
 
 
-def _words_off_target(words: int) -> int:
-    return max(config.REPLY_MIN_WORDS - words, words - config.REPLY_MAX_WORDS, 0)
-
-
 @cache
 def _get_client() -> genai.Client:
     if not config.GEMINI_API_KEY:
@@ -68,7 +65,7 @@ def _get_client() -> genai.Client:
     )
 
 
-def _call(system: str, contents: str | list[types.Content]) -> types.GenerateContentResponse:
+def _call(system: str, contents: str) -> types.GenerateContentResponse:
     client = _get_client()
     generation_config = types.GenerateContentConfig(
         system_instruction=system,
@@ -85,7 +82,7 @@ def _call(system: str, contents: str | list[types.Content]) -> types.GenerateCon
                 model=config.LLM_MODEL, contents=contents, config=generation_config
             )
         except errors.APIError as error:
-            if can_retry and (error.code == 429 or 500 <= error.code < 600):
+            if can_retry and error.code in (429, 500, 502, 503):
                 can_retry = False
                 continue
             raise DraftError(f"Gemini returned HTTP {error.code}.") from None
@@ -111,33 +108,6 @@ def _parse_response(response: types.GenerateContentResponse) -> DraftOut:
     return DraftOut.model_validate(response.parsed)
 
 
-def _fit_length(result: DraftOut, user_message: str) -> DraftOut:
-    """Ask once for a rewrite when a grounded reply misses the word target.
-
-    The rewrite is kept only if it is closer to the target, so this never makes a draft worse.
-    """
-    words = _word_count(result.reply)
-    if result.status != "OK" or not _words_off_target(words):
-        return result
-    correction = (
-        f"Your reply has {words} words. Rewrite it to {config.REPLY_MIN_WORDS} to "
-        f"{config.REPLY_MAX_WORDS} words, not counting the bracketed citations. "
-        "Keep the same facts, citations and status."
-    )
-    contents = [
-        types.Content(role="user", parts=[types.Part(text=user_message)]),
-        types.Content(role="model", parts=[types.Part(text=result.model_dump_json())]),
-        types.Content(role="user", parts=[types.Part(text=correction)]),
-    ]
-    try:
-        rewrite = _parse_response(_call(SYSTEM_PROMPT, contents))
-    except Exception:  # The rewrite is optional, so any failure keeps the first draft.
-        return result
-    if rewrite.status == "OK" and _words_off_target(_word_count(rewrite.reply)) < _words_off_target(words):
-        return rewrite
-    return result
-
-
 def generate_draft(
     text: str, reply_language: str, precedents: list[dict], for_human_review: bool
 ) -> dict:
@@ -148,10 +118,9 @@ def generate_draft(
     except ValidationError:
         raise DraftError("Gemini returned an invalid structured draft.") from None
 
-    if not result.reply.strip():
+    reply = unescape(result.reply).strip()
+    if not reply:
         raise DraftError("Gemini returned an empty draft.")
-    result = _fit_length(result, user_message)
-    reply = result.reply.strip()
 
     return {
         "status": result.status,

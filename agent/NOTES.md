@@ -47,7 +47,19 @@ Order: IBAN → EMAIL → CARD (Luhn-checked, so long phone numbers aren't eaten
   - demo-02 (en password reset): 0.63–0.65, English login-problem tickets.
   - **demo-08 (out of scope): top-1 0.24**, far below `T_SIM` 0.55 → `NO_PRECEDENT`, as expected (input for B1.7).
   - **demo-15 (de printer): top-1 0.53, an English "Printer Not Printing" ticket**, so cross-lingual works. But it's **just below `T_SIM` 0.55**, so it gets `NO_PRECEDENT`, and the rest of the top 5 is off-topic (~0.46). The KB has only ~6–7 printer tickets ("drucker" 0.026%, "printer" 0.031%). → **B2:** don't rely on demo-15 as the cross-lingual showcase; use demo-01.
-- TODO B1.5: full 5+5 cross-lingual table.
+### B1.5 Cross-lingual check (real index, split `5a2ede85f9fb`)
+Same 5 topics, asked once in German and once in English. "Other lang" = how many of the top 5 are in the other language.
+
+| Topic | DE query: top-1 sim | DE: other lang in top 5 | relevant? | EN query: top-1 sim | EN: other lang in top 5 | relevant? |
+|---|---|---|---|---|---|---|
+| VPN keeps disconnecting | 0.77 | 4/5 en | ✅ all VPN | 0.71 | 1/5 de | ✅ all VPN |
+| Charged twice for subscription | **0.45** | 0/5 | ⚠️ weak (billing, but "Double Billing" only #3 at 0.38) | 0.74 | 0/5 | ✅ all double charge |
+| Password reset email missing | 0.64 | 5/5 en | ~ login errors, not reset email | 0.62 | 0/5 | ~ same login tickets |
+| Outlook crashes after update | 0.67 | 2/5 en | ✅ Outlook problems | 0.61 | 1/5 de | ✅ Outlook problems |
+| Database server timeout | 0.76 | 2/5 en | ✅ timeouts | 0.70 | 2/5 de | ✅ timeouts / DB |
+
+- **Cross-lingual retrieval works:** 13 of 25 German-query hits are English tickets (52%), and 4 of 25 English-query hits are German (16%). They're on-topic in 4 of 5 topics. This is the evidence for the bonus feature: demo-01 and the VPN row show it best.
+- **Weak spot:** some German phrasings embed poorly ("doppelt belastet" = charged twice). Top-1 is 0.45, below `T_SIM` 0.55, so a German double-billing ticket would get `NO_PRECEDENT`, while the English one scores 0.74. Possible fixes (not done; optional, need team OK): hybrid BM25 + dense retrieval (B1.5 optional), or a stronger embedding model (`multilingual-e5-base`: better German, ~3–4× slower index build). Also relevant for B2/A2 tuning: German tickets will hit `NO_PRECEDENT` more often than English ones.
 
 ## B2
 
@@ -59,7 +71,11 @@ The injection filter also handles variable whitespace, formal German imperatives
 
 Sensitive terms now match from the start of a word in both tickets and precedent answers, so compounds such as `Rückerstattungsantrag` still count. `SLA`, `SLAs`, and `umgehen` require whole words. This avoids false matches in `bislang`, `Slack`, `translate`, and `umgehend`.
 
-Reply length: a grounded reply must now be 80 to 100 words (previously about 80 to 180), not counting citations. With the prompt alone, all 3 English test drafts but only 1 of 3 German drafts landed in range, because German compounds use fewer words for the same content. The prompt now aims for about 90 words, and a reply outside the range gets one rewrite request. The rewrite is kept only if it is closer to the target. The limits are `REPLY_MIN_WORDS` and `REPLY_MAX_WORDS` in `agent/config.py`, overridable with `SENTINEL_REPLY_MIN_WORDS` and `SENTINEL_REPLY_MAX_WORDS`.
+B2.6 normalizes dataset placeholders to `[name]`, `[tel_num]`, and `[acc_num]` and converts HTML line breaks before escaping ticket and precedent text. The prompt names both sets of placeholders. The final reply decodes HTML entities before citation extraction and validation.
+
+The prompt targets 80 to 100 words for a grounded reply, excluding citations. B2.6 removes the length rewrite so each successful draft uses one Gemini generation request. `.env.example` shows the `SENTINEL_REPLY_MIN_WORDS` and `SENTINEL_REPLY_MAX_WORDS` overrides.
+
+The demo-07 fixture expects `ON_CALL` when the incident thresholds fire. Prompt injection still blocks drafting. The gate reports all unsupported sensitive categories in a single `UNSUPPORTED_REQUEST` reason.
 
 ### Judge Q&A
 

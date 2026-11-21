@@ -246,3 +246,14 @@ def test_health_survives_status_error(fake_service, monkeypatch):
         r = c.get("/health")
     assert r.status_code == 200
     assert r.json()["mock"] is False and r.json()["classifier_loaded"] is False
+
+
+def test_mock_skip_llm_returns_null_draft(mock_client):
+    r = mock_client.post("/triage?skip_llm=true", json={"body": "test"})
+    assert r.status_code == 200
+    got = r.json()
+    assert got["draft"] is None and got["mock"] is True
+    assert got["latency_ms"]["generate"] == 0
+    full = mock_client.post("/triage", json={"body": "test"}).json()
+    assert full["draft"] is not None
+    assert got["latency_ms"]["total"] == full["latency_ms"]["total"] - full["latency_ms"]["generate"]
