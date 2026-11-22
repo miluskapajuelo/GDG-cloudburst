@@ -47,6 +47,22 @@ def test_exclude_ids(retriever):
     assert len(again) == 5 and not excluded & {h["ticket_id"] for h in again}
 
 
+def test_search_from_worker_threads(retriever):
+    """The API serves requests on worker threads. faiss's thread setting is per-thread, and on
+    macOS a multi-threaded faiss search next to torch's OpenMP segfaults (exit 139)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    queries = ["VPN geht nicht", "charged twice for my subscription", "Drucker druckt nicht",
+               "Outlook crashes on startup", "Server antwortet nicht", "password reset email missing"]
+
+    def one(q):
+        return retriever.search(retriever.embed(q), k=5)[0]["ticket_id"]
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(one, queries * 3))
+    assert len(results) == 18 and all(r.startswith("TKT-") for r in results)
+
+
 def test_index_has_no_test_ids(retriever):
     import pandas as pd
     data = Path(os.getenv("SENTINEL_DATA_DIR", "data"))
